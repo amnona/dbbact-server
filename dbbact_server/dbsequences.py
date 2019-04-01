@@ -1,8 +1,8 @@
 from collections import defaultdict
 import psycopg2
 
-import dbbact.primers
-from dbbact.utils import debug
+from . import primers
+from .utils import debug
 from . import dbannotations
 
 # length for the seed sequence
@@ -35,7 +35,7 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
     # get the primer region id
     seqids = []
     numadded = 0
-    idprimer = dbbact.primers.GetIdFromName(con, cur, primer)
+    idprimer = primers.GetIdFromName(con, cur, primer)
     if idprimer < 0:
         debug(2, 'primer %s not found' % primer)
         return "primer %s not found" % primer, None
@@ -381,7 +381,7 @@ def GetTaxonomyAnnotations(con, cur, taxonomy, userid=None):
     for cres in annotationids:
         cid = cres[0]
         ccount = cres[1]
-        err, cdetails = dbbact.dbannotations.GetAnnotationsFromID(con, cur, cid)
+        err, cdetails = dbannotations.GetAnnotationsFromID(con, cur, cid)
         if err:
             debug(6, err)
             continue
@@ -606,7 +606,7 @@ def GetHashAnnotations(con, cur, hash_str, userid=None):
     for cres in annotationids:
         cid = cres[0]
         ccount = cres[1]
-        err, cdetails = dbbact.dbannotations.GetAnnotationsFromID(con, cur, cid)
+        err, cdetails = dbannotations.GetAnnotationsFromID(con, cur, cid)
         if err:
             debug(6, err)
             continue
