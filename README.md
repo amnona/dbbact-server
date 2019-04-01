@@ -11,11 +11,11 @@ API documentation is available at: [api.dbbact.org/docs](api.dbbact.org/docs)
 dbBact is used by the [Calour microbiome analysis tool](https://github.com/biocore/calour)
 
 ## Installation:
-<Warning>
+<aside class="notice">
 We strongly recommend using the main running dbBact server (api.dbbact.org).
 
 By locally installing dbBact, the local installation will not be synchronized with the main dbBact server.
-</Warning>
+<aside>
 
 However, you may want to locally install dbBact in order to test new functions, or to run local queries.
 
