@@ -1,0 +1,1663 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: agenttypestable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE agenttypestable (
+    id integer NOT NULL,
+    description text
+);
+
+
+ALTER TABLE public.agenttypestable OWNER TO dbbact;
+
+--
+-- Name: agenttypes_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE agenttypes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.agenttypes_id_seq OWNER TO dbbact;
+
+--
+-- Name: agenttypes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE agenttypes_id_seq OWNED BY agenttypestable.id;
+
+
+--
+-- Name: annotationdetailstypestable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE annotationdetailstypestable (
+    id integer NOT NULL,
+    description text
+);
+
+
+ALTER TABLE public.annotationdetailstypestable OWNER TO dbbact;
+
+--
+-- Name: annotationdetailstypestable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationdetailstypestable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationdetailstypestable_id_seq OWNER TO dbbact;
+
+--
+-- Name: annotationdetailstypestable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationdetailstypestable_id_seq OWNED BY annotationdetailstypestable.id;
+
+
+--
+-- Name: annotationlisttable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE annotationlisttable (
+    idannotation integer NOT NULL,
+    idannotationdetail integer NOT NULL,
+    idontology integer NOT NULL
+);
+
+
+ALTER TABLE public.annotationlisttable OWNER TO dbbact;
+
+--
+-- Name: annotationlisttable_idannotation_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationlisttable_idannotation_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationlisttable_idannotation_seq OWNER TO dbbact;
+
+--
+-- Name: annotationlisttable_idannotation_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationlisttable_idannotation_seq OWNED BY annotationlisttable.idannotation;
+
+
+--
+-- Name: annotationlisttable_idannotationdetail_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationlisttable_idannotationdetail_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationlisttable_idannotationdetail_seq OWNER TO dbbact;
+
+--
+-- Name: annotationlisttable_idannotationdetail_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationlisttable_idannotationdetail_seq OWNED BY annotationlisttable.idannotationdetail;
+
+
+--
+-- Name: annotationlisttable_idontology_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationlisttable_idontology_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationlisttable_idontology_seq OWNER TO dbbact;
+
+--
+-- Name: annotationlisttable_idontology_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationlisttable_idontology_seq OWNED BY annotationlisttable.idontology;
+
+
+--
+-- Name: annotationparentstable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE annotationparentstable (
+    idannotation integer NOT NULL,
+    annotationdetail text,
+    ontology text
+);
+
+
+ALTER TABLE public.annotationparentstable OWNER TO dbbact;
+
+--
+-- Name: annotationstable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE annotationstable (
+    id integer NOT NULL,
+    idexp integer NOT NULL,
+    iduser integer NOT NULL,
+    idannotationtype integer NOT NULL,
+    idmethod integer NOT NULL,
+    addeddate date,
+    description text,
+    idagenttype integer NOT NULL,
+    isprivate text,
+    seqcount integer DEFAULT 0
+);
+
+
+ALTER TABLE public.annotationstable OWNER TO dbbact;
+
+--
+-- Name: annotationstable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationstable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationstable_id_seq OWNER TO dbbact;
+
+--
+-- Name: annotationstable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationstable_id_seq OWNED BY annotationstable.id;
+
+
+--
+-- Name: annotationstable_idagenttype_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationstable_idagenttype_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationstable_idagenttype_seq OWNER TO dbbact;
+
+--
+-- Name: annotationstable_idagenttype_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationstable_idagenttype_seq OWNED BY annotationstable.idagenttype;
+
+
+--
+-- Name: annotationstable_idannotationtype_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationstable_idannotationtype_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationstable_idannotationtype_seq OWNER TO dbbact;
+
+--
+-- Name: annotationstable_idannotationtype_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationstable_idannotationtype_seq OWNED BY annotationstable.idannotationtype;
+
+
+--
+-- Name: annotationstable_idexp_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationstable_idexp_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationstable_idexp_seq OWNER TO dbbact;
+
+--
+-- Name: annotationstable_idexp_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationstable_idexp_seq OWNED BY annotationstable.idexp;
+
+
+--
+-- Name: annotationstable_idmethod_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationstable_idmethod_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationstable_idmethod_seq OWNER TO dbbact;
+
+--
+-- Name: annotationstable_idmethod_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationstable_idmethod_seq OWNED BY annotationstable.idmethod;
+
+
+--
+-- Name: annotationstable_iduser_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationstable_iduser_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationstable_iduser_seq OWNER TO dbbact;
+
+--
+-- Name: annotationstable_iduser_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationstable_iduser_seq OWNED BY annotationstable.iduser;
+
+
+--
+-- Name: annotationtypestable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE annotationtypestable (
+    id integer NOT NULL,
+    description text
+);
+
+
+ALTER TABLE public.annotationtypestable OWNER TO dbbact;
+
+--
+-- Name: annotationtypestable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE annotationtypestable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.annotationtypestable_id_seq OWNER TO dbbact;
+
+--
+-- Name: annotationtypestable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE annotationtypestable_id_seq OWNED BY annotationtypestable.id;
+
+
+--
+-- Name: experimentstable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE experimentstable (
+    uniqueid integer NOT NULL,
+    expid integer NOT NULL,
+    type text,
+    value text,
+    date date,
+    userid integer NOT NULL,
+    private text
+);
+
+
+ALTER TABLE public.experimentstable OWNER TO dbbact;
+
+--
+-- Name: experimentstable_expid_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE experimentstable_expid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.experimentstable_expid_seq OWNER TO dbbact;
+
+--
+-- Name: experimentstable_expid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE experimentstable_expid_seq OWNED BY experimentstable.expid;
+
+
+--
+-- Name: experimentstable_uniqueid_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE experimentstable_uniqueid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.experimentstable_uniqueid_seq OWNER TO dbbact;
+
+--
+-- Name: experimentstable_uniqueid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE experimentstable_uniqueid_seq OWNED BY experimentstable.uniqueid;
+
+
+--
+-- Name: experimentstable_userid_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE experimentstable_userid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.experimentstable_userid_seq OWNER TO dbbact;
+
+--
+-- Name: experimentstable_userid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE experimentstable_userid_seq OWNED BY experimentstable.userid;
+
+
+--
+-- Name: methodtypestable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE methodtypestable (
+    id integer NOT NULL,
+    description text
+);
+
+
+ALTER TABLE public.methodtypestable OWNER TO dbbact;
+
+--
+-- Name: methodtype_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE methodtype_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.methodtype_id_seq OWNER TO dbbact;
+
+--
+-- Name: methodtype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE methodtype_id_seq OWNED BY methodtypestable.id;
+
+
+--
+-- Name: ontologynamestable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE ontologynamestable (
+    id integer NOT NULL,
+    description text
+);
+
+
+ALTER TABLE public.ontologynamestable OWNER TO dbbact;
+
+--
+-- Name: ontologynamestable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE ontologynamestable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ontologynamestable_id_seq OWNER TO dbbact;
+
+--
+-- Name: ontologynamestable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE ontologynamestable_id_seq OWNED BY ontologynamestable.id;
+
+
+--
+-- Name: ontologysynonymtable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE ontologysynonymtable (
+    idontology integer NOT NULL,
+    synonym text NOT NULL,
+    uniqueid integer NOT NULL
+);
+
+
+ALTER TABLE public.ontologysynonymtable OWNER TO dbbact;
+
+--
+-- Name: ontologysynonymtable_idontology_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE ontologysynonymtable_idontology_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ontologysynonymtable_idontology_seq OWNER TO dbbact;
+
+--
+-- Name: ontologysynonymtable_idontology_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE ontologysynonymtable_idontology_seq OWNED BY ontologysynonymtable.idontology;
+
+
+--
+-- Name: ontologysynonymtable_uniqueid_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE ontologysynonymtable_uniqueid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ontologysynonymtable_uniqueid_seq OWNER TO dbbact;
+
+--
+-- Name: ontologysynonymtable_uniqueid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE ontologysynonymtable_uniqueid_seq OWNED BY ontologysynonymtable.uniqueid;
+
+
+--
+-- Name: ontologytable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE ontologytable (
+    id integer NOT NULL,
+    description text,
+    seqcount integer DEFAULT 0,
+    annotationcount integer DEFAULT 0,
+    annotation_neg_count integer,
+    exp_count integer
+);
+
+
+ALTER TABLE public.ontologytable OWNER TO dbbact;
+
+--
+-- Name: ontologytable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE ontologytable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ontologytable_id_seq OWNER TO dbbact;
+
+--
+-- Name: ontologytable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE ontologytable_id_seq OWNED BY ontologytable.id;
+
+
+--
+-- Name: ontologytreestructuretable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE ontologytreestructuretable (
+    ontologyid integer NOT NULL,
+    ontologyparentid integer NOT NULL,
+    ontologynameid integer NOT NULL,
+    uniqueid integer NOT NULL
+);
+
+
+ALTER TABLE public.ontologytreestructuretable OWNER TO dbbact;
+
+--
+-- Name: ontologytreestructuretable_ontologynameid_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE ontologytreestructuretable_ontologynameid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ontologytreestructuretable_ontologynameid_seq OWNER TO dbbact;
+
+--
+-- Name: ontologytreestructuretable_ontologynameid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE ontologytreestructuretable_ontologynameid_seq OWNED BY ontologytreestructuretable.ontologynameid;
+
+
+--
+-- Name: ontologytreestructuretable_ontologyparentid_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE ontologytreestructuretable_ontologyparentid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ontologytreestructuretable_ontologyparentid_seq OWNER TO dbbact;
+
+--
+-- Name: ontologytreestructuretable_ontologyparentid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE ontologytreestructuretable_ontologyparentid_seq OWNED BY ontologytreestructuretable.ontologyparentid;
+
+
+--
+-- Name: ontologytreestructuretable_uniqueid_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE ontologytreestructuretable_uniqueid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ontologytreestructuretable_uniqueid_seq OWNER TO dbbact;
+
+--
+-- Name: ontologytreestructuretable_uniqueid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE ontologytreestructuretable_uniqueid_seq OWNED BY ontologytreestructuretable.uniqueid;
+
+
+--
+-- Name: primerstable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE primerstable (
+    id integer NOT NULL,
+    iduser integer NOT NULL,
+    forwardprimer text,
+    reverseprimer text,
+    regionname text
+);
+
+
+ALTER TABLE public.primerstable OWNER TO dbbact;
+
+--
+-- Name: primerstable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE primerstable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.primerstable_id_seq OWNER TO dbbact;
+
+--
+-- Name: primerstable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE primerstable_id_seq OWNED BY primerstable.id;
+
+
+--
+-- Name: primerstable_iduser_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE primerstable_iduser_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.primerstable_iduser_seq OWNER TO dbbact;
+
+--
+-- Name: primerstable_iduser_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE primerstable_iduser_seq OWNED BY primerstable.iduser;
+
+
+--
+-- Name: sequencesannotationtable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE sequencesannotationtable (
+    seqid integer NOT NULL,
+    annotationid integer NOT NULL
+);
+
+
+ALTER TABLE public.sequencesannotationtable OWNER TO dbbact;
+
+--
+-- Name: sequencesannotationtable_annotationid_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE sequencesannotationtable_annotationid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.sequencesannotationtable_annotationid_seq OWNER TO dbbact;
+
+--
+-- Name: sequencesannotationtable_sequenceid_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE sequencesannotationtable_sequenceid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.sequencesannotationtable_sequenceid_seq OWNER TO dbbact;
+
+--
+-- Name: sequencesannotationtable_sequenceid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE sequencesannotationtable_sequenceid_seq OWNED BY sequencesannotationtable.seqid;
+
+
+--
+-- Name: sequencestable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE sequencestable (
+    id integer NOT NULL,
+    idprimer integer NOT NULL,
+    sequence text,
+    length text,
+    taxonomy text,
+    ggid integer,
+    seedsequence text,
+    taxrootrank text,
+    taxdomain text,
+    taxphylum text,
+    taxclass text,
+    taxfamily text,
+    taxgenus text,
+    taxorder text,
+    hashfull text,
+    hash150 text,
+    hash100 text,
+    total_annotations integer DEFAULT 0,
+    total_experiments integer DEFAULT 0
+);
+
+
+ALTER TABLE public.sequencestable OWNER TO dbbact;
+
+--
+-- Name: sequencestable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE sequencestable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.sequencestable_id_seq OWNER TO dbbact;
+
+--
+-- Name: sequencestable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE sequencestable_id_seq OWNED BY sequencestable.id;
+
+
+--
+-- Name: sequencestable_idprimer_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE sequencestable_idprimer_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.sequencestable_idprimer_seq OWNER TO dbbact;
+
+--
+-- Name: sequencestable_idprimer_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE sequencestable_idprimer_seq OWNED BY sequencestable.idprimer;
+
+
+--
+-- Name: terminfotable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE terminfotable (
+    term text,
+    totalexperiments integer,
+    totalannotations integer,
+    termtype text
+);
+
+
+ALTER TABLE public.terminfotable OWNER TO dbbact;
+
+--
+-- Name: termpairstable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE termpairstable (
+    termpair text NOT NULL,
+    annotationcount integer
+);
+
+
+ALTER TABLE public.termpairstable OWNER TO dbbact;
+
+--
+-- Name: userstable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE userstable (
+    id integer NOT NULL,
+    username text,
+    passwordhash text,
+    name text,
+    description text,
+    isactive boolean,
+    attemptscounter integer DEFAULT 0,
+    email text,
+    shareemail text,
+    isadmin text,
+    tempcodehash text,
+    recoveryattemptscounter integer DEFAULT 0
+);
+
+
+ALTER TABLE public.userstable OWNER TO dbbact;
+
+--
+-- Name: TABLE userstable; Type: COMMENT; Schema: public; Owner: dbbact
+--
+
+COMMENT ON TABLE userstable IS 'In this table we will store list of DB users';
+
+
+--
+-- Name: COLUMN userstable.id; Type: COMMENT; Schema: public; Owner: dbbact
+--
+
+COMMENT ON COLUMN userstable.id IS 'User id (auto increment)';
+
+
+--
+-- Name: userstable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE userstable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.userstable_id_seq OWNER TO dbbact;
+
+--
+-- Name: userstable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE userstable_id_seq OWNED BY userstable.id;
+
+
+--
+-- Name: wholeSeqDatabaseTable_dbId_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE "wholeSeqDatabaseTable_dbId_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."wholeSeqDatabaseTable_dbId_seq" OWNER TO dbbact;
+
+--
+-- Name: wholeseqdatabasetable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE wholeseqdatabasetable (
+    "dbId" integer DEFAULT nextval('"wholeSeqDatabaseTable_dbId_seq"'::regclass) NOT NULL,
+    version text,
+    "dbName" text
+);
+
+
+ALTER TABLE public.wholeseqdatabasetable OWNER TO dbbact;
+
+--
+-- Name: wholeseqidstable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE wholeseqidstable (
+    id integer NOT NULL,
+    dbid integer,
+    dbbactid integer,
+    wholeseqid text
+)
+WITH (autovacuum_vacuum_scale_factor=0.0, autovacuum_vacuum_threshold=5000, autovacuum_analyze_scale_factor=0.0, autovacuum_analyze_threshold=5000);
+
+
+ALTER TABLE public.wholeseqidstable OWNER TO dbbact;
+
+--
+-- Name: wholeseqidstable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE wholeseqidstable_id_seq
+    START WITH 1406909
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.wholeseqidstable_id_seq OWNER TO dbbact;
+
+--
+-- Name: wholeseqidstable_id_seq1; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE wholeseqidstable_id_seq1
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.wholeseqidstable_id_seq1 OWNER TO dbbact;
+
+--
+-- Name: wholeseqidstable_id_seq1; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE wholeseqidstable_id_seq1 OWNED BY wholeseqidstable.id;
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY agenttypestable ALTER COLUMN id SET DEFAULT nextval('agenttypes_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationdetailstypestable ALTER COLUMN id SET DEFAULT nextval('annotationdetailstypestable_id_seq'::regclass);
+
+
+--
+-- Name: idannotation; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationlisttable ALTER COLUMN idannotation SET DEFAULT nextval('annotationlisttable_idannotation_seq'::regclass);
+
+
+--
+-- Name: idannotationdetail; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationlisttable ALTER COLUMN idannotationdetail SET DEFAULT nextval('annotationlisttable_idannotationdetail_seq'::regclass);
+
+
+--
+-- Name: idontology; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationlisttable ALTER COLUMN idontology SET DEFAULT nextval('annotationlisttable_idontology_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable ALTER COLUMN id SET DEFAULT nextval('annotationstable_id_seq'::regclass);
+
+
+--
+-- Name: idexp; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable ALTER COLUMN idexp SET DEFAULT nextval('annotationstable_idexp_seq'::regclass);
+
+
+--
+-- Name: iduser; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable ALTER COLUMN iduser SET DEFAULT nextval('annotationstable_iduser_seq'::regclass);
+
+
+--
+-- Name: idannotationtype; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable ALTER COLUMN idannotationtype SET DEFAULT nextval('annotationstable_idannotationtype_seq'::regclass);
+
+
+--
+-- Name: idmethod; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable ALTER COLUMN idmethod SET DEFAULT nextval('annotationstable_idmethod_seq'::regclass);
+
+
+--
+-- Name: idagenttype; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable ALTER COLUMN idagenttype SET DEFAULT nextval('annotationstable_idagenttype_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationtypestable ALTER COLUMN id SET DEFAULT nextval('annotationtypestable_id_seq'::regclass);
+
+
+--
+-- Name: uniqueid; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY experimentstable ALTER COLUMN uniqueid SET DEFAULT nextval('experimentstable_uniqueid_seq'::regclass);
+
+
+--
+-- Name: expid; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY experimentstable ALTER COLUMN expid SET DEFAULT nextval('experimentstable_expid_seq'::regclass);
+
+
+--
+-- Name: userid; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY experimentstable ALTER COLUMN userid SET DEFAULT nextval('experimentstable_userid_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY methodtypestable ALTER COLUMN id SET DEFAULT nextval('methodtype_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologynamestable ALTER COLUMN id SET DEFAULT nextval('ontologynamestable_id_seq'::regclass);
+
+
+--
+-- Name: idontology; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologysynonymtable ALTER COLUMN idontology SET DEFAULT nextval('ontologysynonymtable_idontology_seq'::regclass);
+
+
+--
+-- Name: uniqueid; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologysynonymtable ALTER COLUMN uniqueid SET DEFAULT nextval('ontologysynonymtable_uniqueid_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologytable ALTER COLUMN id SET DEFAULT nextval('ontologytable_id_seq'::regclass);
+
+
+--
+-- Name: ontologyparentid; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologytreestructuretable ALTER COLUMN ontologyparentid SET DEFAULT nextval('ontologytreestructuretable_ontologyparentid_seq'::regclass);
+
+
+--
+-- Name: ontologynameid; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologytreestructuretable ALTER COLUMN ontologynameid SET DEFAULT nextval('ontologytreestructuretable_ontologynameid_seq'::regclass);
+
+
+--
+-- Name: uniqueid; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologytreestructuretable ALTER COLUMN uniqueid SET DEFAULT nextval('ontologytreestructuretable_uniqueid_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY primerstable ALTER COLUMN id SET DEFAULT nextval('primerstable_id_seq'::regclass);
+
+
+--
+-- Name: iduser; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY primerstable ALTER COLUMN iduser SET DEFAULT nextval('primerstable_iduser_seq'::regclass);
+
+
+--
+-- Name: seqid; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY sequencesannotationtable ALTER COLUMN seqid SET DEFAULT nextval('sequencesannotationtable_sequenceid_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY sequencestable ALTER COLUMN id SET DEFAULT nextval('sequencestable_id_seq'::regclass);
+
+
+--
+-- Name: idprimer; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY sequencestable ALTER COLUMN idprimer SET DEFAULT nextval('sequencestable_idprimer_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY userstable ALTER COLUMN id SET DEFAULT nextval('userstable_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY wholeseqidstable ALTER COLUMN id SET DEFAULT nextval('wholeseqidstable_id_seq1'::regclass);
+
+
+--
+-- Name: agenttypes_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY agenttypestable
+    ADD CONSTRAINT agenttypes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: annotationdetailstypestable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY annotationdetailstypestable
+    ADD CONSTRAINT annotationdetailstypestable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: annotationlisttable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY annotationlisttable
+    ADD CONSTRAINT annotationlisttable_pkey PRIMARY KEY (idannotation, idannotationdetail, idontology);
+
+
+--
+-- Name: annotationstable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY annotationstable
+    ADD CONSTRAINT annotationstable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: annotationtypestable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY annotationtypestable
+    ADD CONSTRAINT annotationtypestable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: experimentstable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY experimentstable
+    ADD CONSTRAINT experimentstable_pkey PRIMARY KEY (uniqueid);
+
+
+--
+-- Name: methodtype_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY methodtypestable
+    ADD CONSTRAINT methodtype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ontologynamestable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY ontologynamestable
+    ADD CONSTRAINT ontologynamestable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ontologytable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY ontologytable
+    ADD CONSTRAINT ontologytable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ontologytreestructuretable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY ontologytreestructuretable
+    ADD CONSTRAINT ontologytreestructuretable_pkey PRIMARY KEY (ontologyid, ontologyparentid, ontologynameid);
+
+
+--
+-- Name: primerstable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY primerstable
+    ADD CONSTRAINT primerstable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sequencestable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY sequencestable
+    ADD CONSTRAINT sequencestable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: termpairstable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY termpairstable
+    ADD CONSTRAINT termpairstable_pkey PRIMARY KEY (termpair);
+
+
+--
+-- Name: userstable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY userstable
+    ADD CONSTRAINT userstable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: wholeSeqDatabaseTable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY wholeseqdatabasetable
+    ADD CONSTRAINT "wholeSeqDatabaseTable_pkey" PRIMARY KEY ("dbId");
+
+
+--
+-- Name: wholeseqidstable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY wholeseqidstable
+    ADD CONSTRAINT wholeseqidstable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: agenttypestable_description_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX agenttypestable_description_index ON agenttypestable USING btree (description);
+
+
+--
+-- Name: annotationdetailstypestable_description_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX annotationdetailstypestable_description_index ON annotationdetailstypestable USING btree (description);
+
+
+--
+-- Name: annotationid_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX annotationid_index ON sequencesannotationtable USING btree (annotationid);
+
+
+--
+-- Name: annotationlisttable_idontology_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX annotationlisttable_idontology_index ON annotationlisttable USING btree (idontology);
+
+
+--
+-- Name: annotationparentstable_idannotation_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX annotationparentstable_idannotation_index ON annotationparentstable USING btree (idannotation);
+
+
+--
+-- Name: annotationparentstable_ontology_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX annotationparentstable_ontology_index ON annotationparentstable USING btree (ontology);
+
+
+--
+-- Name: annotationstable_idexp_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX annotationstable_idexp_index ON annotationstable USING btree (idexp);
+
+
+--
+-- Name: annotationstable_iduser_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX annotationstable_iduser_index ON annotationstable USING btree (iduser);
+
+
+--
+-- Name: annotationtypestable_description_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX annotationtypestable_description_index ON annotationtypestable USING btree (description);
+
+
+--
+-- Name: experimentstable_expid_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX experimentstable_expid_index ON experimentstable USING btree (expid);
+
+
+--
+-- Name: experimentstable_value_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX experimentstable_value_index ON experimentstable USING btree (value);
+
+
+--
+-- Name: external_db_id_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX external_db_id_index ON wholeseqidstable USING btree (wholeseqid);
+
+
+--
+-- Name: methodtypestable_description_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX methodtypestable_description_index ON methodtypestable USING btree (description);
+
+
+--
+-- Name: ontologysynonymtable _synonym_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX "ontologysynonymtable _synonym_index" ON ontologysynonymtable USING btree (synonym);
+
+
+--
+-- Name: ontologytable_description_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX ontologytable_description_index ON ontologytable USING btree (description);
+
+
+--
+-- Name: ontologytreestructuretable_ontologyparentid_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX ontologytreestructuretable_ontologyparentid_index ON ontologytreestructuretable USING btree (ontologyparentid);
+
+
+--
+-- Name: ontologytreestructuretable_uniqueid_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX ontologytreestructuretable_uniqueid_index ON ontologytreestructuretable USING btree (uniqueid);
+
+
+--
+-- Name: seqid_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX seqid_index ON sequencesannotationtable USING btree (seqid);
+
+
+--
+-- Name: sequencestable_ggid_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX sequencestable_ggid_index ON sequencestable USING btree (ggid);
+
+
+--
+-- Name: sequencestable_seedsequence_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX sequencestable_seedsequence_index ON sequencestable USING btree (seedsequence);
+
+
+--
+-- Name: sequencestable_taxonomy_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX sequencestable_taxonomy_index ON sequencestable USING btree (taxonomy);
+
+
+--
+-- Name: terminfotable_term_idx; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX terminfotable_term_idx ON terminfotable USING btree (term);
+
+
+--
+-- Name: terminfotable_term_idx1; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX terminfotable_term_idx1 ON terminfotable USING btree (term);
+
+
+--
+-- Name: wholeseqidstable_dbbactid_index; Type: INDEX; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE INDEX wholeseqidstable_dbbactid_index ON wholeseqidstable USING btree (dbbactid);
+
+
+--
+-- Name: annotationlisttable_idannotationdetail_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationlisttable
+    ADD CONSTRAINT annotationlisttable_idannotationdetail_fkey FOREIGN KEY (idannotationdetail) REFERENCES annotationdetailstypestable(id);
+
+
+--
+-- Name: annotationlisttable_idontology_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationlisttable
+    ADD CONSTRAINT annotationlisttable_idontology_fkey FOREIGN KEY (idontology) REFERENCES ontologytable(id);
+
+
+--
+-- Name: annotationstable_idagenttype_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable
+    ADD CONSTRAINT annotationstable_idagenttype_fkey FOREIGN KEY (idagenttype) REFERENCES agenttypestable(id);
+
+
+--
+-- Name: annotationstable_idannotationtype_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable
+    ADD CONSTRAINT annotationstable_idannotationtype_fkey FOREIGN KEY (idannotationtype) REFERENCES annotationtypestable(id);
+
+
+--
+-- Name: annotationstable_idmethod_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable
+    ADD CONSTRAINT annotationstable_idmethod_fkey FOREIGN KEY (idmethod) REFERENCES methodtypestable(id);
+
+
+--
+-- Name: annotationstable_iduser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY annotationstable
+    ADD CONSTRAINT annotationstable_iduser_fkey FOREIGN KEY (iduser) REFERENCES userstable(id);
+
+
+--
+-- Name: experimentstable_userid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY experimentstable
+    ADD CONSTRAINT experimentstable_userid_fkey FOREIGN KEY (userid) REFERENCES userstable(id);
+
+
+--
+-- Name: ontologysynonymtable_idontology_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologysynonymtable
+    ADD CONSTRAINT ontologysynonymtable_idontology_fkey FOREIGN KEY (idontology) REFERENCES ontologytable(id);
+
+
+--
+-- Name: ontologytreestructuretable_ontologyid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologytreestructuretable
+    ADD CONSTRAINT ontologytreestructuretable_ontologyid_fkey FOREIGN KEY (ontologyid) REFERENCES ontologytable(id);
+
+
+--
+-- Name: ontologytreestructuretable_ontologynameid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologytreestructuretable
+    ADD CONSTRAINT ontologytreestructuretable_ontologynameid_fkey FOREIGN KEY (ontologynameid) REFERENCES ontologynamestable(id);
+
+
+--
+-- Name: ontologytreestructuretable_ontologyparentid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY ontologytreestructuretable
+    ADD CONSTRAINT ontologytreestructuretable_ontologyparentid_fkey FOREIGN KEY (ontologyparentid) REFERENCES ontologytable(id);
+
+
+--
+-- Name: primerstable_iduser_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY primerstable
+    ADD CONSTRAINT primerstable_iduser_fkey FOREIGN KEY (iduser) REFERENCES userstable(id);
+
+
+--
+-- Name: sequencesannotationtable_sequenceid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY sequencesannotationtable
+    ADD CONSTRAINT sequencesannotationtable_sequenceid_fkey FOREIGN KEY (seqid) REFERENCES sequencestable(id);
+
+
+--
+-- Name: sequencestable_idprimer_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY sequencestable
+    ADD CONSTRAINT sequencestable_idprimer_fkey FOREIGN KEY (idprimer) REFERENCES primerstable(id);
+
+
+--
+-- Name: wholeseqidstable_dbbactid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY wholeseqidstable
+    ADD CONSTRAINT wholeseqidstable_dbbactid_fkey FOREIGN KEY (dbbactid) REFERENCES sequencestable(id);
+
+
+--
+-- Name: wholeseqidstable_dbid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY wholeseqidstable
+    ADD CONSTRAINT wholeseqidstable_dbid_fkey FOREIGN KEY (dbid) REFERENCES wholeseqdatabasetable("dbId");
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: amnon
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM amnon;
+GRANT ALL ON SCHEMA public TO amnon;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
