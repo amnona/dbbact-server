@@ -23,20 +23,10 @@ However, you may want to locally install dbBact in order to test new functions, 
 
 2. Create the dbBact conda environment:
 ```
- conda create -n dbbact2 python=3.6 numpy matplotlib scipy jupyter statsmodels
+ conda create -n dbbact2 python=3.6 numpy matplotlib scipy jupyter statsmodels psycopg2
 
  source acticate dbbact
  ```
 
-3. install more required python packages:
-
-  ```pip install flask-cors
-  
-  pip install image
-  
-  pip install git+git://github.com/amueller/word_cloud
-  
-  pip install psycopg2
- ```
 3. Clone the dbbact github repository
   git clone 
