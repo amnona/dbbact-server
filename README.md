@@ -1,4 +1,4 @@
-# dbBact
+# dbbact-server
 
 This is the REST-API server for the dbBact open microbiome knowledge-base.
 
