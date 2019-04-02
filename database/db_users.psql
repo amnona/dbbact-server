@@ -1,0 +1,60 @@
+--
+-- Name: usersprivatetable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+CREATE TABLE usersprivatetable (
+    id integer NOT NULL,
+    passwordhash text,
+    name text,
+    description text,
+    isactive boolean,
+    attemptscounter integer,
+    email text,
+    shareemail text,
+    isadmin text,
+    tempcodehash text,
+    recoveryattemptscounter integer,
+    username text
+);
+
+
+ALTER TABLE public.usersprivatetable OWNER TO dbbact;
+
+--
+-- Data for Name: usersprivatetable; Type: TABLE DATA; Schema: public; Owner: dbbact
+--
+
+COPY usersprivatetable (id, passwordhash, name, description, isactive, attemptscounter, email, shareemail, isadmin, tempcodehash, recoveryattemptscounter, username) FROM stdin;
+4	$2a$06$goiP6AChLtSyVIGnUwZVl.XZJh0d2.cmPZ6A1HtRJrBf6pzlY4wuC		Citizen science	t	0		n	\N	\N	0	test_user
+0	$2a$06$KNMw2Tjs8MF2RKL2O9UeGuyy9/lJBaouVN5byaLo/Sm33OMf7Uk3K	na	unknown user	\N	0	\N	\N	\N	\N	\N	na
+\.
+
+
+--
+-- Name: usersprivatetable_pkey; Type: CONSTRAINT; Schema: public; Owner: dbbact; Tablespace: 
+--
+
+ALTER TABLE ONLY usersprivatetable
+    ADD CONSTRAINT usersprivatetable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: usersprivatetable_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY usersprivatetable
+    ADD CONSTRAINT usersprivatetable_id_fkey FOREIGN KEY (id) REFERENCES userstable(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: usersprivatetable_username_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbbact
+--
+
+ALTER TABLE ONLY usersprivatetable
+    ADD CONSTRAINT usersprivatetable_username_fkey FOREIGN KEY (username) REFERENCES userstable(username) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- PostgreSQL database dump complete
+--
+

@@ -1,0 +1,2 @@
+CREATE USER dbbact WITH PASSWORD 'magNiv' CREATEDB;
+CREATE DATABASE dbbact WITH owner=dbbact;

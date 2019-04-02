@@ -6,7 +6,7 @@ maxfailedattempt = 3
 
 def getUserId(con, cur, user, password):
     """
-    Get the user id after autontication
+    Get the user id after authentication
 
     input:
     con,cur : database connection and cursor
@@ -24,11 +24,11 @@ def getUserId(con, cur, user, password):
         user id  >= 0 if the user exist
     """
     try:
-        debug(1, 'SELECT id,attemptscounter FROM userstable WHERE username=%s' % user)
-        cur.execute('SELECT id,attemptscounter FROM userstable WHERE username=%s', [user])
+        debug(1, 'SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=%s' % user)
+        cur.execute('SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=%s', [user])
         if cur.rowcount == 0:
-            debug(3, 'user %s was not found in userstable' % [user])
-            return 'user %s was not found in userstable' % [user], -1
+            debug(3, 'user %s was not found in UsersPrivateTable' % [user])
+            return 'user %s was not found in UsersPrivateTable' % [user], -1
         else:
             # save the user id
             row = cur.fetchone()
@@ -39,7 +39,7 @@ def getUserId(con, cur, user, password):
                 debug(5, 'user %s is locked after several login attempts' % [user])
                 return 'user %s is locked after several login attempts' % [user], -3
             # user exist and not locked , try to log in
-            cur.execute('SELECT id FROM userstable WHERE (username=%s and passwordhash = crypt(%s, passwordhash))', [user, password])
+            cur.execute('SELECT id FROM UsersPrivateTable WHERE (username=%s and passwordhash = crypt(%s, passwordhash))', [user, password])
             if cur.rowcount == 0:
                 # increase the failure attempt counter
                 failAttemptCounter = failAttemptCounter + 1
@@ -59,6 +59,7 @@ def getUserId(con, cur, user, password):
         return "error %s enountered in GetUserId" % e, -4
 
     return "", userId
+
 
 def getUserIdRecover(con, cur, user, recoverycode):
     """
@@ -80,19 +81,19 @@ def getUserIdRecover(con, cur, user, recoverycode):
         user id  >= 0 if the user exist
     """
     try:
-        debug(1, 'SELECT id FROM userstable WHERE username=%s' % user)
-        cur.execute('SELECT id FROM userstable WHERE username=%s', [user])
+        debug(1, 'SELECT id FROM UsersPrivateTable WHERE username=%s' % user)
+        cur.execute('SELECT id FROM UsersPrivateTable WHERE username=%s', [user])
         if cur.rowcount == 0:
-            debug(3, 'user %s was not found in userstable' % [user])
-            return 'user %s was not found in userstable' % [user], -1
+            debug(3, 'user %s was not found in UsersPrivateTable' % [user])
+            return 'user %s was not found in UsersPrivateTable' % [user], -1
         else:
             # save the user id
             row = cur.fetchone()
             tempUserId = row[0]
-            
+
             # user exist and not locked , try to log in
-            debug(3,'SELECT id FROM userstable WHERE (username=%s and tempcodehash = crypt(%s, tempcodehash))' % (user, recoverycode))
-            cur.execute('SELECT id FROM userstable WHERE (username=%s and tempcodehash = crypt(%s, tempcodehash))', [user, recoverycode])
+            debug(3, 'SELECT id FROM UsersPrivateTable WHERE (username=%s and tempcodehash = crypt(%s, tempcodehash))' % (user, recoverycode))
+            cur.execute('SELECT id FROM UsersPrivateTable WHERE (username=%s and tempcodehash = crypt(%s, tempcodehash))', [user, recoverycode])
             if cur.rowcount == 0:
                 # increase the failure attempt counter
                 debug(3, 'invalid recovery code for user %s' % [user])
@@ -106,6 +107,7 @@ def getUserIdRecover(con, cur, user, recoverycode):
         return "error %s enountered in getUserIdRecover" % e, -4
 
     return "", userId
+
 
 def isUserExist(con, cur, user):
     """
@@ -124,10 +126,10 @@ def isUserExist(con, cur, user):
         -4 exception
     """
     try:
-        debug(1, 'SELECT id,attemptscounter FROM userstable WHERE username=%s' % user)
-        cur.execute('SELECT id,attemptscounter FROM userstable WHERE username=%s', [user])
+        debug(1, 'SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=%s' % user)
+        cur.execute('SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=%s', [user])
         if cur.rowcount == 0:
-            debug(3, 'user %s was not found in userstable' % [user])
+            debug(3, 'user %s was not found in UsersPrivateTable' % [user])
             return "", 0
         else:
             return "", 1
@@ -155,11 +157,11 @@ def isAdmin(con, cur, user):
         -4 exception
     """
     try:
-        debug(1, 'SELECT isadmin FROM userstable WHERE username=%s' % user)
-        cur.execute('SELECT isadmin FROM userstable WHERE username=%s', [user])
+        debug(1, 'SELECT isadmin FROM UsersPrivateTable WHERE username=%s' % user)
+        cur.execute('SELECT isadmin FROM UsersPrivateTable WHERE username=%s', [user])
         if cur.rowcount == 0:
-            debug(3, 'user %s was not found in userstable' % [user])
-            return 'user %s was not found in userstable' % [user], -1
+            debug(3, 'user %s was not found in UsersPrivateTable' % [user])
+            return 'user %s was not found in UsersPrivateTable' % [user], -1
         else:
             admin = cur.fetchone()[0]
             if admin and not admin.isspace():
@@ -183,9 +185,8 @@ def setUserLoginAttempts(con, cur, usrid, val):
 
     output:
     """
-    returnVal = 0
-    debug(3, 'update userstable set attemptscounter=%s WHERE id=%s' % (val, usrid))
-    cur.execute('update userstable set attemptscounter=%s WHERE id=%s', [val, usrid])
+    debug(3, 'update UsersPrivateTable set attemptscounter=%s WHERE id=%s' % (val, usrid))
+    cur.execute('update UsersPrivateTable set attemptscounter=%s WHERE id=%s', [val, usrid])
     con.commit()
 
 
@@ -200,10 +201,10 @@ def setUserLoginAttemptsByName(con, cur, username, val):
 
     output:
     """
-    returnVal = 0
-    debug(3, 'update userstable set attemptscounter=%s WHERE username=%s' % (val, username))
-    cur.execute('update userstable set attemptscounter=%s WHERE username=%s', [val, username])
+    debug(3, 'update UsersPrivateTable set attemptscounter=%s WHERE username=%s' % (val, username))
+    cur.execute('update UsersPrivateTable set attemptscounter=%s WHERE username=%s', [val, username])
     con.commit()
+
 
 def setUserRecoveryAttemptsByName(con, cur, username, val):
     """
@@ -216,10 +217,10 @@ def setUserRecoveryAttemptsByName(con, cur, username, val):
 
     output:
     """
-    returnVal = 0
-    debug(3, 'update userstable set recoveryattemptscounter=%s WHERE username=%s' % (val, username))
-    cur.execute('update userstable set recoveryattemptscounter=%s WHERE username=%s', [val, username])
+    debug(3, 'update UsersPrivateTable set recoveryattemptscounter=%s WHERE username=%s' % (val, username))
+    cur.execute('update UsersPrivateTable set recoveryattemptscounter=%s WHERE username=%s', [val, username])
     con.commit()
+
 
 def getUserLoginAttempts(con, cur, usrid):
     """
@@ -234,13 +235,14 @@ def getUserLoginAttempts(con, cur, usrid):
         return the number of failed attempts for a given user
     """
     returnVal = 0
-    cur.execute('SELECT attemptscounter FROM userstable WHERE id=%s', [usrid])
+    cur.execute('SELECT attemptscounter FROM UsersPrivateTable WHERE id=%s', [usrid])
     if cur.rowcount == 0:
-        debug(6, 'cant find user %s' % [user])
+        debug(6, 'cant find userid %s' % [usrid])
         returnVal = 0
     else:
         returnVal = cur.fetchone()[0]
     return returnVal
+
 
 def getUserRecoveryAttempts(con, cur, usrid):
     """
@@ -255,15 +257,16 @@ def getUserRecoveryAttempts(con, cur, usrid):
         return the number of failed attempts for a given user
     """
     returnVal = 0
-    cur.execute('SELECT recoveryattemptscounter FROM userstable WHERE id=%s', [usrid])
+    cur.execute('SELECT recoveryattemptscounter FROM UsersPrivateTable WHERE id=%s', [usrid])
     if cur.rowcount == 0:
-        debug(6, 'cant find user %s' % [user])
+        debug(6, 'cant find userid %s' % [usrid])
         returnVal = 0
     else:
         returnVal = cur.fetchone()[0]
         if not returnVal:
             returnVal = 0
     return returnVal
+
 
 def getUserRecoveryAttemptsByName(con, cur, name):
     """
@@ -278,7 +281,7 @@ def getUserRecoveryAttemptsByName(con, cur, name):
         return the number of failed attempts for a given user
     """
     returnVal = 0
-    cur.execute('SELECT recoveryattemptscounter FROM userstable WHERE username=%s', [name])
+    cur.execute('SELECT recoveryattemptscounter FROM UsersPrivateTable WHERE username=%s', [name])
     if cur.rowcount == 0:
         debug(6, 'cant find user %s' % [name])
         returnVal = -1
@@ -288,9 +291,12 @@ def getUserRecoveryAttemptsByName(con, cur, name):
             returnVal = 0
     return returnVal
 
+
 def addUser(con, cur, user, pwd, name, description, mail, publish):
     """
     Add new user
+    Adds the new user both to the userstable and usersprivatetable
+    userstable is used for the foreign keys and is exported in the dbbact backup. usersprivatetable contains the private info, and is not exported.
 
     input:
     con,cur : database connection and cursor
@@ -325,10 +331,16 @@ def addUser(con, cur, user, pwd, name, description, mail, publish):
     isactive = "y"
     attemptscounter = 0
     try:
-        debug(3, "insert into userstable (username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (%s, crypt(%s, gen_salt('bf')), %s, %s , %s, %s, %s, %s)" % (user, pwd, name, description, isactive, publish, mail, attemptscounter))
-        cur.execute("insert into userstable (username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (%s, crypt(%s, gen_salt('bf')), %s, %s , %s, %s, %s, %s)", [user, pwd, name, description, isactive, publish, mail, attemptscounter])
+        # add username to the public users table and get the resulting id
+        cur.execute("INSERT INTO UsersTable (username) VALUES (%s)", [user])
+        cur.execute("SELECT id FROM UsersTable WHERE username=%s", [user])
+        cid = cur.fetchone()[0]
+        # add private data to UsersPrivateTalbe
+        debug(3, "insert into UsersPrivateTable (username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (%s, crypt(%s, gen_salt('bf')), %s, %s , %s, %s, %s, %s)" % (user, pwd, name, description, isactive, publish, mail, attemptscounter))
+        cur.execute("insert into UsersPrivateTable (id, username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (%s, %s, crypt(%s, gen_salt('bf')), %s, %s , %s, %s, %s, %s)", [cid, user, pwd, name, description, isactive, publish, mail, attemptscounter])
         con.commit()
         return "", 1
+
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in addUser" % e)
         return ("error %s enountered in addUser" % e, -4)
@@ -365,13 +377,14 @@ def updateNewPassword(con, cur, user, newpwd):
 
     # default values
     try:
-        debug(3, "update userstable set passwordhash = crypt(%s, gen_salt('bf')) where username=%s" % (newpwd, user))
-        cur.execute("update userstable set passwordhash = crypt(%s, gen_salt('bf')) where username=%s", [newpwd, user])
+        debug(3, "update UsersPrivateTable set passwordhash = crypt(%s, gen_salt('bf')) where username=%s" % (newpwd, user))
+        cur.execute("update UsersPrivateTable set passwordhash = crypt(%s, gen_salt('bf')) where username=%s", [newpwd, user])
         con.commit()
         return "", 1
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in addUser" % e)
         return ("error %s enountered in addUser" % e, -4)
+
 
 def updateNewTempcode(con, cur, user, tempcode):
     """
@@ -404,8 +417,8 @@ def updateNewTempcode(con, cur, user, tempcode):
 
     # default values
     try:
-        debug(3, "update userstable set tempcodehash = crypt(%s, gen_salt('bf')) where username=%s" % (tempcode, user))
-        cur.execute("update userstable set tempcodehash = crypt(%s, gen_salt('bf')) where username=%s", [tempcode, user])
+        debug(3, "update UsersPrivateTable set tempcodehash = crypt(%s, gen_salt('bf')) where username=%s" % (tempcode, user))
+        cur.execute("update UsersPrivateTable set tempcodehash = crypt(%s, gen_salt('bf')) where username=%s", [tempcode, user])
         con.commit()
         return "", 1
     except psycopg2.DatabaseError as e:
@@ -444,8 +457,8 @@ def getMail(con, cur, user):
         return ("user %s doesnt exist" % user, -2)
     # default values
     try:
-        debug(1, 'SELECT email FROM userstable WHERE username=%s' % user)
-        cur.execute('SELECT email FROM userstable WHERE username=%s', [user])
+        debug(1, 'SELECT email FROM UsersPrivateTable WHERE username=%s' % user)
+        cur.execute('SELECT email FROM UsersPrivateTable WHERE username=%s', [user])
         if cur.rowcount > 0:
             email = cur.fetchone()[0]
             if email and not email.isspace():
@@ -483,8 +496,8 @@ def getUserInformation(con, cur, userid):
         return ("user id can't be negative", None)
 
     try:
-        debug(1, 'SELECT * userstable WHERE id=%s' % userid)
-        cur.execute('SELECT * FROM userstable WHERE id=%s', [userid])
+        debug(1, 'SELECT * UsersPrivateTable WHERE id=%s' % userid)
+        cur.execute('SELECT * FROM UsersPrivateTable WHERE id=%s', [userid])
         if cur.rowcount > 0:
             data = {}
             res = cur.fetchone()
@@ -505,45 +518,3 @@ def getUserInformation(con, cur, userid):
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in getUserInformation" % e)
         return ("error %s enountered in getUserInformation" % e, None)
-
-
-"""
-def addTempUsers(con,cur):
-
-    pwd1 = "ptest1"
-    pwd2 = "ptest2"
-    pwd3 = "ptest3"
-
-    sql1 = "insert into  annotationschematest.userstable (username, passwordhash,name,description,isactive) values ('user1', crypt('puser1', gen_salt('bf')), 'user1 name', 'user1 description' , true)"
-    sql2 = "insert into  annotationschematest.userstable (username, passwordhash,name,description,isactive) values ('user2', crypt('puser2', gen_salt('bf')), 'user2 name', 'user2 description' , true)"
-    sql3 = "insert into  annotationschematest.userstable (username, passwordhash,name,description,isactive) values ('user3', crypt('puser3', gen_salt('bf')), 'user3 name', 'user3 description' , true)"
-    try:
-        cur.execute(sql1)
-        cur.execute(sql2)
-        cur.execute(sql3)
-        con.commit()
-        return ""
-    except psycopg2.DatabaseError as e:
-        debug(7,"error %s enountered in addTempUsers" % e)
-        return "error %s enountered in addTempUsers" % e
-
-def addTempUsers2(con,cur):
-
-    pwd1 = "ptest1"
-    pwd2 = "ptest2"
-    pwd3 = "ptest3"
-
-
-    sql1 = "insert into  annotationschematest.userstable (username, passwordhash,name,description,isactive) values ('user1', 'puser1', 'user1 name', 'user1 description' , true)"
-    sql2 = "insert into  annotationschematest.userstable (username, passwordhash,name,description,isactive) values ('user2', 'puser2', 'user2 name', 'user2 description' , true)"
-    sql3 = "insert into  annotationschematest.userstable (username, passwordhash,name,description,isactive) values ('user3', 'puser3', 'user3 name', 'user3 description' , true)"
-    try:
-        cur.execute(sql1)
-        cur.execute(sql2)
-        cur.execute(sql3)
-        con.commit()
-        return ""
-    except psycopg2.DatabaseError as e:
-        debug(7,"error %s enountered in addTempUsers" % e)
-        return "error %s enountered in addTempUsers" % e
-"""

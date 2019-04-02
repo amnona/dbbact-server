@@ -23,6 +23,21 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
+--
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA annotationschematest;
+
+
+--
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+
+
 SET search_path = public, pg_catalog;
 
 SET default_tablespace = '';
@@ -1648,12 +1663,12 @@ ALTER TABLE ONLY wholeseqidstable
 
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: amnon
+-- Name: public; Type: ACL; Schema: -; Owner: dbbact
 --
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM amnon;
-GRANT ALL ON SCHEMA public TO amnon;
+REVOKE ALL ON SCHEMA public FROM dbbact;
+GRANT ALL ON SCHEMA public TO dbbact;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
