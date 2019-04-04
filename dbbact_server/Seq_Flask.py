@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from . import dbsequences
 from . import dbannotations
 from . import dbontology
+from . import dbprimers
 from .utils import debug, getdoc
 from .autodoc import auto
 # NOTE: local flask_cors module, not pip installed!
@@ -291,6 +292,7 @@ def get_sequence_annotations():
         return('sequence parameter missing', 400)
     get_term_info = alldat.get('get_term_info', True)
     get_tax_info = alldat.get('get_tax_info', True)
+    region = alldat.get('region')
 
     taxonomy = None
     if get_tax_info:
@@ -298,7 +300,7 @@ def get_sequence_annotations():
         if err:
             taxonomy = 'error: err'
 
-    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id)
+    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
@@ -1094,11 +1096,62 @@ def get_primers():
         }
     '''
     debug(3, 'get_primers', request)
-    err, primers = dbsequences.get_primers(g.con, g.cur)
+    err, primers = dbprimers.get_primers(g.con, g.cur)
     if err:
         debug(6, err)
         return ('Problem geting primers. error=%s' % err, 400)
     res = json.dumps({'primers': primers})
+    return res
+
+
+@login_required
+@Seq_Flask_Obj.route('/sequences/add_primer_region', methods=['POST'])
+@auto.doc()
+def add_primer_region():
+    '''
+    Title: add_primer_region
+    Description : Add a new primer region (i.e. 'V4') to the primers table
+    URL: /sequences/add_primer_region
+    Method: POST
+    URL Params:
+    Data Params: JSON
+        {
+        'name': str
+            name of the region (i.e. 'v4')
+        'fprimer', 'rprimer': str, optional
+            name (i.e. '515f') or sequence pf the forward and reverse primers used for the region
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            "primers": list of dict of {
+                'primerid': int
+                    dbbact internal id of the primer region (i.e. 1 for v4, etc.)
+                'name': str,
+                    name of the primer region (i.e. 'v4', 'its1', etc.)
+                'fprimer': str
+                'rprimer: str
+                    name of the forward and reverse primers for the region (i.e. 515f, etc.)
+            }
+        }
+    '''
+    debug(3, 'get_primers', request)
+    try:
+        alldat = request.get_json()
+        regionname = alldat.get('name')
+        forwardprimer = alldat.get('fprimer', '')
+        reverseprimer = alldat.get('rprimer', '')
+    except Exception as e:
+        msg = 'missing parameters for add_primer_region'
+        debug(2, msg)
+        return(json.dumps(msg), 400)
+
+    err = dbprimers.AddPrimerRegion(g.con, g.cur, regionname=regionname, forwardprimer=forwardprimer, reverseprimer=reverseprimer, userid=current_user.user_id)
+    if err:
+        debug(6, err)
+        return ('Problem adding new region. error=%s' % err, 400)
+    res = json.dumps('ok')
     return res
 
 

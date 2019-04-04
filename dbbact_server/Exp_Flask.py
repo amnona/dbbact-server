@@ -1,6 +1,6 @@
 import json
 from flask import Blueprint, g, request
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from .utils import getdoc, debug
 from .autodoc import auto
@@ -11,6 +11,7 @@ from . import dbannotations
 Exp_Flask_Obj = Blueprint('Exp_Flask_Obj', __name__)
 
 
+@login_required
 @Exp_Flask_Obj.route('/experiments/add_details', methods=['GET', 'POST'])
 @auto.doc()
 def add_details():
@@ -78,22 +79,22 @@ def add_details():
     return("AddExperimentDetails failed", 400)
 
 
+@login_required
 @Exp_Flask_Obj.route('/experiments/get_id_by_list', methods=['GET'])
 @auto.doc()
 def get_id_by_list():
     """
     Title: Query experiment based on list of type/value:
-    Description: Get IDs of all experiments matching one of the fields in field/value pairs (i.e. "Pubmedid","111222")
+    Description: Get IDs of all experiments matching one of the field/value pairs (i.e. "Pubmedid","111222")
+                 Similar to get_id but pairs are supplied as two arrays instead of list of pairs
     URL: /experimets/get_id_by_list
     Method: GET
     URL Params: JSON
         {
-            details : list of tuples [type,value] of str where:
-                type : str
-                    the detail type (i.e. "pubmedid"/"author"/etc.)
-                    (type from ExperimentsTable)
-                value : str
-                    the detail value (i.e. "john smith"/"pmid003344"/etc.)
+            'nameStrArr': list of str
+                list of field names
+            'valueStrArr': list of str
+                corresponding values
         }
     Success Response:
         Code : 200
@@ -110,26 +111,31 @@ def get_id_by_list():
             If study is private, return only if user is authenticated and created the study. If user not authenticated, do not return it in the list
             If study is not private, return it (no need for authentication)
     """
-    debug(3, 'experiments/get_id_by_list', request)
-    alldat = request.get_json()
-    nameArr = alldat.get('nameStrArr')
-    valueArr = alldat.get('valueStrArr')
+    debug(3, 'experiments/get_id_by_list')
+    try:
+        alldat = request.get_json()
+        nameArr = alldat.get('nameStrArr')
+        valueArr = alldat.get('valueStrArr')
+    except Exception as e:
+        debug(2, e)
+        return json.dumps({'expId': [], 'errorCode': e, 'errorText': e.message})
 
     if (nameArr is None) or (valueArr is None):
-        return('no details')
-    err, expId = dbexperiments.GetExperimentIdByVals(g.con, g.cur, nameArr, valueArr, userid=current_user.user_id)
+        return json.dumps({'expId': [], 'errorCode': 'no details supplied', 'errorText': 'no details supplied'})
+    err, expId = dbexperiments.GetExperimentIdByVals(g.con, g.cur, nameArr, valueArr, logic='any', userid=current_user.user_id)
     if not err:
         return json.dumps({'expId': expId, 'errorCode': 0, 'errorText': ''})
     else:
         return json.dumps({'expId': expId, 'errorCode': expId, 'errorText': err})
 
 
+@login_required
 @Exp_Flask_Obj.route('/experiments/get_id', methods=['GET'])
 @auto.doc()
 def get_id():
     """
     Title: Query experiment based on type/value:
-    Description: Get IDs of all experiments matching a field/value pair (i.e. "Pubmedid","111222")
+    Description: Get IDs of all experiments matching one of the field/value pairs (i.e. "Pubmedid","111222")
     URL: /experimets/get_id
     Method: GET
     URL Params: JSON
@@ -161,13 +167,14 @@ def get_id():
     details = alldat.get('details')
     if details is None:
         return('no details')
-    err, cids = dbexperiments.GetExperimentId(g.con, g.cur, details, userid=current_user.user_id)
+    err, cids = dbexperiments.GetExperimentId(g.con, g.cur, details, logic='any', userid=current_user.user_id)
     if not err:
         return json.dumps({'expId': cids})
     else:
         return (err, 400)
 
 
+@login_required
 @Exp_Flask_Obj.route('/experiments/get_details', methods=['GET'])
 @auto.doc()
 def get_details():

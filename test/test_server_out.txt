@@ -1,143 +1,617 @@
-[2019-04-03 23:45:26 +0300] [26488] [INFO] Starting gunicorn 19.9.0
-[2019-04-03 23:45:26 +0300] [26488] [INFO] Listening at: http://127.0.0.1:5002 (26488)
-[2019-04-03 23:45:26 +0300] [26488] [INFO] Using worker: sync
-[2019-04-03 23:45:26 +0300] [26491] [INFO] Booting worker with pid: 26491
-[2019-04-03 23:45:26 +0300] [26492] [INFO] Booting worker with pid: 26492
-[2019-04-03 23:45:26 +0300] [26493] [INFO] Booting worker with pid: 26493
-[2019-04-03 23:45:26 +0300] [26494] [INFO] Booting worker with pid: 26494
-[2019-04-03 23:45:26] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
-[2019-04-03 23:45:26] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
-[2019-04-03 23:45:26] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/register_user
-[2019-04-03 23:45:26] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:26] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:26] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:26] [1] [dbuser.py:isUserExist:129] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
-[2019-04-03 23:45:26] [3] [dbuser.py:isUserExist:132] user ['test1'] was not found in UsersPrivateTable
-[2019-04-03 23:45:26] [3] [dbuser.py:addUser:340] insert into UsersPrivateTable (username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (test1, crypt(secret, gen_salt('bf')), mr test, None , y, n, test@test.com, 0)
-[2019-04-03 23:45:26] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
-[2019-04-03 23:45:26] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
-[2019-04-03 23:45:26] [2] [Users_Flask.py:register_user:158] Added user completed successfully
-[2019-04-03 23:45:26] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/register_user
-[2019-04-03 23:45:26] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:26] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:26] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:26] [1] [dbuser.py:isUserExist:129] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
-[2019-04-03 23:45:26] [5] [dbuser.py:addUser:328] Cannot add user test1. User already exists
-[2019-04-03 23:45:27] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/register_user
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [1] [dbuser.py:isUserExist:129] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test2
-[2019-04-03 23:45:27] [3] [dbuser.py:isUserExist:132] user ['test2'] was not found in UsersPrivateTable
-[2019-04-03 23:45:27] [3] [dbuser.py:addUser:340] insert into UsersPrivateTable (username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (test2, crypt(secret2, gen_salt('bf')), mr test2, None , y, y, test2@test.com, 0)
-[2019-04-03 23:45:27] [2] [Users_Flask.py:register_user:158] Added user completed successfully
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/get_user_public_information
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserInformation:502] SELECT * UsersPrivateTable WHERE username=test1
-[2019-04-03 23:45:27] [2] [Users_Flask.py:get_user_public_information:89] 
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/get_user_public_information
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserInformation:502] SELECT * UsersPrivateTable WHERE username=test2
-[2019-04-03 23:45:27] [2] [Users_Flask.py:get_user_public_information:89] 
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/add_details
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [3] [Exp_Flask.py:add_details:59] [IP: 127.0.0.1] experiments/add_details
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'expID': None, 'details': [['name', 'test1'], ['SRA', 'PRJ1']]}
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is None
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
-[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/add_details
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [3] [Exp_Flask.py:add_details:59] [IP: 127.0.0.1] experiments/add_details
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'expID': None, 'details': [['name', 'test2'], ['SRA', 'PRJ2']], 'user': 'test1', 'pwd': 'secret'}
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is test1
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['test1', 1]
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=1
-[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=test1
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/add_details
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [3] [Exp_Flask.py:add_details:59] [IP: 127.0.0.1] experiments/add_details
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'expID': None, 'details': [['name', 'test3'], ['SRA', 'PRJ3']], 'user': 'test1', 'pwd': 'wrongpassword'}
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is test1
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
-[2019-04-03 23:45:27] [3] [dbuser.py:getUserId:46] increment failed attempt for user test1 , fail attempt = 1
-[2019-04-03 23:45:27] [3] [dbuser.py:setUserLoginAttempts:188] update UsersPrivateTable set attemptscounter=1 WHERE id=1
-[2019-04-03 23:45:27] [3] [dbuser.py:getUserId:48] invalid password for user ['test1']
-[2019-04-03 23:45:27] [2] [Server_Main.py:load_user:133] user login for user test1 failed invalid password for user ['test1']
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:138] logged in as default user userid=0
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_experiments_list
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [3] [Exp_Flask.py:get_experiments_list:287] [IP: 127.0.0.1] experiments/get_experiments_list
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is None
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
-[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
-[2019-04-03 23:45:27] [1] [dbexperiments.py:GetExperimentsList:247] GetExperimentsList
-[2019-04-03 23:45:27] [1] [Exp_Flask.py:get_experiments_list:291] found 3 experiments for get_experiments_list
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_id
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [3] [Exp_Flask.py:get_id:159] [IP: 127.0.0.1] experiments/get_id
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'details': [['SRA', 'PRJ2']]}
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is None
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
-[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_id
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [3] [Exp_Flask.py:get_id:159] [IP: 127.0.0.1] experiments/get_id
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'details': [['SRA', 'PRJ4']]}
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is None
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
-[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
-[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
-[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
-[2019-04-03 23:45:27] [2] [dbexperiments.py:GetExperimentId:113] No experiments found matching all details
-[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/stats/stats
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
-[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
-[2019-04-03 23:45:27] [3] [DBStats_Flask.py:dbdstats:38] [IP: 127.0.0.1] dbstats
-[2019-04-03 23:45:27] [1] [dbstats.py:GetStats:18] Get db stats
-[2019-04-03 23:45:27] [2] [DBStats_Flask.py:dbdstats:41] Got statistics
-[2019-04-03 23:45:27 +0300] [26488] [INFO] Handling signal: term
-[2019-04-03 23:45:27 +0300] [26493] [INFO] Worker exiting (pid: 26493)
-[2019-04-03 23:45:27 +0300] [26494] [INFO] Worker exiting (pid: 26494)
-[2019-04-03 23:45:27 +0300] [26492] [INFO] Worker exiting (pid: 26492)
-[2019-04-03 23:45:27 +0300] [26491] [INFO] Worker exiting (pid: 26491)
+[2019-04-04 15:59:20 +0300] [51144] [INFO] Starting gunicorn 19.9.0
+[2019-04-04 15:59:20 +0300] [51144] [INFO] Listening at: http://127.0.0.1:5002 (51144)
+[2019-04-04 15:59:20 +0300] [51144] [INFO] Using worker: sync
+[2019-04-04 15:59:20 +0300] [51147] [INFO] Booting worker with pid: 51147
+[2019-04-04 15:59:20 +0300] [51149] [INFO] Booting worker with pid: 51149
+[2019-04-04 15:59:20 +0300] [51150] [INFO] Booting worker with pid: 51150
+[2019-04-04 15:59:20 +0300] [51153] [INFO] Booting worker with pid: 51153
+[2019-04-04 15:59:21] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
+[2019-04-04 15:59:21] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/register_user
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [1] [dbuser.py:isUserExist:129] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
+[2019-04-04 15:59:21] [3] [dbuser.py:isUserExist:132] user ['test1'] was not found in UsersPrivateTable
+[2019-04-04 15:59:21] [3] [dbuser.py:addUser:340] insert into UsersPrivateTable (username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (test1, crypt(secret, gen_salt('bf')), mr test, None , y, n, test@test.com, 0)
+[2019-04-04 15:59:21] [2] [Users_Flask.py:register_user:158] Added user completed successfully
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/register_user
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [1] [dbuser.py:isUserExist:129] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
+[2019-04-04 15:59:21] [5] [dbuser.py:addUser:328] Cannot add user test1. User already exists
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/register_user
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [1] [dbuser.py:isUserExist:129] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test2
+[2019-04-04 15:59:21] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
+[2019-04-04 15:59:21] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
+[2019-04-04 15:59:21] [3] [dbuser.py:isUserExist:132] user ['test2'] was not found in UsersPrivateTable
+[2019-04-04 15:59:21] [3] [dbuser.py:addUser:340] insert into UsersPrivateTable (username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (test2, crypt(secret2, gen_salt('bf')), mr test2, None , y, y, test2@test.com, 0)
+[2019-04-04 15:59:21] [2] [Users_Flask.py:register_user:158] Added user completed successfully
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/get_user_public_information
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserInformation:502] SELECT * UsersPrivateTable WHERE username=test1
+[2019-04-04 15:59:21] [2] [Users_Flask.py:get_user_public_information:89] 
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/get_user_public_information
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
+[2019-04-04 15:59:21] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserInformation:502] SELECT * UsersPrivateTable WHERE username=test2
+[2019-04-04 15:59:21] [2] [Users_Flask.py:get_user_public_information:89] 
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/add_details
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Exp_Flask.py:add_details:60] [IP: 127.0.0.1] experiments/add_details
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'expID': None, 'details': [['name', 'test1'], ['SRA', 'PRJ1']]}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/add_details
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
+[2019-04-04 15:59:21] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Exp_Flask.py:add_details:60] [IP: 127.0.0.1] experiments/add_details
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'expID': None, 'details': [['name', 'test2'], ['SRA', 'PRJ2']], 'user': 'test1', 'pwd': 'secret'}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is test1
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['test1', 1]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=1
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=test1
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/add_details
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Exp_Flask.py:add_details:60] [IP: 127.0.0.1] experiments/add_details
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'expID': None, 'details': [['name', 'test3'], ['SRA', 'PRJ3']], 'user': 'test1', 'pwd': 'wrongpassword'}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is test1
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
+[2019-04-04 15:59:21] [3] [dbuser.py:getUserId:46] increment failed attempt for user test1 , fail attempt = 1
+[2019-04-04 15:59:21] [3] [dbuser.py:setUserLoginAttempts:188] update UsersPrivateTable set attemptscounter=1 WHERE id=1
+[2019-04-04 15:59:21] [3] [dbuser.py:getUserId:48] invalid password for user ['test1']
+[2019-04-04 15:59:21] [2] [Server_Main.py:load_user:133] user login for user test1 failed invalid password for user ['test1']
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:138] logged in as default user userid=0
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_experiments_list
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Exp_Flask.py:get_experiments_list:294] [IP: 127.0.0.1] experiments/get_experiments_list
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbexperiments.py:GetExperimentsList:247] GetExperimentsList
+[2019-04-04 15:59:21] [1] [Exp_Flask.py:get_experiments_list:298] found 3 experiments for get_experiments_list
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_id
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Exp_Flask.py:get_id:165] [IP: 127.0.0.1] experiments/get_id
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'details': [['SRA', 'PRJ2']]}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_id
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Exp_Flask.py:get_id:165] [IP: 127.0.0.1] experiments/get_id
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'details': [['SRA', 'PRJ4']]}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [2] [dbexperiments.py:GetExperimentId:113] No experiments found matching all details
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_details
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Exp_Flask.py:get_details:209] [IP: 127.0.0.1] experiments/get_details
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'expId': 2}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbexperiments.py:GetDetailsFromExpId:219] GetDetailsFromExpId 2
+[2019-04-04 15:59:21] [2] [dbexperiments.py:GetDetailsFromExpId:227] Found 2 details for expid 2
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/sequences/add_primer_region
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Seq_Flask.py:add_primer_region:1139] [IP: 127.0.0.1] get_primers
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'name': 'V4', 'fprimer': '515f'}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [2] [dbprimers.py:AddPrimerRegion:94] primer region v4 added
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/sequences/add_primer_region
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Seq_Flask.py:add_primer_region:1139] [IP: 127.0.0.1] get_primers
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'name': 'v34'}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [2] [dbprimers.py:AddPrimerRegion:94] primer region v34 added
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/sequences/add_primer_region
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Seq_Flask.py:add_primer_region:1139] [IP: 127.0.0.1] get_primers
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'name': 'V4', 'fprimer': '520f'}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [2] [dbprimers.py:AddPrimerRegion:88] region v4 already exists in PrimersTable
+[2019-04-04 15:59:21] [6] [Seq_Flask.py:add_primer_region:1152] region v4 already exists in PrimersTalbe
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/sequences/get_primers
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Seq_Flask.py:get_primers:1098] [IP: 127.0.0.1] get_primers
+[2019-04-04 15:59:21] [1] [dbprimers.py:get_primers:20] get_primers
+[2019-04-04 15:59:21] [1] [dbprimers.py:get_primers:32] found 2 primers
+[2019-04-04 15:59:21] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/annotations/add
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:21] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:21] [3] [Annotation_Flask.py:add_annotations:83] [IP: 127.0.0.1] add_annotations
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:93] login request json: {'expId': 1, 'sequences': ['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'], 'region': 'v4', 'annotationType': 'common', 'description': 'test annotation1', 'annotationList': [['all', 'mus musculus']]}
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:21] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:21] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:21] [1] [dbsequences.py:AddSequences:42] primerid 1
+[2019-04-04 15:59:21] [1] [dbsequences.py:GetSequenceId:229] sequence AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA not found
+[2019-04-04 15:59:21] [1] [dbsequences.py:GetSequenceId:229] sequence TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT not found
+[2019-04-04 15:59:21] [3] [dbsequences.py:AddSequences:71] Added 2 sequences (out of 2)
+[2019-04-04 15:59:21] [1] [dbexperiments.py:TestExpIdExists:180] TestExpIdExists 1 userid 0
+[2019-04-04 15:59:21] [1] [dbexperiments.py:TestExpIdExists:188] expid 1 public - exists
+[2019-04-04 15:59:21] [2] [dbidval.py:GetIdFromDescription:45] value common found in table AnnotationTypesTable id 4
+[2019-04-04 15:59:21] [2] [dbannotations.py:AddAnnotation:259] added annotation id is 1. adding 1 annotationdetails
+[2019-04-04 15:59:21] [2] [dbidval.py:GetIdFromDescription:45] value all found in table AnnotationDetailsTypesTable id 3
+[2019-04-04 15:59:21] [2] [dbidval.py:GetIdFromDescription:36] value mus musculus not found in table OntologyTable
+[2019-04-04 15:59:21] [3] [dbannotations.py:AddAnnotationDetails:309] ontology term mus musculus not found
+[2019-04-04 15:59:21] [2] [dbidval.py:GetIdFromDescription:36] value mus musculus not found in table OntologyTable
+[2019-04-04 15:59:21] [2] [dbidval.py:AddItem:88] AddItem - added new item mus musculus. id is 1
+[2019-04-04 15:59:21] [2] [dbidval.py:GetIdFromDescription:36] value na not found in table OntologyTable
+[2019-04-04 15:59:21] [2] [dbidval.py:AddItem:88] AddItem - added new item na. id is 2
+[2019-04-04 15:59:21] [2] [dbidval.py:GetIdFromDescription:36] value scdb not found in table OntologyNamesTable
+[2019-04-04 15:59:21] [2] [dbidval.py:AddItem:88] AddItem - added new item scdb. id is 1
+[2019-04-04 15:59:21] [2] [dbontology.py:AddTerm:43] added ontology term mus musculus. id is 1
+[2019-04-04 15:59:21] [3] [dbannotations.py:AddAnnotationDetails:314] ontology term mus musculus added
+[2019-04-04 15:59:21] [1] [dbannotations.py:AddAnnotationDetails:317] Added 1 annotationlist items
+[2019-04-04 15:59:21] [2] [dbannotations.py:AddAnnotation:266] 1 annotationdetails added
+[2019-04-04 15:59:21] [2] [dbidval.py:GetIdFromDescription:45] value mus musculus found in table OntologyTable id 1
+[2019-04-04 15:59:21] [2] [dbontology.py:GetTreeParentsById:145] found 1 parentids for termid 1
+[2019-04-04 15:59:21] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 2 in table OntologyTable
+[2019-04-04 15:59:21] [3] [dbontology.py:GetTreeParentsById:140] termid 2 not found in ontologytree
+[2019-04-04 15:59:22] [2] [dbontology.py:GetParents:187] found 2 parents
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:354] term mus musculus parents ['mus musculus', 'na']
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:365] adding parent na
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:365] adding parent mus musculus
+[2019-04-04 15:59:22] [1] [dbannotations.py:AddAnnotationParents:370] Added 2 annotationparents items
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotation:273] 2 annotation parents added
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddSequenceAnnotations:61] Added 2 sequence annotations
+[2019-04-04 15:59:22] [2] [Annotation_Flask.py:add_annotations:106] added sequece annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/annotations/add
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Annotation_Flask.py:add_annotations:83] [IP: 127.0.0.1] add_annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:93] login request json: {'expId': 1, 'sequences': ['CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC', 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC'], 'region': 'v4', 'method': 'magic', 'annotationType': 'common', 'description': 'test annotation2', 'annotationList': [['all', 'feces'], ['all', 'dog']], 'user': 'test1', 'pwd': 'secret'}
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:99] username is test1
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:52] login succeed for user ['test1', 1]
+[2019-04-04 15:59:22] [3] [dbuser.py:getUserId:54] reset failed attempt for user [1]
+[2019-04-04 15:59:22] [3] [dbuser.py:setUserLoginAttempts:188] update UsersPrivateTable set attemptscounter=0 WHERE id=1
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=1
+[2019-04-04 15:59:22] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=test1
+[2019-04-04 15:59:22] [1] [dbsequences.py:AddSequences:42] primerid 1
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceId:229] sequence CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC not found
+[2019-04-04 15:59:22] [3] [dbsequences.py:AddSequences:71] Added 1 sequences (out of 2)
+[2019-04-04 15:59:22] [1] [dbexperiments.py:TestExpIdExists:180] TestExpIdExists 1 userid 1
+[2019-04-04 15:59:22] [1] [dbexperiments.py:TestExpIdExists:188] expid 1 public - exists
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value common found in table AnnotationTypesTable id 4
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:36] value magic not found in table MethodTypesTable
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:36] value magic not found in table MethodTypesTable
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:88] AddItem - added new item magic. id is 1
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotation:259] added annotation id is 2. adding 2 annotationdetails
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value all found in table AnnotationDetailsTypesTable id 3
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:36] value feces not found in table OntologyTable
+[2019-04-04 15:59:22] [3] [dbannotations.py:AddAnnotationDetails:309] ontology term feces not found
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:36] value feces not found in table OntologyTable
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:88] AddItem - added new item feces. id is 3
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value na found in table OntologyTable id 2
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:83] AddItem - item na already exists. id is 2
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value scdb found in table OntologyNamesTable id 1
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:83] AddItem - item scdb already exists. id is 1
+[2019-04-04 15:59:22] [2] [dbontology.py:AddTerm:43] added ontology term feces. id is 3
+[2019-04-04 15:59:22] [3] [dbannotations.py:AddAnnotationDetails:314] ontology term feces added
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value all found in table AnnotationDetailsTypesTable id 3
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:36] value dog not found in table OntologyTable
+[2019-04-04 15:59:22] [3] [dbannotations.py:AddAnnotationDetails:309] ontology term dog not found
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:36] value dog not found in table OntologyTable
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:88] AddItem - added new item dog. id is 4
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value na found in table OntologyTable id 2
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:83] AddItem - item na already exists. id is 2
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value scdb found in table OntologyNamesTable id 1
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:83] AddItem - item scdb already exists. id is 1
+[2019-04-04 15:59:22] [2] [dbontology.py:AddTerm:43] added ontology term dog. id is 4
+[2019-04-04 15:59:22] [3] [dbannotations.py:AddAnnotationDetails:314] ontology term dog added
+[2019-04-04 15:59:22] [1] [dbannotations.py:AddAnnotationDetails:317] Added 2 annotationlist items
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotation:266] 2 annotationdetails added
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value feces found in table OntologyTable id 3
+[2019-04-04 15:59:22] [2] [dbontology.py:GetTreeParentsById:145] found 1 parentids for termid 3
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 2 in table OntologyTable
+[2019-04-04 15:59:22] [3] [dbontology.py:GetTreeParentsById:140] termid 2 not found in ontologytree
+[2019-04-04 15:59:22] [2] [dbontology.py:GetParents:187] found 2 parents
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:354] term feces parents ['feces', 'na']
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value dog found in table OntologyTable id 4
+[2019-04-04 15:59:22] [2] [dbontology.py:GetTreeParentsById:145] found 1 parentids for termid 4
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 2 in table OntologyTable
+[2019-04-04 15:59:22] [3] [dbontology.py:GetTreeParentsById:140] termid 2 not found in ontologytree
+[2019-04-04 15:59:22] [2] [dbontology.py:GetParents:187] found 2 parents
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:354] term dog parents ['dog', 'na']
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:365] adding parent feces
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:365] adding parent na
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:365] adding parent dog
+[2019-04-04 15:59:22] [1] [dbannotations.py:AddAnnotationParents:370] Added 3 annotationparents items
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotation:273] 3 annotation parents added
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddSequenceAnnotations:61] Added 2 sequence annotations
+[2019-04-04 15:59:22] [2] [Annotation_Flask.py:add_annotations:106] added sequece annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/annotations/add
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Annotation_Flask.py:add_annotations:83] [IP: 127.0.0.1] add_annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:93] login request json: {'expId': 2, 'sequences': ['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE', 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'], 'region': 'V34', 'annotationType': 'other', 'description': 'test annotation3', 'annotationList': [['all', 'feces'], ['all', 'cat']]}
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:22] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbsequences.py:AddSequences:42] primerid 2
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceId:255] sequence aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa not found
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceId:229] sequence EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE not found
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceId:229] sequence ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff not found
+[2019-04-04 15:59:22] [3] [dbsequences.py:AddSequences:71] Added 3 sequences (out of 3)
+[2019-04-04 15:59:22] [1] [dbexperiments.py:TestExpIdExists:180] TestExpIdExists 2 userid 0
+[2019-04-04 15:59:22] [1] [dbexperiments.py:TestExpIdExists:188] expid 2 public - exists
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value other found in table AnnotationTypesTable id 6
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotation:259] added annotation id is 3. adding 2 annotationdetails
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value all found in table AnnotationDetailsTypesTable id 3
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value feces found in table OntologyTable id 3
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value all found in table AnnotationDetailsTypesTable id 3
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:36] value cat not found in table OntologyTable
+[2019-04-04 15:59:22] [3] [dbannotations.py:AddAnnotationDetails:309] ontology term cat not found
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:36] value cat not found in table OntologyTable
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:88] AddItem - added new item cat. id is 5
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value na found in table OntologyTable id 2
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:83] AddItem - item na already exists. id is 2
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value scdb found in table OntologyNamesTable id 1
+[2019-04-04 15:59:22] [2] [dbidval.py:AddItem:83] AddItem - item scdb already exists. id is 1
+[2019-04-04 15:59:22] [2] [dbontology.py:AddTerm:43] added ontology term cat. id is 5
+[2019-04-04 15:59:22] [3] [dbannotations.py:AddAnnotationDetails:314] ontology term cat added
+[2019-04-04 15:59:22] [1] [dbannotations.py:AddAnnotationDetails:317] Added 2 annotationlist items
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotation:266] 2 annotationdetails added
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value feces found in table OntologyTable id 3
+[2019-04-04 15:59:22] [2] [dbontology.py:GetTreeParentsById:145] found 1 parentids for termid 3
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 2 in table OntologyTable
+[2019-04-04 15:59:22] [3] [dbontology.py:GetTreeParentsById:140] termid 2 not found in ontologytree
+[2019-04-04 15:59:22] [2] [dbontology.py:GetParents:187] found 2 parents
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:354] term feces parents ['feces', 'na']
+[2019-04-04 15:59:22] [2] [dbidval.py:GetIdFromDescription:45] value cat found in table OntologyTable id 5
+[2019-04-04 15:59:22] [2] [dbontology.py:GetTreeParentsById:145] found 1 parentids for termid 5
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 2 in table OntologyTable
+[2019-04-04 15:59:22] [3] [dbontology.py:GetTreeParentsById:140] termid 2 not found in ontologytree
+[2019-04-04 15:59:22] [2] [dbontology.py:GetParents:187] found 2 parents
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:354] term cat parents ['cat', 'na']
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:365] adding parent feces
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:365] adding parent cat
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotationParents:365] adding parent na
+[2019-04-04 15:59:22] [1] [dbannotations.py:AddAnnotationParents:370] Added 3 annotationparents items
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddAnnotation:273] 3 annotation parents added
+[2019-04-04 15:59:22] [2] [dbannotations.py:AddSequenceAnnotations:61] Added 3 sequence annotations
+[2019-04-04 15:59:22] [2] [Annotation_Flask.py:add_annotations:106] added sequece annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/annotations/get_all_annotations
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Annotation_Flask.py:get_all_annotations:529] [IP: 127.0.0.1] get_all_annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:22] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAllAnnotations:1034] GetAllAnnotations for user 0
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAllAnnotations:1039] Found 3 annotations in dbBact
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:475] get annotation from id 1
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:481] [1, 1, 0, 4, 0, datetime.date(2019, 4, 4), 'test annotation1', 0, 'n', 2, 'na']
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table MethodTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table AgentTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description common for id 4 in table AnnotationTypesTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:427] get annotationdetails from id 1
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description mus musculus for id 1 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 1 term mus musculus
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:441] found 1 annotation details
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:475] get annotation from id 2
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:481] [2, 1, 1, 4, 1, datetime.date(2019, 4, 4), 'test annotation2', 0, 'n', 1, 'test1']
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description magic for id 1 in table MethodTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table AgentTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description common for id 4 in table AnnotationTypesTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:427] get annotationdetails from id 2
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description feces for id 3 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 3 term feces
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description dog for id 4 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 4 term dog
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:441] found 2 annotation details
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:475] get annotation from id 3
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:481] [3, 2, 0, 6, 0, datetime.date(2019, 4, 4), 'test annotation3', 0, 'n', 3, 'na']
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table MethodTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table AgentTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description other for id 6 in table AnnotationTypesTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:427] get annotationdetails from id 3
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description feces for id 3 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 3 term feces
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description cat for id 5 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 5 term cat
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:441] found 2 annotation details
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAllAnnotations:1047] Got details for 3 annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/annotations/get_annotation
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Annotation_Flask.py:get_annotation:444] [IP: 127.0.0.1] get_annotation
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:475] get annotation from id 2
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:481] [2, 1, 1, 4, 1, datetime.date(2019, 4, 4), 'test annotation2', 0, 'n', 1, 'test1']
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description magic for id 1 in table MethodTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table AgentTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description common for id 4 in table AnnotationTypesTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:427] get annotationdetails from id 2
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description feces for id 3 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 3 term feces
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description dog for id 4 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 4 term dog
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:441] found 2 annotation details
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/annotations/get_full_sequences
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Annotation_Flask.py:get_annotation_full_sequences:271] [IP: 127.0.0.1] get_annotation_full_sequences
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:93] login request json: {'annotationid': 1}
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:22] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetFullSequencesFromAnnotationID:731] GetSequencesFromAnnotationID for annotationid 1
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequencesFromAnnotationID:692] GetSequencesFromAnnotationID for annotationid 1
+[2019-04-04 15:59:22] [1] [dbannotations.py:IsAnnotationVisible:540] IsAnnotationVisible, annotationid 1, userid 0
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequencesFromAnnotationID:705] Found 2 sequences associated
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetFullSequencesFromAnnotationID:735] Found 2 sequences
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/annotations/get_sequences
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Annotation_Flask.py:get_annotation_sequences:223] [IP: 127.0.0.1] get_annotation_sequences
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:93] login request json: {'annotationid': 3}
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:22] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequencesFromAnnotationID:692] GetSequencesFromAnnotationID for annotationid 3
+[2019-04-04 15:59:22] [1] [dbannotations.py:IsAnnotationVisible:540] IsAnnotationVisible, annotationid 3, userid 0
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequencesFromAnnotationID:705] Found 3 sequences associated
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/sequences/get_annotations
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Seq_Flask.py:get_sequence_annotations:285] [IP: 127.0.0.1] get_sequence_annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:93] login request json: {'sequence': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'}
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:22] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceTaxonomy:953] GetSequenceTaxonomy sequence AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequenceAnnotations:609] GetSequenceAnnotations sequence AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequenceAnnotations:617] sequenceid=[4, 1]
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:475] get annotation from id 1
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:481] [1, 1, 0, 4, 0, datetime.date(2019, 4, 4), 'test annotation1', 0, 'n', 2, 'na']
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table MethodTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table AgentTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description common for id 4 in table AnnotationTypesTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:427] get annotationdetails from id 1
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description mus musculus for id 1 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 1 term mus musculus
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:441] found 1 annotation details
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:475] get annotation from id 3
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:481] [3, 2, 0, 6, 0, datetime.date(2019, 4, 4), 'test annotation3', 0, 'n', 3, 'na']
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table MethodTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table AgentTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description other for id 6 in table AnnotationTypesTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:427] get annotationdetails from id 3
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description feces for id 3 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 3 term feces
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description cat for id 5 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 5 term cat
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:441] found 2 annotation details
+[2019-04-04 15:59:22] [3] [dbannotations.py:GetSequenceAnnotations:629] found 2 annotations
+[2019-04-04 15:59:22] [1] [dbontology.py:get_annotations_term_counts:350] get_annotations_term_counts for 2 annotations
+[2019-04-04 15:59:22] [1] [dbontology.py:get_term_counts:312] get_term_counts for 3 terms
+[2019-04-04 15:59:22] [2] [dbontology.py:get_term_counts:319] Term feces not found in ontology table
+[2019-04-04 15:59:22] [2] [dbontology.py:get_term_counts:319] Term cat not found in ontology table
+[2019-04-04 15:59:22] [2] [dbontology.py:get_term_counts:319] Term mus musculus not found in ontology table
+[2019-04-04 15:59:22] [1] [dbontology.py:get_term_counts:326] found info for 0 terms
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/sequences/get_annotations
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Seq_Flask.py:get_sequence_annotations:285] [IP: 127.0.0.1] get_sequence_annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:93] login request json: {'sequence': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'}
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:22] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceTaxonomy:953] GetSequenceTaxonomy sequence AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceTaxonomy:959] taxonomy not found for sequence aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequenceAnnotations:609] GetSequenceAnnotations sequence AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequenceAnnotations:617] sequenceid=[4, 1]
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:475] get annotation from id 1
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:481] [1, 1, 0, 4, 0, datetime.date(2019, 4, 4), 'test annotation1', 0, 'n', 2, 'na']
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table MethodTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table AgentTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description common for id 4 in table AnnotationTypesTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:427] get annotationdetails from id 1
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description mus musculus for id 1 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 1 term mus musculus
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:441] found 1 annotation details
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:475] get annotation from id 3
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:481] [3, 2, 0, 6, 0, datetime.date(2019, 4, 4), 'test annotation3', 0, 'n', 3, 'na']
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table MethodTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table AgentTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description other for id 6 in table AnnotationTypesTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:427] get annotationdetails from id 3
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description feces for id 3 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 3 term feces
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description cat for id 5 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 5 term cat
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:441] found 2 annotation details
+[2019-04-04 15:59:22] [3] [dbannotations.py:GetSequenceAnnotations:629] found 2 annotations
+[2019-04-04 15:59:22] [1] [dbontology.py:get_annotations_term_counts:350] get_annotations_term_counts for 2 annotations
+[2019-04-04 15:59:22] [1] [dbontology.py:get_term_counts:312] get_term_counts for 3 terms
+[2019-04-04 15:59:22] [2] [dbontology.py:get_term_counts:319] Term feces not found in ontology table
+[2019-04-04 15:59:22] [2] [dbontology.py:get_term_counts:319] Term cat not found in ontology table
+[2019-04-04 15:59:22] [2] [dbontology.py:get_term_counts:319] Term mus musculus not found in ontology table
+[2019-04-04 15:59:22] [1] [dbontology.py:get_term_counts:326] found info for 0 terms
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/sequences/get_annotations
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Seq_Flask.py:get_sequence_annotations:285] [IP: 127.0.0.1] get_sequence_annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:93] login request json: {'sequence': 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'}
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:22] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceTaxonomy:953] GetSequenceTaxonomy sequence FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceTaxonomy:959] taxonomy not found for sequence ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequenceAnnotations:609] GetSequenceAnnotations sequence FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequenceAnnotations:617] sequenceid=[6]
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:475] get annotation from id 3
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationsFromID:481] [3, 2, 0, 6, 0, datetime.date(2019, 4, 4), 'test annotation3', 0, 'n', 3, 'na']
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table MethodTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description na for id 0 in table AgentTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description other for id 6 in table AnnotationTypesTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:427] get annotationdetails from id 3
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description feces for id 3 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 3 term feces
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description all for id 3 in table AnnotationDetailsTypesTable
+[2019-04-04 15:59:22] [1] [dbidval.py:GetDescriptionFromId:121] found description cat for id 5 in table OntologyTable
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:437] ontologyid 5 term cat
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetAnnotationDetails:441] found 2 annotation details
+[2019-04-04 15:59:22] [3] [dbannotations.py:GetSequenceAnnotations:629] found 1 annotations
+[2019-04-04 15:59:22] [1] [dbontology.py:get_annotations_term_counts:350] get_annotations_term_counts for 1 annotations
+[2019-04-04 15:59:22] [1] [dbontology.py:get_term_counts:312] get_term_counts for 2 terms
+[2019-04-04 15:59:22] [2] [dbontology.py:get_term_counts:319] Term feces not found in ontology table
+[2019-04-04 15:59:22] [2] [dbontology.py:get_term_counts:319] Term cat not found in ontology table
+[2019-04-04 15:59:22] [1] [dbontology.py:get_term_counts:326] found info for 0 terms
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/sequences/get_annotations
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [Seq_Flask.py:get_sequence_annotations:285] [IP: 127.0.0.1] get_sequence_annotations
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:93] login request json: {'sequence': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'region': 'pita'}
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-04 15:59:22] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-04 15:59:22] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceTaxonomy:953] GetSequenceTaxonomy sequence AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceTaxonomy:959] taxonomy not found for sequence aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+[2019-04-04 15:59:22] [1] [dbannotations.py:GetSequenceAnnotations:609] GetSequenceAnnotations sequence AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+[2019-04-04 15:59:22] [1] [dbsequences.py:GetSequenceId:255] sequence AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA not found
+[2019-04-04 15:59:22] [2] [dbannotations.py:GetSequenceAnnotations:612] Sequence AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA not found for GetSequenceAnnotations.
+[2019-04-04 15:59:22] [1] [dbontology.py:get_annotations_term_counts:350] get_annotations_term_counts for 0 annotations
+[2019-04-04 15:59:22] [1] [dbontology.py:get_term_counts:312] get_term_counts for 0 terms
+[2019-04-04 15:59:22] [1] [dbontology.py:get_term_counts:326] found info for 0 terms
+[2019-04-04 15:59:22] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/stats/stats
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-04 15:59:22] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-04 15:59:22] [3] [DBStats_Flask.py:dbdstats:38] [IP: 127.0.0.1] dbstats
+[2019-04-04 15:59:22] [1] [dbstats.py:GetStats:18] Get db stats
+[2019-04-04 15:59:22] [2] [DBStats_Flask.py:dbdstats:41] Got statistics
+[2019-04-04 15:59:22 +0300] [51144] [INFO] Handling signal: term
+[2019-04-04 15:59:22 +0300] [51153] [INFO] Worker exiting (pid: 51153)
+[2019-04-04 15:59:22 +0300] [51147] [INFO] Worker exiting (pid: 51147)
+[2019-04-04 15:59:22 +0300] [51149] [INFO] Worker exiting (pid: 51149)
 [['name', 'test1'], ['SRA', 'PRJ1']]
 [['name', 'test2'], ['SRA', 'PRJ2']]
 [['name', 'test3'], ['SRA', 'PRJ3']]
-[2019-04-03 23:45:27 +0300] [26488] [INFO] Shutting down: Master
+[2019-04-04 15:59:22 +0300] [51150] [INFO] Worker exiting (pid: 51150)
+[2019-04-04 15:59:23 +0300] [51144] [INFO] Shutting down: Master

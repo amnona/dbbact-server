@@ -400,7 +400,7 @@ def get_annotation():
             "userid" : int
                 The user id
                 (id from UsersTable)
-            "user" : str
+            "username" : str
                 name of the user who added this annotation
                 (userName from UsersTable)
             "date" : str (DD-MM-YYYY HH:MM:SS)

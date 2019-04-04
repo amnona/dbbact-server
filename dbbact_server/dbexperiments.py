@@ -28,31 +28,31 @@ def GetExperimentIdByVals(con, cur, arrName, arrValue, userid=None, logic='any')
     """
     try:
         expids = None
-        
+
         if len(arrName) == 0:
             debug(7, "GetExperimentID failed 1")
             return 'Number of search fields can\'t be 0', None
-        
+
         if len(arrName) != len(arrValue):
             debug(7, "GetExperimentID failed")
             return 'Number of fields in Name and Value arrays can\'t be different', None
-        
+
         sqlQuery = "SELECT distinct expId from ExperimentsTable where "
         for index in range(len(arrName)):
             dtype = arrName[index].lower()
             value = arrValue[index].lower()
             if index > 0 :
-                if logic=='all':
+                if logic == 'all':
                     sqlQuery = sqlQuery + " AND "
                 else:
                     sqlQuery = sqlQuery + " OR "
             sqlQuery = sqlQuery + ('(type = \'%s\' AND value = \'%s\')' % (dtype, value))
         print(sqlQuery)
-        
-        #Run the query
+
+        # Run the query
         cur.execute(sqlQuery)
-        
-        #If number of rows is bigger than 1, return 0
+
+        # If number of rows is bigger than 1, return 0
         data = cur.fetchall()
         if len(data) == 0:
             debug(7, "Can't find experiment")

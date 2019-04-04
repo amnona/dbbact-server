@@ -53,7 +53,7 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
     err, seqids = dbsequences.AddSequences(con, cur, sequences, primer=primer, commit=False)
     if err:
         return err, -1
-    err, annotationid = AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method, description, agenttype, private, userid, commit=False, numseqs=len(seqids))
+    err, annotationid = AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method, description, agenttype, private, userid, commit=False, numseqs=len(set(seqids)))
     if err:
         return err, -1
     for cseqid in seqids:

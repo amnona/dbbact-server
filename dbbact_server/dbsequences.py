@@ -1,7 +1,7 @@
 from collections import defaultdict
 import psycopg2
 
-from . import primers
+from . import dbprimers
 from .utils import debug
 from . import dbannotations
 
@@ -35,7 +35,7 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
     # get the primer region id
     seqids = []
     numadded = 0
-    idprimer = primers.GetIdFromName(con, cur, primer)
+    idprimer = dbprimers.GetIdFromName(con, cur, primer)
     if idprimer < 0:
         debug(2, 'primer %s not found' % primer)
         return "primer %s not found" % primer, None
@@ -975,33 +975,3 @@ def GetSequenceTaxonomy(con, cur, sequence, region=None, userid=0):
     # ctaxinfo = {'taxonomy': taxStr}
     # return '', ctaxinfo
     return '', taxStr
-
-
-def get_primers(con, cur):
-    '''Get information about all the sequencing primers used in dbbact
-
-    Returns
-    -------
-    primers: list of dict of {
-        'primerid': int
-            dbbact internal id of the primer region (i.e. 1 for v4, etc.)
-        'name': str,
-            name of the primer region (i.e. 'v4', 'its1', etc.)
-        'fprimer': str
-        'rprimer: str
-            name of the forward and reverse primers for the region (i.e. 515f, etc.)
-    '''
-    debug(1, 'get_primers')
-
-    primers = []
-    cur.execute('SELECT id, regionname, forwardprimer, reverseprimer FROM PrimersTable')
-    res = cur.fetchall()
-    for cres in res:
-        cprimer = {}
-        cprimer['primerid'] = cres[0]
-        cprimer['name'] = cres[1]
-        cprimer['fprimer'] = cres[2]
-        cprimer['rprimer'] = cres[3]
-        primers.append(cprimer)
-    debug(1, 'found %d primers' % len(primers))
-    return '', primers
