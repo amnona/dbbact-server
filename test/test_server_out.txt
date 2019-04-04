@@ -1,0 +1,143 @@
+[2019-04-03 23:45:26 +0300] [26488] [INFO] Starting gunicorn 19.9.0
+[2019-04-03 23:45:26 +0300] [26488] [INFO] Listening at: http://127.0.0.1:5002 (26488)
+[2019-04-03 23:45:26 +0300] [26488] [INFO] Using worker: sync
+[2019-04-03 23:45:26 +0300] [26491] [INFO] Booting worker with pid: 26491
+[2019-04-03 23:45:26 +0300] [26492] [INFO] Booting worker with pid: 26492
+[2019-04-03 23:45:26 +0300] [26493] [INFO] Booting worker with pid: 26493
+[2019-04-03 23:45:26 +0300] [26494] [INFO] Booting worker with pid: 26494
+[2019-04-03 23:45:26] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
+[2019-04-03 23:45:26] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
+[2019-04-03 23:45:26] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/register_user
+[2019-04-03 23:45:26] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:26] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:26] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:26] [1] [dbuser.py:isUserExist:129] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
+[2019-04-03 23:45:26] [3] [dbuser.py:isUserExist:132] user ['test1'] was not found in UsersPrivateTable
+[2019-04-03 23:45:26] [3] [dbuser.py:addUser:340] insert into UsersPrivateTable (username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (test1, crypt(secret, gen_salt('bf')), mr test, None , y, n, test@test.com, 0)
+[2019-04-03 23:45:26] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
+[2019-04-03 23:45:26] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
+[2019-04-03 23:45:26] [2] [Users_Flask.py:register_user:158] Added user completed successfully
+[2019-04-03 23:45:26] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/register_user
+[2019-04-03 23:45:26] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:26] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:26] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:26] [1] [dbuser.py:isUserExist:129] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
+[2019-04-03 23:45:26] [5] [dbuser.py:addUser:328] Cannot add user test1. User already exists
+[2019-04-03 23:45:27] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/register_user
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [1] [dbuser.py:isUserExist:129] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test2
+[2019-04-03 23:45:27] [3] [dbuser.py:isUserExist:132] user ['test2'] was not found in UsersPrivateTable
+[2019-04-03 23:45:27] [3] [dbuser.py:addUser:340] insert into UsersPrivateTable (username, passwordhash,name,description,isactive,shareemail,email,attemptscounter) values (test2, crypt(secret2, gen_salt('bf')), mr test2, None , y, y, test2@test.com, 0)
+[2019-04-03 23:45:27] [2] [Users_Flask.py:register_user:158] Added user completed successfully
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/get_user_public_information
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [6] [Server_Main.py:gunicorn:172] starting dbbact rest-api server using gunicorn, debug_level=1
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [5] [Server_Main.py:set_env_params:196] using value pita for env. parameter DBBACT_SERVER_TYPE
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserInformation:502] SELECT * UsersPrivateTable WHERE username=test1
+[2019-04-03 23:45:27] [2] [Users_Flask.py:get_user_public_information:89] 
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/users/get_user_public_information
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserInformation:502] SELECT * UsersPrivateTable WHERE username=test2
+[2019-04-03 23:45:27] [2] [Users_Flask.py:get_user_public_information:89] 
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/add_details
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [3] [Exp_Flask.py:add_details:59] [IP: 127.0.0.1] experiments/add_details
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'expID': None, 'details': [['name', 'test1'], ['SRA', 'PRJ1']]}
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/add_details
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [3] [Exp_Flask.py:add_details:59] [IP: 127.0.0.1] experiments/add_details
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'expID': None, 'details': [['name', 'test2'], ['SRA', 'PRJ2']], 'user': 'test1', 'pwd': 'secret'}
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is test1
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['test1', 1]
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=1
+[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=test1
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/add_details
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [3] [Exp_Flask.py:add_details:59] [IP: 127.0.0.1] experiments/add_details
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'expID': None, 'details': [['name', 'test3'], ['SRA', 'PRJ3']], 'user': 'test1', 'pwd': 'wrongpassword'}
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is test1
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=test1
+[2019-04-03 23:45:27] [3] [dbuser.py:getUserId:46] increment failed attempt for user test1 , fail attempt = 1
+[2019-04-03 23:45:27] [3] [dbuser.py:setUserLoginAttempts:188] update UsersPrivateTable set attemptscounter=1 WHERE id=1
+[2019-04-03 23:45:27] [3] [dbuser.py:getUserId:48] invalid password for user ['test1']
+[2019-04-03 23:45:27] [2] [Server_Main.py:load_user:133] user login for user test1 failed invalid password for user ['test1']
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:138] logged in as default user userid=0
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_experiments_list
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [3] [Exp_Flask.py:get_experiments_list:287] [IP: 127.0.0.1] experiments/get_experiments_list
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-03 23:45:27] [1] [dbexperiments.py:GetExperimentsList:247] GetExperimentsList
+[2019-04-03 23:45:27] [1] [Exp_Flask.py:get_experiments_list:291] found 3 experiments for get_experiments_list
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_id
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [3] [Exp_Flask.py:get_id:159] [IP: 127.0.0.1] experiments/get_id
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'details': [['SRA', 'PRJ2']]}
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/experiments/get_id
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [3] [Exp_Flask.py:get_id:159] [IP: 127.0.0.1] experiments/get_id
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:89] >>>>>>>>>>>load_user login attempt
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:93] login request json: {'details': [['SRA', 'PRJ4']]}
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:99] username is None
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:27] SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=na
+[2019-04-03 23:45:27] [1] [dbuser.py:getUserId:52] login succeed for user ['na', 0]
+[2019-04-03 23:45:27] [1] [Server_Main.py:load_user:121] load_user login succeeded userid=0
+[2019-04-03 23:45:27] [1] [dbuser.py:isAdmin:160] SELECT isadmin FROM UsersPrivateTable WHERE username=na
+[2019-04-03 23:45:27] [2] [dbexperiments.py:GetExperimentId:113] No experiments found matching all details
+[2019-04-03 23:45:27] [1] [Server_Main.py:before_request:56] [IP: 127.0.0.1] got local request for page http://127.0.0.1:5002/stats/stats
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:37] connecting to database using server type test
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:62] connecting host=False, database=dbbact_test, user=dbbact_test, port=5432
+[2019-04-03 23:45:27] [1] [db_access.py:connect_db:68] connected to database
+[2019-04-03 23:45:27] [3] [DBStats_Flask.py:dbdstats:38] [IP: 127.0.0.1] dbstats
+[2019-04-03 23:45:27] [1] [dbstats.py:GetStats:18] Get db stats
+[2019-04-03 23:45:27] [2] [DBStats_Flask.py:dbdstats:41] Got statistics
+[2019-04-03 23:45:27 +0300] [26488] [INFO] Handling signal: term
+[2019-04-03 23:45:27 +0300] [26493] [INFO] Worker exiting (pid: 26493)
+[2019-04-03 23:45:27 +0300] [26494] [INFO] Worker exiting (pid: 26494)
+[2019-04-03 23:45:27 +0300] [26492] [INFO] Worker exiting (pid: 26492)
+[2019-04-03 23:45:27 +0300] [26491] [INFO] Worker exiting (pid: 26491)
+[['name', 'test1'], ['SRA', 'PRJ1']]
+[['name', 'test2'], ['SRA', 'PRJ2']]
+[['name', 'test3'], ['SRA', 'PRJ3']]
+[2019-04-03 23:45:27 +0300] [26488] [INFO] Shutting down: Master

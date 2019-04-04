@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, g, request
 from flask_login import LoginManager, UserMixin, login_required
 
@@ -12,15 +14,11 @@ from .Ontology_Flask import Ontology_Flask_Obj
 from .utils import debug, SetDebugLevel
 from . import db_access
 from . import dbuser
-import os
 
 
 # global variables
 dbDefaultUser = "na"  # anonymos user in case the field is empty
 dbDefaultPwd = ""
-
-# this variable stores the server type to use. since we connect to the database every request, need to store between them the inital server type.
-server_type_g = None
 
 recentLoginUsers = []
 
@@ -35,6 +33,7 @@ app.register_blueprint(Docs_Flask_Obj)
 
 auto.init_app(app)
 
+# setup the user authentication (using json parameters 'user', 'pwd')
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -51,12 +50,16 @@ class User(UserMixin):
 # whenever a new request arrives, connect to the database and store in g.db
 @app.before_request
 def before_request():
-    global server_type_g
     if request.remote_addr != '127.0.0.1':
         debug(6, 'got request for page %s' % request.url, request=request)
     else:
         debug(1, 'got local request for page %s' % request.url, request=request)
-    con, cur = db_access.connect_db(server_type=server_type_g)
+    con, cur = db_access.connect_db(server_type=app.config.get('DBBACT_SERVER_TYPE'),
+                                    host=app.config.get('DBBACT_POSTGRES_HOST'),
+                                    port=app.config.get('DBBACT_POSTGRES_PORT'),
+                                    database=app.config.get('DBBACT_POSTGRES_DATABASE'),
+                                    user=app.config.get('DBBACT_POSTGRES_USER'),
+                                    password=app.config.get('DBBACT_POSTGRES_PASSWORD'))
     g.con = con
     g.cur = cur
 
@@ -87,6 +90,7 @@ def load_user(request):
         user = None
         alldat = request.get_json()
         if (alldat is not None):
+            debug(1, 'login request json: %s' % alldat)
             userName = alldat.get('user')
             password = alldat.get('pwd')
         else:
@@ -126,7 +130,7 @@ def load_user(request):
             # add the user to the list
             # recentLoginUsers.append(user)
         else:
-            debug(1, 'user login failed %s' % (errorMes))
+            debug(2, 'user login for user %s failed %s' % (userName, errorMes))
             # login failed, so fallback to default user
             errorMes, userId = dbuser.getUserId(g.con, g.cur, dbDefaultUser, dbDefaultPwd)
             isadmin = 0
@@ -136,10 +140,11 @@ def load_user(request):
         return user
     # we need this except for flask-autodoc (it does not have flask.g ?!?!)
     except:
+        debug(3, 'exception occured when logging in user. login failed')
         return None
 
 
-def gunicorn(server_type=None, debug_level=6):
+def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=None, pg_pwd=None, debug_level=6):
     '''The entry point for running the api server through gunicorn (http://gunicorn.org/)
     to run dbbact rest server using gunicorn, use:
 
@@ -151,6 +156,8 @@ def gunicorn(server_type=None, debug_level=6):
     server_type: str or None, optional
         the server instance running. used for db_access(). can be: 'main','develop','test','local'
         None to use the DBBACT_SERVER_TYPE environment variable instead
+    pg_host, pg_port, pg_db, pg_user, pg_pwd: str or None, optional
+        str to override the env. variable and server_type selected postgres connection parameters
     debug_level: int, optional
         The minimal level of debug messages to log (10 is max, ~5 is equivalent to warning)
 
@@ -158,35 +165,40 @@ def gunicorn(server_type=None, debug_level=6):
     -------
     Flask app
     '''
-    global server_type_g
-
     SetDebugLevel(debug_level)
     # to enable the stack traces on error
     # (from https://stackoverflow.com/questions/18059937/flask-app-raises-a-500-error-with-no-exception)
     app.debug = True
     debug(6, 'starting dbbact rest-api server using gunicorn, debug_level=%d' % debug_level)
-    if server_type is None:
-        if 'DBBACT_SERVER_TYPE' in os.environ:
-            server_type = os.environ['DBBACT_SERVER_TYPE']
-            debug(6, 'Using server_type %s from DBBACT_SERVER_TYPE env. variable' % server_type)
-        else:
-            debug(7, 'server_type not supplied and DBBACT_SERVER_TYPE env. variable not set.')
-    else:
-        if 'DBBACT_SERVER_TYPE' in os.environ:
-            debug(7, 'server_type supplied but DBBACT_SERVER_TYPE env. variable also set. Using server_type %s' % server_type)
-    server_type_g = server_type
+    set_env_params()
+    if server_type is not None:
+        app.config['DBBACT_SERVER_TYPE'] = server_type
+    if pg_host is not None:
+        app.config['DBBACT_POSTGRES_HOST'] = pg_host
+    if pg_port is not None:
+        app.config['DBBACT_POSTGRES_PORT'] = pg_port
+    if pg_user is not None:
+        app.config['DBBACT_POSTGRES_USER'] = pg_user
+    if pg_pwd is not None:
+        app.config['DBBACT_POSTGRES_PASSWORD'] = pg_user
+    if pg_db is not None:
+        app.config['DBBACT_POSTGRES_DATABASE'] = pg_db
+
     return app
+
+
+def set_env_params():
+    # set the database access parameters
+    env_params = ['DBBACT_SERVER_TYPE', 'DBBACT_POSTGRES_HOST', 'DBBACT_POSTGRES_PORT', 'DBBACT_POSTGRES_DATABASE', 'DBBACT_POSTGRES_USER', 'DBBACT_POSTGRES_PASSWORD']
+    for cparam in env_params:
+            cval = os.environ.get(cparam)
+            if cval is not None:
+                debug(5, 'using value %s for env. parameter %s' % (cval, cparam))
+            app.config[cparam] = cval
 
 
 if __name__ == '__main__':
     SetDebugLevel(6)
     debug(2, 'starting server')
-    if 'DBBACT_SERVER_TYPE' in os.environ:
-        server_type_g = os.environ['DBBACT_SERVER_TYPE']
-    else:
-        debug(7, 'server_type not supplied and DBBACT_SERVER_TYPE env. variable not set.')
+    set_env_params()
     app.run(port=5001, threaded=True)
-    # if 'OPENU_FLAG' in os.environ:
-    #     app.run(host='0.0.0.0', port=5001, threaded=True)
-    # else:
-    #     app.run(threaded=True)

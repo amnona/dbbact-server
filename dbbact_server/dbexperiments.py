@@ -121,7 +121,7 @@ def GetExperimentId(con, cur, details, userid=None, logic='any'):
         return '%s' % e, None
 
 
-def AddExperimentDetails(con, cur, expid, details, userid, private='n', commit=True):
+def AddExperimentDetails(con, cur, expid, details, user_id, private='n', commit=True):
     """
     Add details to an existing or new experiment
 
@@ -156,7 +156,7 @@ def AddExperimentDetails(con, cur, expid, details, userid, private='n', commit=T
     for ctype, cval in details:
         ctype = ctype.lower()
         cval = cval.lower()
-        cur.execute('INSERT INTO ExperimentsTable (expId,type,value,date,userid,private) VALUES(%s,%s,%s,%s,%s,%s)', [expid, ctype, cval, cdate, userid, private])
+        cur.execute('INSERT INTO ExperimentsTable (expId,type,value,date,userid,private) VALUES(%s,%s,%s,%s,%s,%s)', [expid, ctype, cval, cdate, user_id, private])
     if commit:
         con.commit()
     return expid

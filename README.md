@@ -23,7 +23,7 @@ However, you may want to locally install dbBact in order to test new functions, 
 
 2. Create the dbBact conda environment:
 ```
- conda create -n dbbact2 python=3.6 numpy matplotlib scipy jupyter statsmodels psycopg2 flask
+ conda create -n dbbact2 python=3.6 numpy matplotlib scipy jupyter statsmodels psycopg2 flask requests
 
  source acticate dbbact
  ```

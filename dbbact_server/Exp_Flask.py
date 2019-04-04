@@ -70,9 +70,7 @@ def add_details():
         private = 'n'
     if expid == -1:
         expid = None
-    # TODO: get userid
-    userid = 0
-    res = dbexperiments.AddExperimentDetails(g.con, g.cur, expid=expid, details=details, userid=userid, private=private, commit=True)
+    res = dbexperiments.AddExperimentDetails(g.con, g.cur, expid=expid, details=details, user_id=current_user.user_id, private=private, commit=True)
     if res > 0:
         return(json.dumps({'expId': res}))
     if res == -1:
@@ -119,9 +117,7 @@ def get_id_by_list():
 
     if (nameArr is None) or (valueArr is None):
         return('no details')
-    # TODO: get userid
-    userid = 0
-    err, expId = dbexperiments.GetExperimentIdByVals(g.con, g.cur, nameArr, valueArr, userid)
+    err, expId = dbexperiments.GetExperimentIdByVals(g.con, g.cur, nameArr, valueArr, userid=current_user.user_id)
     if not err:
         return json.dumps({'expId': expId, 'errorCode': 0, 'errorText': ''})
     else:
@@ -165,9 +161,7 @@ def get_id():
     details = alldat.get('details')
     if details is None:
         return('no details')
-    # TODO: get userid
-    userid = 0
-    err, cids = dbexperiments.GetExperimentId(g.con, g.cur, details, userid)
+    err, cids = dbexperiments.GetExperimentId(g.con, g.cur, details, userid=current_user.user_id)
     if not err:
         return json.dumps({'expId': cids})
     else:
@@ -212,9 +206,7 @@ def get_details():
     expid = alldat.get('expId')
     if expid is None:
         return('no expId supplied', 400)
-    # TODO: get userid
-    userid = 0
-    err, details = dbexperiments.GetDetailsFromExpId(g.con, g.cur, expid, userid)
+    err, details = dbexperiments.GetDetailsFromExpId(g.con, g.cur, expid, userid=current_user.user_id)
     if err:
         return(err, 400)
     return json.dumps({'details': details})
@@ -261,9 +253,7 @@ def get_annotations():
     expid = alldat.get('expId')
     if expid is None:
         return('no expId supplied', 400)
-    # TODO: get userid
-    userid = 0
-    err, annotations = dbannotations.GetAnnotationsFromExpId(g.con, g.cur, expid, userid)
+    err, annotations = dbannotations.GetAnnotationsFromExpId(g.con, g.cur, expid, userid=current_user.user_id)
     if err:
         return(err, 400)
     return json.dumps({'annotations': annotations})
@@ -298,4 +288,5 @@ def get_experiments_list():
     err, expdat = dbexperiments.GetExperimentsList(g.con, g.cur, userid=current_user.user_id)
     if err:
         return(err, 400)
+    debug(1, 'found %d experiments for get_experiments_list' % len(expdat))
     return json.dumps({'explist': expdat})

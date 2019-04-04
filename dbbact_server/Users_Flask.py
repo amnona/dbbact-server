@@ -57,15 +57,33 @@ def get_user_public_information():
     Title: Return the user information
     URL: users/get_user_public_information
     Method: POST,GET
+    Data Params: JSON
+        {
+            username : str
+                the dbbact username
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            data: dict
+                the user data. includes:
+                'id' : int
+                'username' : str
+                'name' : str
+                'description' : str
+                'email' : str
+                    if shared, returns email, otherwise returns "-"
+        }
     """
 
     cfunc = get_user_public_information
     if request.method == 'GET':
         return(getdoc(cfunc))
     alldat = request.get_json()
-    userid = alldat.get('userid')
+    username = alldat.get('username')
 
-    err, userinfo = dbuser.getUserInformation(g.con, g.cur, userid)
+    err, userinfo = dbuser.getUserInformation(g.con, g.cur, username)
     if err:
         return(err, 400)
     debug(2, err)

@@ -325,6 +325,7 @@ def addUser(con, cur, user, pwd, name, description, mail, publish):
     # If the user already exist, return error
     err, val = isUserExist(con, cur, user)
     if val > 0:
+        debug(5, 'Cannot add user %s. User already exists' % user)
         return ("user %s already exist" % user, -3)
 
     # default values
@@ -473,13 +474,14 @@ def getMail(con, cur, user):
         return ("error %s enountered in addUser" % e, -4)
 
 
-def getUserInformation(con, cur, userid):
+def getUserInformation(con, cur, username):
     """
     Get the public information of user
 
     input:
     con,cur : database connection and cursor
-    user: id
+    username: str
+        the username to get the info for
 
     output:
     errmsg : str
@@ -492,16 +494,17 @@ def getUserInformation(con, cur, userid):
         'description' : str
         'email' : str
     """
-    if userid is not None and userid < 0:
-        return ("user id can't be negative", None)
+    if username is None:
+        return ("username is empty", None)
 
     try:
-        debug(1, 'SELECT * UsersPrivateTable WHERE id=%s' % userid)
-        cur.execute('SELECT * FROM UsersPrivateTable WHERE id=%s', [userid])
+
+        debug(1, 'SELECT * UsersPrivateTable WHERE username=%s' % username)
+        cur.execute('SELECT * FROM UsersPrivateTable WHERE username=%s', [username])
         if cur.rowcount > 0:
             data = {}
             res = cur.fetchone()
-            data['id'] = userid
+            data['id'] = res['id']
             data['username'] = res['username']
             data['name'] = res['name']
             data['description'] = res['description']
@@ -513,7 +516,7 @@ def getUserInformation(con, cur, userid):
                 data['email'] = '-'
             return ('', data)
         else:
-            return ("user %s doesnt exist" % userid, None)
+            return ("user %s doesnt exist" % username, None)
 
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in getUserInformation" % e)
