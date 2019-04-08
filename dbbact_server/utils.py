@@ -17,6 +17,10 @@ def debug(level, msg, request=None):
         error level (0=debug, 4=info, 7=warning,...10=critical)
     msg : str
         the debug message
+    request: requests.Request or None, optional
+        not None to write the source address of the request
+    ofile: str or None, optional
+        name of file to write the debug info into, or None to print to stderr
     """
     global debuglevel
 

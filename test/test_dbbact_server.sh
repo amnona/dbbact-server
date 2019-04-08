@@ -1,4 +1,8 @@
 #!/bin/bash
+# Parameters:
+# $1 address for the test dbbact server (i.e. 127.0.0.1:5002)
+DEFAULT_SERVER_ADDR="127.0.0.1:5002"
+SERVER_ADDR=${1:-$DEFAULT_SERVER_ADDR}
 
 # delete the test database and user and create new
 /Applications/Postgres.app/Contents/MacOS/bin/psql postgres < create_test_db.commands.txt
@@ -30,5 +34,5 @@
  /Applications/Postgres.app/Contents/MacOS/bin/psql -d dbbact_test -U dbbact_test -c "INSERT INTO MethodTypesTable (id,description) VALUES(0,'na');"
 
  # and run the test
- ./test_server.py
+ ./test_server.py --server-addr $SERVER_ADDR
  

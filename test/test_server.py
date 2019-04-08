@@ -8,6 +8,7 @@ import atexit
 
 import requests
 
+__version__ = "0.9"
 server_addr = '127.0.0.1:5002'
 
 '''To create the dbbact_test database:
@@ -45,10 +46,10 @@ def akv(k, v, d):
 	raise AssertionError('assert_dict_item failed. dict %r does not cotain key %s value %s' % (d, k, v))
 
 
-def start_server(out_file_name='./test_server_out.txt'):
+def start_server(out_file_name='./log-test-server.txt'):
 	global server_proc
 
-	cmd = ['gunicorn', 'dbbact_server.Server_Main:gunicorn(debug_level=1,server_type="test")', '-b', server_addr, '--workers', '4', '--name=dbbact-rest-api', '--timeout', '300']
+	cmd = ['gunicorn', 'dbbact_server.Server_Main:gunicorn(debug_level=2,server_type="test")', '-b', server_addr, '--workers', '4', '--name=dbbact-rest-api', '--timeout', '300']
 	# proc = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	print('writing dbbact_server output to file %s' % out_file_name)
 	outfile = open(out_file_name, 'w')
@@ -162,15 +163,17 @@ def test_server():
 	alen(res['annotations'], 0)
 
 	res = pget('stats/stats')
-	print(res)
+	print('all tests completed ok')
+	print('database stats: %s' % res)
 
 
 def main(argv):
-	parser = argparse.ArgumentParser(description='generic version ')
-	parser.add_argument('-i', '--input', help='name of input fasta file')
-	parser.add_argument('-k', '--keep_primers', help="Don't remove the primer sequences", action='store_true')
+	global server_addr
 
+	parser = argparse.ArgumentParser(description='test_server version %s' % __version__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+	parser.add_argument('--server-addr', help='address of the test server', default='127.0.0.1:5002')
 	args = parser.parse_args(argv)
+	server_addr = args.server_addr
 	test_server()
 
 

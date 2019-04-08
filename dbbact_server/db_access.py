@@ -69,6 +69,6 @@ def connect_db(server_type=None, database=None, user=None, password=None, port=N
         return (con, cur)
     except psycopg2.DatabaseError as e:
         msg = 'Cannot connect to database %s. Error %s' % (server_type, e)
-        print(msg)
+        debug(3, msg)
         raise SystemError(msg)
         return None

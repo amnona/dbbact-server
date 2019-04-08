@@ -711,19 +711,23 @@ def GetSequenceWithNoTaxonomyID(con, cur):
 
     Returns
     -------
-    sequence id : return the sequence id
+    errmsg: '' if ok, otherwise the error message
+    sequence id : a sequenceid of a sequence without taxonomy, or -1 if no such sequences exist
     '''
     debug(1, 'GetSequenceWithNoTaxonomy')
 
-    cur.execute("select id from annotationschematest.sequencestable where (COALESCE(taxrootrank,'')='' AND COALESCE(taxdomain,'')='' AND COALESCE(taxphylum,'')='' AND COALESCE(taxclass,'')='' AND COALESCE(taxfamily,'')='' AND COALESCE(taxgenus,'')='' AND COALESCE(taxorder,'')='') limit 1")
-    if cur.rowcount == 0:
-        errmsg = 'no missing taxonomy'
-        debug(1, errmsg)
+    try:
+        cur.execute("select id from sequencestable where (COALESCE(taxrootrank,'')='' AND COALESCE(taxdomain,'')='' AND COALESCE(taxphylum,'')='' AND COALESCE(taxclass,'')='' AND COALESCE(taxfamily,'')='' AND COALESCE(taxgenus,'')='' AND COALESCE(taxorder,'')='') limit 1")
+        if cur.rowcount == 0:
+            debug(1, 'no sequences without taxonomy')
+            return '', -1
+        res = cur.fetchone()
+        return_id = res[0]
+        return '', return_id
+    except Exception as e:
+        errmsg = 'database error when fetching samples with no taxonomy: %s' % e
+        debug(5, errmsg)
         return errmsg, -1
-    res = cur.fetchone()
-    return_id = res[0]
-
-    return '', return_id
 
 
 def GetSequenceWithNoHashID(con, cur):
@@ -736,19 +740,59 @@ def GetSequenceWithNoHashID(con, cur):
 
     Returns
     -------
-    sequence id : return the sequence id
+    errmsg: '' if ok, otherwise the error message
+    sequence id : a sequenceid of a sequence without hash, or -1 if no such sequences exist
     '''
     debug(1, 'GetSequenceWithNoHashID')
 
-    cur.execute("select id from annotationschematest.sequencestable where (COALESCE(hashfull,'')='' AND COALESCE(hash150,'')='' AND COALESCE(hash100,'')='') limit 1")
-    if cur.rowcount == 0:
-        errmsg = 'no missing hash'
-        debug(1, errmsg)
+    try:
+        cur.execute("select id from sequencestable where (COALESCE(hashfull,'')='' AND COALESCE(hash150,'')='' AND COALESCE(hash100,'')='') limit 1")
+        if cur.rowcount == 0:
+            debug(1, 'no sequences without hash found')
+            return '', -1
+        res = cur.fetchone()
+        return_id = res[0]
+        return '', return_id
+    except Exception as e:
+        errmsg = 'database error when fetching samples with no hashid: %s' % e
+        debug(5, errmsg)
         return errmsg, -1
-    res = cur.fetchone()
-    return_id = res[0]
 
-    return '', return_id
+
+def get_whole_seq_db_id_from_name(con, cur, whole_seq_db_name, whole_seq_db_version=None):
+    '''
+    Get the id of the whole sequence database based on name and optional version
+
+    Parameters
+    ----------
+    whole_seq_db_name: str
+        name (i.e. SILVA/GREENGENES)
+    whole_seq_db_version: str or None, optional
+        if not None, match also the version
+
+    Returns:
+    err: str or empty if ok
+    id: int
+        the WholeSeqDatabaseTable id
+    '''
+    whole_seq_db_name = whole_seq_db_name.lower()
+    debug(1, 'get_whole_seq_db_id_from_name for db %s version %s' % (whole_seq_db_name, whole_seq_db_version))
+    try:
+        if whole_seq_db_version is None:
+            cur.execute('SELECT dbid FROM WholeSeqDatabaseTable WHERE dbName=%s', [whole_seq_db_name])
+        else:
+            cur.execute('SELECT (dbId) FROM WholeSeqDatabaseTable WHERE "dbName"=%s AND version=%s', [whole_seq_db_name, whole_seq_db_version])
+        if cur.rowcount == 0:
+            debug(1, 'no match to database found')
+            return('No match found', None)
+        res = cur.fetchone()
+        dbid = res['dbid']
+        debug(1, 'database id is: %d' % dbid)
+        return '', dbid
+    except Exception as e:
+        msg = 'error encountered when getting whole sequence database id: %s' % e
+        debug(3, msg)
+        return msg, None
 
 
 def SequencesWholeToFile(con, cur, fileName, dbid):
@@ -782,7 +826,7 @@ def SequencesWholeToFile(con, cur, fileName, dbid):
     return ''
 
 
-def AddWholeSeqId(con, cur, dbidVal, dbbactidVal, wholeseqidVal, noTest=False):
+def AddWholeSeqId(con, cur, dbidVal, dbbactidVal, wholeseqidVal, commit=True):
     '''
     Add record to wholeseqidstable table
 
@@ -792,53 +836,64 @@ def AddWholeSeqId(con, cur, dbidVal, dbbactidVal, wholeseqidVal, noTest=False):
     dbidVal - db type (e.g. silva, gg)
     dbbactidVal - sequnence id in dbbact
     wholeseqidVal - the id in different db (e.g. silva, gg)
+    commit: true to commit, false to insert without commit
 
     Returns
     -------
     error message
     '''
     debug(1, 'AddWholeSeqId')
-
     try:
-        if noTest is True:
+        # check if we already have this entry
+        err, existFlag = WholeSeqIdExists(con, cur, dbidVal, dbbactidVal, wholeseqidVal)
+        if not existFlag:
             cur.execute('INSERT INTO wholeseqidstable (dbid, dbbactid, wholeseqid) VALUES (%s, %s, %s)', [dbidVal, dbbactidVal, wholeseqidVal])
-        else:
-            err, existFlag = WholeSeqIdExists(con, cur, dbidVal, dbbactidVal, 'na')
-            if existFlag is False:
-                cur.execute('INSERT INTO wholeseqidstable (dbid, dbbactid, wholeseqid) VALUES (%s, %s, %s)', [dbidVal, dbbactidVal, wholeseqidVal])
-            else:
-                cur.execute('UPDATE wholeseqidstable set wholeseqid = %s where (dbid = %s and dbbactid = %s)', [wholeseqidVal, dbidVal, dbbactidVal])
-        con.commit()
+            if commit:
+                con.commit()
+        return
     except psycopg2.DatabaseError as e:
         debug(7, 'database error %s' % e)
         return "database error %s" % e
-    return ""
+    # try:
+    #     err, existFlag = WholeSeqIdExists(con, cur, dbidVal, dbbactidVal, 'na')
+    #     if existFlag is False:
+    #         cur.execute('INSERT INTO wholeseqidstable (dbid, dbbactid, wholeseqid) VALUES (%s, %s, %s)', [dbidVal, dbbactidVal, wholeseqidVal])
+    #     else:
+    #         cur.execute('UPDATE wholeseqidstable set wholeseqid = %s where (dbid = %s and dbbactid = %s)', [wholeseqidVal, dbidVal, dbbactidVal])
+    #     if commit:
+    #         con.commit()
+    # except psycopg2.DatabaseError as e:
+    #     debug(7, 'database error %s' % e)
+    #     return "database error %s" % e
+    # return ''
 
 
-def WholeSeqIdExists(con, cur, dbidVal, dbbactidVal, wholeseqidVal=''):
+def WholeSeqIdExists(con, cur, dbidVal, dbbactidVal, wholeseqidVal=None):
     '''
-    Check if record is already exist in wholeseqidstable table
+    Check if record already exists in wholeseqidstable table
 
     Parameters
     ----------
     con,cur
     dbidVal - db type (e.g. silva, gg)
     dbbactidVal - sequnence id in dbbact
-    wholeseqidVal - the id in different db (e.g. silva, gg)
-    if empty we will retrive all the ids which have at list one record
+    wholeseqidVal: str or None, optional
+        if not None, search for a match also for the wholeseqidVal id in different db (e.g. silva, gg)
+        if None, retrive all the ids which have at list one record
 
     Returns
     -------
-    True if exist
-    error message
+    err: empty ('') if query went ok, otherwise contains the database error
+    exists: True if record exists in wholeSeqIDsTalbe, False otherwise
     '''
     debug(1, 'WholeSeqIdExists')
 
     try:
-        if wholeseqidVal:
-            cur.execute("SELECT * FROM wholeseqidstable where dbid = %s and dbbactid = %s and wholeseqid = %s ", [dbidVal, dbbactidVal, wholeseqidVal])
+        if wholeseqidVal is not None:
+            cur.execute("SELECT * FROM wholeseqidstable where dbid = %s and dbbactid = %s and wholeseqid = %s", [dbidVal, dbbactidVal, wholeseqidVal])
         else:
-            cur.execute("SELECT * FROM wholeseqidstable where dbid = %s and dbbactid = %s and wholeseqid != 'na'", [dbidVal, dbbactidVal])
+            cur.execute("SELECT * FROM wholeseqidstable where dbid = %s and dbbactid = %s", [dbidVal, dbbactidVal])
+            # cur.execute("SELECT * FROM wholeseqidstable where dbid = %s and dbbactid = %s and wholeseqid != 'na'", [dbidVal, dbbactidVal])
         if cur.rowcount > 0:
             return "", True
         else:
@@ -866,7 +921,7 @@ def GetSequenceStrByID(con, cur, seq_id):
     '''
     debug(1, 'GetSequenceStrByID')
 
-    cur.execute("select sequence from annotationschematest.sequencestable where id=%s" % seq_id)
+    cur.execute("select sequence from sequencestable where id=%s" % seq_id)
     if cur.rowcount == 0:
         errmsg = 'no sequeence for seqid %s' % seq_id
         debug(1, errmsg)
@@ -896,7 +951,7 @@ def UpdateHash(con, cur, seq_id, hash_seq_full, hash_seq_150, hash_seq_100):
     debug(1, 'UpdateHash')
 
     try:
-        cur.execute("update annotationschematest.sequencestable set hashfull='%s',hash150='%s',hash100='%s' where id=%s" % (hash_seq_full, hash_seq_150, hash_seq_100, seq_id))
+        cur.execute("update sequencestable set hashfull='%s',hash150='%s',hash100='%s' where id=%s" % (hash_seq_full, hash_seq_150, hash_seq_100, seq_id))
         con.commit()
         return True
     except:
@@ -921,7 +976,7 @@ def AddSequenceTax(con, cur, seq_id, col, value):
     debug(1, 'GetSequenceStrByID')
 
     try:
-        cur.execute("update annotationschematest.sequencestable set %s='%s' where id=%s" % (col, value, seq_id))
+        cur.execute("update sequencestable set %s='%s' where id=%s" % (col, value, seq_id))
         con.commit()
         return True
     except:
