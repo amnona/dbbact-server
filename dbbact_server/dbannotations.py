@@ -49,15 +49,22 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
     res : int
         annotationid if ok, -1 if error encouneted
     """
-    # add the sequences
+    # add the sequences after removing duplicates
+    sequences = [x.lower() for x in sequences]
+    sequences = list(set(sequences))
     err, seqids = dbsequences.AddSequences(con, cur, sequences, primer=primer, commit=False)
     if err:
         return err, -1
     err, annotationid = AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method, description, agenttype, private, userid, commit=False, numseqs=len(set(seqids)))
     if err:
         return err, -1
+    # link sequences to annotation
     for cseqid in seqids:
-        cur.execute('INSERT INTO SequencesAnnotationTable (seqId,annotationId) VALUES (%s,%s)', [cseqid, annotationid])
+        cur.execute('SELECT * from SequencesAnnotationTable WHERE seqId=%s AND annotationID=%s LIMIT 1', [cseqid, annotationid])
+        if cur.rowcount == 0:
+            cur.execute('INSERT INTO SequencesAnnotationTable (seqId,annotationId) VALUES (%s,%s)', [cseqid, annotationid])
+        else:
+            debug(3, "trying to re-add sequenceannotation seqid=%s annotationid=%s. skipping" % (cseqid, annotationid))
     debug(2, "Added %d sequence annotations" % len(seqids))
     if commit:
         con.commit()
