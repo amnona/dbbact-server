@@ -15,9 +15,9 @@ __version__ = "0.1"
 
 commands = {'update_seq_taxonomy': './update_seq_taxonomy.py',
 			'update_seq_hash': './update_seq_hash.py',
-			'update_silva': './update_whole_seq_db.py -w SILVA -f silva-small.fa',
-			'update_gg': './update_whole_seq_db.py -w greengenes -f greengenes-small.fa',
-			'update_seq_counts': './update_seq_counts.py',}
+			'update_silva': './update_whole_seq_db.py -w SILVA',
+			'update_gg': './update_whole_seq_db.py -w greengenes',
+			'update_seq_counts': './update_seq_counts.py'}
 
 
 def get_time_to_tomorrow(hour, minute=0):
