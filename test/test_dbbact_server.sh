@@ -18,27 +18,27 @@ echo $PGPASSWORD
 PGPASSWORD="dbbact_test" ${POSTGRES_DIR}pg_restore -U dbbact_test -d dbbact_test --schema-only --no-owner ../database/dbbact-export.psql
 
 # add anonymous user
- ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO UsersTable (id,username) VALUES(0,'na');"
+PGPASSWORD="dbbact_test"  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO UsersTable (id,username) VALUES(0,'na');"
  # password hash is for empty string ""
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO UsersPrivateTable (id,username,passwordhash, attemptscounter) VALUES(0,'na','"'$2a$06$KNMw2Tjs8MF2RKL2O9UeGuyy9/lJBaouVN5byaLo/Sm33OMf7Uk3K'"',0);"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO UsersPrivateTable (id,username,passwordhash, attemptscounter) VALUES(0,'na','"'$2a$06$KNMw2Tjs8MF2RKL2O9UeGuyy9/lJBaouVN5byaLo/Sm33OMf7Uk3K'"',0);"
 
  # add annotationtypes
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(1,'diffexp');"
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(2,'isa');"
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(3,'contamination');"
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(4,'common');"
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(5,'highfreq');"
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(6,'other');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(1,'diffexp');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(2,'isa');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(3,'contamination');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(4,'common');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(5,'highfreq');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationTypesTable (id,description) VALUES(6,'other');"
 
 # add details types
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationDetailsTypesTable (id,description) VALUES(1,'high');"
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationDetailsTypesTable (id,description) VALUES(2,'low');"
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationDetailsTypesTable (id,description) VALUES(3,'all');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationDetailsTypesTable (id,description) VALUES(1,'high');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationDetailsTypesTable (id,description) VALUES(2,'low');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AnnotationDetailsTypesTable (id,description) VALUES(3,'all');"
 
 # add agents type
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AgentTypesTable (id,description) VALUES(0,'na');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO AgentTypesTable (id,description) VALUES(0,'na');"
 # add methods type
-  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO MethodTypesTable (id,description) VALUES(0,'na');"
+  PGPASSWORD="dbbact_test" ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO MethodTypesTable (id,description) VALUES(0,'na');"
 
  # and run the test
  ./test_server.py --server-addr $SERVER_ADDR
