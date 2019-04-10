@@ -49,7 +49,7 @@ def akv(k, v, d):
 def start_server(out_file_name='./log-test-server.txt'):
 	global server_proc
 
-	cmd = ['gunicorn', 'dbbact_server.Server_Main:gunicorn(debug_level=2,server_type="test")', '-b', server_addr, '--workers', '4', '--name=dbbact-rest-api', '--timeout', '300']
+	cmd = ['gunicorn', 'dbbact_server.Server_Main:gunicorn(debug_level=2,server_type="test")', '-b', server_addr, '--workers', '4', '--name=test-dbbact-rest-api', '--timeout', '300']
 	# proc = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	print('writing dbbact_server output to file %s' % out_file_name)
 	outfile = open(out_file_name, 'w')
