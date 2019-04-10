@@ -11,7 +11,7 @@ SERVER_ADDR=${2:-$DEFAULT_SERVER_ADDR}
 ${POSTGRES_DIR}psql postgres -U postgres < create_test_db.commands.txt
 
 # get the full database scheme
-${POSTGRES_DIR}pg_restore -U dbbact_test -d dbbact_test --schema-only --no-owner ../database/dbbact-full-2019-04-02.psql
+${POSTGRES_DIR}pg_restore -U dbbact_test -d dbbact_test --schema-only --no-owner ../database/dbbact-export.psql
 
 # add anonymous user
  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO UsersTable (id,username) VALUES(0,'na');"
