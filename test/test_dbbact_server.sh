@@ -8,7 +8,7 @@ DEFAULT_SERVER_ADDR="127.0.0.1:5002"
 SERVER_ADDR=${2:-$DEFAULT_SERVER_ADDR}
 
 # delete the test database and user and create new
-${POSTGRES_DIR}psql postgres < create_test_db.commands.txt
+${POSTGRES_DIR}psql postgres -U postgres < create_test_db.commands.txt
 
 # get the full database scheme
 ${POSTGRES_DIR}pg_restore -U dbbact_test -d dbbact_test --schema-only --no-owner ../database/dbbact-full-2019-04-02.psql
