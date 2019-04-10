@@ -11,10 +11,11 @@ SERVER_ADDR=${2:-$DEFAULT_SERVER_ADDR}
 ${POSTGRES_DIR}psql postgres -U postgres < create_test_db.commands.txt
 
 # set the password env, variable
-PGPASSWORD=dbbact_test 
+PGPASSWORD="dbbact_test"
+echo $PGPASSWORD
 
 # get the full database scheme
-${POSTGRES_DIR}pg_restore -U dbbact_test -d dbbact_test --schema-only --no-owner ../database/dbbact-export.psql
+PGPASSWORD="dbbact_test" ${POSTGRES_DIR}pg_restore -U dbbact_test -d dbbact_test --schema-only --no-owner ../database/dbbact-export.psql
 
 # add anonymous user
  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO UsersTable (id,username) VALUES(0,'na');"
