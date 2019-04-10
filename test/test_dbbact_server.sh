@@ -17,6 +17,9 @@ echo $PGPASSWORD
 # get the full database scheme
 PGPASSWORD="dbbact_test" ${POSTGRES_DIR}pg_restore -U dbbact_test -d dbbact_test --schema-only --no-owner ../database/dbbact-export.psql
 
+# add the  users private table
+PGPASSWORD="dbbact_test" ${POSTGRES_DIR}pg_restore -U dbbact_test -d dbbact_test --schema-only --no-owner ../database/users-private-table-scheme.psql
+
 # add anonymous user
 PGPASSWORD="dbbact_test"  ${POSTGRES_DIR}psql -d dbbact_test -U dbbact_test -c "INSERT INTO UsersTable (id,username) VALUES(0,'na');"
  # password hash is for empty string ""
