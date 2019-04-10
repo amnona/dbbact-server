@@ -49,14 +49,15 @@ def akv(k, v, d):
 def start_server(out_file_name='./log-test-server.txt'):
 	global server_proc
 
+	print('starting server on address %s with output to %s' % (server_addr, out_file_name))
 	cmd = ['gunicorn', 'dbbact_server.Server_Main:gunicorn(debug_level=2,server_type="test")', '-b', server_addr, '--workers', '4', '--name=test-dbbact-rest-api', '--timeout', '300']
 	# proc = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-	print('writing dbbact_server output to file %s' % out_file_name)
 	outfile = open(out_file_name, 'w')
 	proc = subprocess.Popen(cmd, shell=False, stdout=outfile, stderr=outfile)
 	if proc is None:
 		raise ValueError('Did not manage to start gunicorn dbbact_server process')
 	atexit.register(stop_server, proc=proc, outfile=outfile)
+	print('server started on address %s' % server_addr)
 	time.sleep(0.5)
 	return proc
 
@@ -170,6 +171,7 @@ def test_server():
 def main(argv):
 	global server_addr
 
+	print('test_server.py started')
 	parser = argparse.ArgumentParser(description='test_server version %s' % __version__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('--server-addr', help='address of the test server', default='127.0.0.1:5002')
 	args = parser.parse_args(argv)
