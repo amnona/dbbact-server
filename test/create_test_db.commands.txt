@@ -1,5 +1,5 @@
 DROP DATABASE IF EXISTS dbbact_test;
-CREATE USER dbbact_test;
+CREATE USER dbbact_test WITH PASSWORD 'dbbact_test';
 CREATE DATABASE dbbact_test WITH owner=dbbact_test;
 \connect dbbact_test
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
