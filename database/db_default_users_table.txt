@@ -1,0 +1,66 @@
+--
+-- Name: userstable; Type: TABLE; Schema: public; Owner: dbbact; Tablespace: 
+-- This is the default clean users table
+-- For user test_user, the password is ????
+--
+
+CREATE TABLE userstable (
+    id integer NOT NULL,
+    username text,
+    passwordhash text,
+    name text,
+    description text,
+    isactive boolean,
+    attemptscounter integer DEFAULT 0,
+    email text,
+    shareemail text,
+    isadmin text,
+    tempcodehash text,
+    recoveryattemptscounter integer DEFAULT 0
+);
+
+
+ALTER TABLE public.userstable OWNER TO dbbact;
+
+--
+-- Name: TABLE userstable; Type: COMMENT; Schema: public; Owner: dbbact
+--
+
+COMMENT ON TABLE userstable IS 'In this table we will store list of DB users';
+
+
+--
+-- Name: COLUMN userstable.id; Type: COMMENT; Schema: public; Owner: dbbact
+--
+
+COMMENT ON COLUMN userstable.id IS 'User id (auto increment)';
+
+
+--
+-- Name: userstable_id_seq; Type: SEQUENCE; Schema: public; Owner: dbbact
+--
+
+CREATE SEQUENCE userstable_id_seq
+    START WITH 5
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.userstable_id_seq OWNER TO dbbact;
+
+--
+-- Name: userstable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbbact
+--
+
+ALTER SEQUENCE userstable_id_seq OWNED BY userstable.id;
+
+--
+-- Data for Name: userstable; Type: TABLE DATA; Schema: public; Owner: dbbact
+--
+
+COPY userstable (id, username, passwordhash, name, description, isactive, attemptscounter, email, shareemail, isadmin, tempcodehash, recoveryattemptscounter) FROM stdin;
+0	na	$2a$06$KNMw2Tjs8MF2RKL2O9UeGuyy9/lJBaouVN5byaLo/Sm33OMf7Uk3K	na	unknown user	\N	0	\N	\N	\N	\N	\N
+4	test_user	$2a$06$goiP6AChLtSyVIGnUwZVl.XZJh0d2.cmPZ6A1HtRJrBf6pzlY4wuC		Citizen science	t	0		n	\N	\N	0
+\.
