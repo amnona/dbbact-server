@@ -1,4 +1,5 @@
 CREATE USER dbbact WITH PASSWORD 'magNiv' CREATEDB;
 CREATE DATABASE dbbact WITH owner=dbbact;
 
-CREATE DATABASE dev_dbbact WITH owner=dbbact;
+CREATE USER dbbact_develop WITH PASSWORD 'dbbact_develop' CREATEDB
+CREATE DATABASE dbbact_develop WITH owner=dbbact_develop;
