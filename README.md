@@ -2,11 +2,11 @@
 
 This is the REST-API server for the dbBact open microbiome knowledge-base.
 
-The main dbBact server is running at: [dbbact.org](dbbact.org).
+The main dbBact server is running at: [dbbact.org](http://dbbact.org).
 
 The dbBact API is available at: api.dbbact.org
 
-API documentation is available at: [api.dbbact.org/docs](api.dbbact.org/docs)
+API documentation is available at: [api.dbbact.org/docs](http://api.dbbact.org/docs)
 
 dbBact is used by the [Calour microbiome analysis tool](https://github.com/biocore/calour)
 
@@ -30,7 +30,7 @@ However, you may want to locally install dbBact in order to test new functions, 
 
 3. install additional needed packages:
 ```
- pip install git+git://github.com/amnona/flask-autodoc
+pip install git+git://github.com/amnona/flask-autodoc
 
 pip install flask-login
 ```
@@ -53,6 +53,23 @@ pip install -e .
 ```
 
 7. install the database template to postgres
+```
+psql -U postgres < database/setup.psql
+
+psql -U postgres -d dbbact < database/extensions.psql
+
+pg_restore -U dbbact -d dbbact database/dbbact-export.psql
+```
+(Password for dbbact is magNiv)
+
+Alternatively, to erase current dbbact database, use:
+```
+pg_restore -U postgres -d postgres --clean --create database/dbbact-export.psql
+```
+Also prepare the users private data table (which is not exported in the database export due to privacy concerns):
+```
+psql -U dbbact -d dbbact < database/data_users_private.txt
+```
 
 8. Set the dbbact server environment flag to specify running environment (production/develop/local)
 production:
