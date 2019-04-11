@@ -16,7 +16,7 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 -- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: 
 --
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA annotationschematest;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 
 --
