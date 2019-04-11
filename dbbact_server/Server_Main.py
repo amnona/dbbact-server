@@ -198,7 +198,7 @@ def set_env_params():
 
 
 if __name__ == '__main__':
-    SetDebugLevel(1) 
+    SetDebugLevel(1)
     debug(2, 'starting server')
     set_env_params()
     app.run(port=5001, threaded=True)

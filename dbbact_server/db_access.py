@@ -38,6 +38,7 @@ def connect_db(server_type=None, database=None, user=None, password=None, port=N
         if server_type == 'develop':
             cuser = 'dbbact_develop'
             cdatabase = 'dbbact_develop'
+            cpassword = 'dbbact_develop'
         elif server_type == 'test':
             cuser = 'dbbact_test'
             cdatabase = 'dbbact_test'
