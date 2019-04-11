@@ -37,7 +37,7 @@ pip install flask-login
 
 4. for gunicorn (alternatively can run using flask but not for production):
 ```
-conda install gunicorn
+pip install gunicorn
 
 pip install setproctitle
 ```
