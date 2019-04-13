@@ -32,6 +32,8 @@ def dbdstats():
                 number of ontology terms in the OntologyTable
             "NumExperiments" : int
                 number of unique expIDs in the ExperimentsTable
+            "Database": str
+                name of current database for which the stats are returned
         }
     Details:
     """

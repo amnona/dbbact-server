@@ -41,4 +41,7 @@ def GetStats(con, cur):
         explist.add(cres[0])
     stats['NumExperiments'] = len(explist)
 
+    cur.execute('SELECT current_database()')
+    res = cur.fetchone()
+    stats['Database'] = res[0]
     return '', stats
