@@ -8,6 +8,8 @@ from datetime import datetime
 from pathlib import Path
 import subprocess
 
+import setproctitle
+
 from dbbact_server.utils import debug, SetDebugLevel
 
 __version__ = "0.1"
@@ -47,7 +49,10 @@ def removeFile(file_name):
 def run_bg_jobs(port, host, database, user, password, single_update=False, command_params=None):
 	debug(3, 'run_bg_jobs started')
 	if single_update:
-		debug(2, 'running single_update and quitting')
+		debug(3, 'running single_update and quitting')
+	cpath = os.path.abspath(__file__)
+	cdir = os.path.dirname(cpath)
+	debug(2, 'path for commands is: %s' % cdir)
 	stop_file = "stop.run_bg_jobs"
 	removeFile(stop_file)
 	while not isFileExist(stop_file):
@@ -63,6 +68,7 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 			cbash += ' --port %s --database %s --user %s --password %s' % (port, database, user, password)
 			if host is not None:
 				cbash += ' --host %s' % host
+			cbash = os.path.join(cdir, cbash)
 			debug(2, 'running command %s (%d / %d)' % (ccommand, idx + 1, len(commands)))
 			debug(1, cbash)
 			with open('log-%s.txt' % ccommand, 'a') as logfile:
@@ -86,16 +92,50 @@ def main(argv):
 	parser = argparse.ArgumentParser(description='run_bg_jobs version %s.' % __version__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('--port', help='postgres port', default=5432, type=int)
 	parser.add_argument('--host', help='postgres host', default=None)
-	parser.add_argument('--database', help='postgres database', default='dbbact')
-	parser.add_argument('--user', help='postgres user', default='dbbact')
-	parser.add_argument('--password', help='postgres password', default='magNiv')
+	parser.add_argument('--database', help='postgres database (overrides value from server-type)')
+	parser.add_argument('--user', help='postgres user (overrides value from server-type)')
+	parser.add_argument('--password', help='postgres password (overrides value from server-type)')
+	parser.add_argument('--server-type', help='dbbact rest api server type (main/develop/test)', default='main')
 	parser.add_argument('--debug-level', help='debug level (1 for debug ... 9 for critical)', default=2, type=int)
 	parser.add_argument('--single-update', help='update once and quit', action='store_true')
 	parser.add_argument('-p', '--command-params', help='specific command parameters. command and parameter name separated by : (i.e. update_silva:wholeseq-file:SILVA.fa). can use flag more than once', action='append')
 	args = parser.parse_args(argv)
 
 	SetDebugLevel(args.debug_level)
-	run_bg_jobs(port=args.port, host=args.host, database=args.database, user=args.user, password=args.password, single_update=args.single_update, command_params=args.command_params)
+	server_type = args.server_type
+	database = args.database
+	user = args.user
+	password = args.password
+	if server_type == 'main':
+		setproctitle.setproctitle('run_bg_jobs.py [main]')
+		if database is None:
+			database = 'dbbact'
+		if user is None:
+			user = 'dbbact'
+		if password is None:
+			password = 'magNiv'
+	elif server_type == 'develop':
+		setproctitle.setproctitle('run_bg_jobs.py [develop]')
+		if database is None:
+			database = 'dbbact_develop'
+		if user is None:
+			user = 'dbbact_develop'
+		if password is None:
+			password = 'dbbact_develop'
+	elif server_type == 'test':
+		setproctitle.setproctitle('run_bg_jobs.py [test]')
+		if database is None:
+			database = 'dbbact'
+		if user is None:
+			user = 'dbbact'
+		if password is None:
+			password = 'magNiv'
+	elif server_type is None:
+		pass
+	else:
+		raise ValueError('unknown server-type. should be one of ("main" / "develop" / "test"')
+
+	run_bg_jobs(port=args.port, host=args.host, database=database, user=user, password=password, single_update=args.single_update, command_params=args.command_params)
 
 
 if __name__ == "__main__":
