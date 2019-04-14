@@ -62,9 +62,12 @@ def update_seq_taxonomy(con, cur, rdp='rdp_classifier_2.12/'):
             debug(2, 'No more sequences without taxonomy detected')
             break
 
+        debug(1, 'looking for sequence without taxonomy')
         err, seq_str = dbsequences.GetSequenceStrByID(con, cur, seq_id)
         if err:
             raise ValueError(5, 'error encountered when searching for sequence id %d' % seq_id)
+
+        debug(1, 'processing sequence %d: %s' % (count, seq_str))
 
         # java -Xmx1g -jar dist/classifier.jar classify  -o output_filename example.fasta
         input_file_name = "%sinput" % rdp
