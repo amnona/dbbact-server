@@ -46,7 +46,7 @@ def removeFile(file_name):
 		pass
 
 
-def run_bg_jobs(port, host, database, user, password, single_update=False, command_params=None):
+def run_bg_jobs(port, host, database, user, password, single_update=False, command_params=None, debug_level=None):
 	debug(3, 'run_bg_jobs started')
 	if single_update:
 		debug(3, 'running single_update and quitting')
@@ -68,6 +68,8 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 			cbash += ' --port %s --database %s --user %s --password %s' % (port, database, user, password)
 			if host is not None:
 				cbash += ' --host %s' % host
+			if debug_level is not None:
+				cbash += ' --debug-level %d' % debug_level
 			cbash = os.path.join(cdir, cbash)
 			debug(2, 'running command %s (%d / %d)' % (ccommand, idx + 1, len(commands)))
 			debug(1, cbash)
@@ -135,7 +137,7 @@ def main(argv):
 	else:
 		raise ValueError('unknown server-type. should be one of ("main" / "develop" / "test"')
 
-	run_bg_jobs(port=args.port, host=args.host, database=database, user=user, password=password, single_update=args.single_update, command_params=args.command_params)
+	run_bg_jobs(port=args.port, host=args.host, database=database, user=user, password=password, single_update=args.single_update, command_params=args.command_params, debug_level=args.debug_level)
 
 
 if __name__ == "__main__":
