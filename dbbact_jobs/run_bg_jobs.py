@@ -46,13 +46,13 @@ def removeFile(file_name):
 		pass
 
 
-def run_bg_jobs(port, host, database, user, password, single_update=False, command_params=None, debug_level=None):
+def run_bg_jobs(port, host, database, user, password, single_update=False, command_params=None, debug_level=None, output_dir=None):
 	debug(3, 'run_bg_jobs started')
 	if single_update:
 		debug(3, 'running single_update and quitting')
 	cpath = os.path.abspath(__file__)
 	cdir = os.path.dirname(cpath)
-	debug(2, 'path for commands is: %s' % cdir)
+	debug(2, 'path for commands is: %s. output dir is %s' % (cdir, output_dir))
 	stop_file = "stop.run_bg_jobs"
 	removeFile(stop_file)
 	while not isFileExist(stop_file):
@@ -73,7 +73,11 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 			cbash = os.path.join(cdir, cbash)
 			debug(2, 'running command %s (%d / %d)' % (ccommand, idx + 1, len(commands)))
 			debug(1, cbash)
-			with open('log-%s.txt' % ccommand, 'a') as logfile:
+			if output_dir is None:
+				output_file = 'log-%s.txt' % ccommand
+			else:
+				output_file = os.path.join(output_dir, 'log-%s.txt' % ccommand)
+			with open(output_file, 'a') as logfile:
 				start_time = time.time()
 				res = subprocess.call(cbash, shell=True, stderr=logfile, stdout=logfile)
 				end_time = time.time()
@@ -98,6 +102,7 @@ def main(argv):
 	parser.add_argument('--user', help='postgres user (overrides value from server-type)')
 	parser.add_argument('--password', help='postgres password (overrides value from server-type)')
 	parser.add_argument('--server-type', help='dbbact rest api server type (main/develop/test)', default='main')
+	parser.add_argument('-o', '--output-dir', help='output directory for the log files')
 	parser.add_argument('--debug-level', help='debug level (1 for debug ... 9 for critical)', default=2, type=int)
 	parser.add_argument('--single-update', help='update once and quit', action='store_true')
 	parser.add_argument('-p', '--command-params', help='specific command parameters. command and parameter name separated by : (i.e. update_silva:wholeseq-file:SILVA.fa). can use flag more than once', action='append')
@@ -137,7 +142,7 @@ def main(argv):
 	else:
 		raise ValueError('unknown server-type. should be one of ("main" / "develop" / "test"')
 
-	run_bg_jobs(port=args.port, host=args.host, database=database, user=user, password=password, single_update=args.single_update, command_params=args.command_params, debug_level=args.debug_level)
+	run_bg_jobs(port=args.port, host=args.host, database=database, user=user, password=password, single_update=args.single_update, command_params=args.command_params, debug_level=args.debug_level, output_dir=args.output_dir)
 
 
 if __name__ == "__main__":
