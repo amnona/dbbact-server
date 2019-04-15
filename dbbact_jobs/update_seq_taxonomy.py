@@ -19,10 +19,10 @@ def update_seq_taxonomy(con, cur, rdp='rdp_classifier_2.12/'):
     fasta_file_name = 'sequences-no-taxonomy.fa'
     output_file_name = 'sequences-tax.rdp.txt'
     with open(fasta_file_name, 'w') as fl:
-        num_missing_tax += 1
         cur.execute("SELECT sequence FROM SequencesTable WHERE COALESCE(taxonomy, 'na') = 'na' ")
         for cres in cur:
             fl.write('>%s\n%s\n' % (cres[0], cres[0]))
+            num_missing_tax += 1
     debug(2, 'found %d sequences with missing taxonomy. saved to fasta file %s' % (num_missing_tax, fasta_file_name))
     # run RDP
     os.system("java -Xmx1g -jar %sdist/classifier.jar classify  -o %s %s" % (rdp, output_file_name, fasta_file_name))
