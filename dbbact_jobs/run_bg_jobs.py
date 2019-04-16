@@ -71,7 +71,7 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 			if debug_level is not None:
 				cbash += ' --debug-level %d' % debug_level
 			if proc_title is not None:
-				cbash += ' --proc-title %s' % proc_title
+				cbash += ' --proc-title "%s"' % proc_title
 			cbash = os.path.join(cdir, cbash)
 			debug(2, 'running command %s (%d / %d)' % (ccommand, idx + 1, len(commands)))
 			debug(1, cbash)
@@ -119,9 +119,9 @@ def main(argv):
 	database = args.database
 	user = args.user
 	password = args.password
-	proc_title = '"run_bg_jobs.py"'
+	proc_title = 'dbbact run_bg_jobs.py'
 	if server_type == 'main':
-		proc_title = '"run_bg_jobs.py [main]"'
+		proc_title += ' [main]'
 		if database is None:
 			database = 'dbbact'
 		if user is None:
@@ -129,7 +129,7 @@ def main(argv):
 		if password is None:
 			password = 'magNiv'
 	elif server_type == 'develop':
-		proc_title = '"run_bg_jobs.py [develop]"'
+		proc_title += ' [develop]'
 		if database is None:
 			database = 'dbbact_develop'
 		if user is None:
@@ -137,7 +137,7 @@ def main(argv):
 		if password is None:
 			password = 'dbbact_develop'
 	elif server_type == 'test':
-		proc_title = '"run_bg_jobs.py [test]"'
+		proc_title += ' [test]'
 		if database is None:
 			database = 'dbbact'
 		if user is None:
