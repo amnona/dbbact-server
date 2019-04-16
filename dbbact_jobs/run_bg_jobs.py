@@ -71,7 +71,7 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 			if debug_level is not None:
 				cbash += ' --debug-level %d' % debug_level
 			if proc_title is not None:
-				cbash += ' --proc-title "%s %s"' % (proc_title, ccommand)
+				cbash += ' --proc-title "%s [%s]"' % (proc_title, ccommand)
 			cbash = os.path.join(cdir, cbash)
 			debug(2, 'running command %s (%d / %d)' % (ccommand, idx + 1, len(commands)))
 			debug(1, cbash)
