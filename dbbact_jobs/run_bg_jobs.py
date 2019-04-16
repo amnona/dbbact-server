@@ -71,7 +71,7 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 			if debug_level is not None:
 				cbash += ' --debug-level %d' % debug_level
 			if proc_title is not None:
-				cbash += ' --proc-title "%s"' % proc_title
+				cbash += ' --proc-title "%s %s"' % (proc_title, ccommand)
 			cbash = os.path.join(cdir, cbash)
 			debug(2, 'running command %s (%d / %d)' % (ccommand, idx + 1, len(commands)))
 			debug(1, cbash)
@@ -149,7 +149,7 @@ def main(argv):
 	else:
 		raise ValueError('unknown server-type. should be one of ("main" / "develop" / "test"')
 
-	setproctitle.setproctitle(proc_title)
+	setproctitle.setproctitle(proc_title + ' [master]')
 	run_bg_jobs(port=args.port, host=args.host, database=database, user=user, password=password, single_update=args.single_update, command_params=args.command_params, debug_level=args.debug_level, output_dir=args.output_dir, proc_title=proc_title)
 
 
