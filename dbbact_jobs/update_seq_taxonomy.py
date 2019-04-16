@@ -37,6 +37,8 @@ def update_seq_taxonomy(con, cur, rdp='rdp_classifier_2.12/'):
             cline = cline.rstrip()
             ctaxonomy = [''] * len(ok_levels)
             cdat = cline.split('\t')
+            if len(cdat) < 2:
+                continue
             cseq = cdat.pop(0)
             # we don't use it...
             cdirection = cdat.pop(0)
