@@ -20,8 +20,11 @@ def update_seq_taxonomy(con, cur, rdp='rdp_classifier_2.12/'):
 	num_missing_tax = 0
 	fasta_file_name = 'sequences-no-taxonomy.fa'
 	output_file_name = 'sequences-tax.rdp.txt'
+	cur.execute("SELECT sequence FROM SequencesTable WHERE COALESCE(taxonomy, 'na') = 'na' ")
+	if cur.rowcount == 0:
+		debug(3, 'no new sequences found')
+		return
 	with open(fasta_file_name, 'w') as fl:
-		cur.execute("SELECT sequence FROM SequencesTable WHERE COALESCE(taxonomy, 'na') = 'na' ")
 		for cres in cur:
 			fl.write('>%s\n%s\n' % (cres[0], cres[0]))
 			num_missing_tax += 1
