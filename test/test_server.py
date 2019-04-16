@@ -58,7 +58,7 @@ def start_server(out_file_name='./log-test-server.txt'):
 		raise ValueError('Did not manage to start gunicorn dbbact_server process')
 	atexit.register(stop_server, proc=proc, outfile=outfile)
 	print('server started on address %s' % server_addr)
-	time.sleep(0.5)
+	time.sleep(5)
 	return proc
 
 
