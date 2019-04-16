@@ -4,6 +4,8 @@ import argparse
 import sys
 from collections import defaultdict
 
+import setproctitle
+
 from dbbact_server.utils import debug, SetDebugLevel
 from dbbact_server import db_access
 from dbbact_server import dbsequences
@@ -184,6 +186,7 @@ def main(argv):
 	parser.add_argument('--database', help='postgres database', default='dbbact')
 	parser.add_argument('--user', help='postgres user', default='dbbact')
 	parser.add_argument('--password', help='postgres password', default='magNiv')
+	parser.add_argument('--proc-title', help='name of the process (to view in ps aux)')
 	parser.add_argument('--debug-level', help='debug level (1 for debug ... 9 for critical)', default=2, type=int)
 
 	parser.add_argument('-f', '--wholeseq-file', help='name of the whole sequence fasta file', required=True)
@@ -192,6 +195,10 @@ def main(argv):
 	args = parser.parse_args(argv)
 
 	SetDebugLevel(args.debug_level)
+	# set the process name for ps aux
+	if args.proc_title:
+		setproctitle.setproctitle(args.proc_title)
+
 	# get the database connection
 	con, cur = db_access.connect_db(database=args.database, user=args.user, password=args.password, port=args.port, host=args.host)
 

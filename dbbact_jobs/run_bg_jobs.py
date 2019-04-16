@@ -46,7 +46,7 @@ def removeFile(file_name):
 		pass
 
 
-def run_bg_jobs(port, host, database, user, password, single_update=False, command_params=None, debug_level=None, output_dir=None):
+def run_bg_jobs(port, host, database, user, password, single_update=False, command_params=None, debug_level=None, output_dir=None, proc_title=None):
 	debug(3, 'run_bg_jobs started')
 	if single_update:
 		debug(3, 'running single_update and quitting')
@@ -70,6 +70,8 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 				cbash += ' --host %s' % host
 			if debug_level is not None:
 				cbash += ' --debug-level %d' % debug_level
+			if proc_title is not None:
+				cbash += ' --proc-title %s' % proc_title
 			cbash = os.path.join(cdir, cbash)
 			debug(2, 'running command %s (%d / %d)' % (ccommand, idx + 1, len(commands)))
 			debug(1, cbash)
@@ -117,8 +119,9 @@ def main(argv):
 	database = args.database
 	user = args.user
 	password = args.password
+	proc_title = 'run_bg_jobs.py'
 	if server_type == 'main':
-		setproctitle.setproctitle('run_bg_jobs.py [main]')
+		proc_title = 'run_bg_jobs.py [main]'
 		if database is None:
 			database = 'dbbact'
 		if user is None:
@@ -126,7 +129,7 @@ def main(argv):
 		if password is None:
 			password = 'magNiv'
 	elif server_type == 'develop':
-		setproctitle.setproctitle('run_bg_jobs.py [develop]')
+		proc_title = 'run_bg_jobs.py [develop]'
 		if database is None:
 			database = 'dbbact_develop'
 		if user is None:
@@ -134,7 +137,7 @@ def main(argv):
 		if password is None:
 			password = 'dbbact_develop'
 	elif server_type == 'test':
-		setproctitle.setproctitle('run_bg_jobs.py [test]')
+		proc_title = 'run_bg_jobs.py [test]'
 		if database is None:
 			database = 'dbbact'
 		if user is None:
@@ -146,7 +149,8 @@ def main(argv):
 	else:
 		raise ValueError('unknown server-type. should be one of ("main" / "develop" / "test"')
 
-	run_bg_jobs(port=args.port, host=args.host, database=database, user=user, password=password, single_update=args.single_update, command_params=args.command_params, debug_level=args.debug_level, output_dir=args.output_dir)
+	setproctitle.setproctitle(proc_title)
+	run_bg_jobs(port=args.port, host=args.host, database=database, user=user, password=password, single_update=args.single_update, command_params=args.command_params, debug_level=args.debug_level, output_dir=args.output_dir, proc_title=proc_title)
 
 
 if __name__ == "__main__":
