@@ -119,9 +119,9 @@ def main(argv):
 	database = args.database
 	user = args.user
 	password = args.password
-	proc_title = 'run_bg_jobs.py'
+	proc_title = '"run_bg_jobs.py"'
 	if server_type == 'main':
-		proc_title = 'run_bg_jobs.py [main]'
+		proc_title = '"run_bg_jobs.py [main]"'
 		if database is None:
 			database = 'dbbact'
 		if user is None:
@@ -129,7 +129,7 @@ def main(argv):
 		if password is None:
 			password = 'magNiv'
 	elif server_type == 'develop':
-		proc_title = 'run_bg_jobs.py [develop]'
+		proc_title = '"run_bg_jobs.py [develop]"'
 		if database is None:
 			database = 'dbbact_develop'
 		if user is None:
@@ -137,7 +137,7 @@ def main(argv):
 		if password is None:
 			password = 'dbbact_develop'
 	elif server_type == 'test':
-		proc_title = 'run_bg_jobs.py [test]'
+		proc_title = '"run_bg_jobs.py [test]"'
 		if database is None:
 			database = 'dbbact'
 		if user is None:
