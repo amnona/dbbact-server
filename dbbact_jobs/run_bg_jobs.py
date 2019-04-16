@@ -85,6 +85,10 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 					debug(5, 'command %s failed. error code: %s' % (ccommand, res))
 				else:
 					debug(2, 'command exited ok. running time: %r sec' % (end_time - start_time))
+				# check for sig_term so we will stop running
+				if res == -15:
+					debug(8, 'sigterm encountered. exiting')
+					raise ValueError('sigterm encountered')
 		if single_update:
 			debug(3, 'single_update - finished')
 			break
