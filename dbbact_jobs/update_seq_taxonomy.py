@@ -70,7 +70,7 @@ def update_seq_taxonomy(con, cur, rdp='rdp_classifier_2.12/'):
 			if max_non_empty < 1:
 				taxstr = 'unknown'
 			else:
-				taxstr = ';'.join(ctaxonomy[:max_non_empty + 1]) + ';'
+				taxstr = ';'.join(ctaxonomy[1:max_non_empty + 1]) + ';'
 			cur.execute('UPDATE SequencesTable SET taxonomy=%s WHERE sequence=%s', [taxstr, cseq])
 			num_updated += 1
 	debug(2, 'finished updating database. committing')
