@@ -300,7 +300,7 @@ def get_sequence_annotations():
         if err:
             taxonomy = 'error: err'
 
-    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region)
+    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region, seq_translate_api=g.seq_translate_api)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
