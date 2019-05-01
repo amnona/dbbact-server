@@ -891,7 +891,7 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
     return('')
 
 
-def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info=True, get_all_exp_annotations=True, get_taxonomy=True, get_parents=True):
+def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info=True, get_all_exp_annotations=True, get_taxonomy=True, get_parents=True, seq_translate_api=None):
     """
     Get annotations for a list of sequences in a compact form
 
@@ -946,7 +946,7 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
     for cseqpos, cseq in enumerate(sequences):
         cseqannotationids = []
         # get the sequenceid
-        err, sid = dbsequences.GetSequenceId(con, cur, cseq, region)
+        err, sid = dbsequences.GetSequenceId(con, cur, cseq, region, seq_translate_api=seq_translate_api)
         # if not in database - no annotations
         if len(sid) == 0:
             continue

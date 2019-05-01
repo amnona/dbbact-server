@@ -527,7 +527,7 @@ def get_fast_annotations():
     get_taxonomy = alldat.get('get_taxonomy', True)
     get_parents = alldat.get('get_parents', True)
     get_all_exp_annotations = alldat.get('get_all_exp_annotations', True)
-    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations)
+    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations, seq_translate_api=g.seq_translate_api)
     if err:
         errmsg = 'error encountered while getting the fast annotations: %s' % err
         debug(6, errmsg)
