@@ -256,13 +256,16 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
                 sid.append(resid)
 
     if seq_translate_api is not None:
+        debug(2, 'translating')
         res = requests.post(seq_translate_api + '/test2', json={'sequences': [sequence]})
         if res.ok:
             trans_ids = res.json()['dbbact_ids'][0]
         else:
             debug(5, 'got error from sequence translator: %s' % res.content)
             trans_ids = []
-    sid.extend(trans_ids)
+        sid.extend(trans_ids)
+    else:
+        debug(2, 'not translating')
 
     if len(sid) == 0:
         errmsg = 'sequence %s not found' % sequence
