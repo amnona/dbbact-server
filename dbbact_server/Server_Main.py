@@ -146,7 +146,7 @@ def load_user(request):
         return None
 
 
-def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=None, pg_pwd=None, debug_level=6):
+def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=None, pg_pwd=None, seq_trans_api=True, debug_level=6):
     '''The entry point for running the api server through gunicorn (http://gunicorn.org/)
     to run dbbact rest server using gunicorn, use:
 
@@ -160,6 +160,11 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
         None to use the DBBACT_SERVER_TYPE environment variable instead
     pg_host, pg_port, pg_db, pg_user, pg_pwd: str or None, optional
         str to override the env. variable and server_type selected postgres connection parameters
+    seq_trans_api: str or None or False, optional
+        if str, use the sequence translator rest api from this address (e,g, 'http://127.0.0.1:5021')
+        if True, use the server type default value
+        if None, do not use sequence translator to link sequences across different primer regions
+
     debug_level: int, optional
         The minimal level of debug messages to log (10 is max, ~5 is equivalent to warning)
 
@@ -175,6 +180,17 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
     set_env_params()
     if server_type is not None:
         app.config['DBBACT_SERVER_TYPE'] = server_type
+        if server_type == 'main':
+            if seq_trans_api is True:
+                seq_trans_api = 'http://0.0.0.0:5021'
+        elif server_type == 'develop':
+            if seq_trans_api is True:
+                seq_trans_api = 'http://0.0.0.0:5022'
+        elif server_type == 'test':
+            if seq_trans_api is True:
+                seq_trans_api = 'http://0.0.0.0:5023'
+        else:
+            debug(6, 'unknown server_type %s. Not using sequence translator')
     if pg_host is not None:
         app.config['DBBACT_POSTGRES_HOST'] = pg_host
     if pg_port is not None:
@@ -186,14 +202,18 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
     if pg_db is not None:
         app.config['DBBACT_POSTGRES_DATABASE'] = pg_db
 
-    app.config['DBBACT_SEQUENCE_TRANSLATOR_ADDR'] = 'http://0.0.0.0:5022'
+    if seq_trans_api == True:
+        debug(6, 'cannot set sequence translator since server_type is not set. Not using sequence translator')
+        seq_trans_api = None
+    if seq_trans_api is not None:
+        app.config['DBBACT_SEQUENCE_TRANSLATOR_ADDR'] = seq_trans_api
 
     return app
 
 
 def set_env_params():
     # set the database access parameters
-    env_params = ['DBBACT_SERVER_TYPE', 'DBBACT_POSTGRES_HOST', 'DBBACT_POSTGRES_PORT', 'DBBACT_POSTGRES_DATABASE', 'DBBACT_POSTGRES_USER', 'DBBACT_POSTGRES_PASSWORD']
+    env_params = ['DBBACT_SERVER_TYPE', 'DBBACT_POSTGRES_HOST', 'DBBACT_POSTGRES_PORT', 'DBBACT_POSTGRES_DATABASE', 'DBBACT_POSTGRES_USER', 'DBBACT_POSTGRES_PASSWORD', 'DBBACT_SEQUENCE_TRANSLATOR_ADDR']
     for cparam in env_params:
             cval = os.environ.get(cparam)
             if cval is not None:
