@@ -186,7 +186,7 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
     if pg_db is not None:
         app.config['DBBACT_POSTGRES_DATABASE'] = pg_db
 
-    app.config['DBBACT_SEQUENCE_TRANSLATOR_ADDR'] = 'http://0.0.0.0:5021'
+    app.config['DBBACT_SEQUENCE_TRANSLATOR_ADDR'] = 'http://0.0.0.0:5022'
 
     return app
 
