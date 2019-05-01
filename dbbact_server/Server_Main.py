@@ -190,20 +190,17 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
         app.config['DBBACT_POSTGRES_PASSWORD'] = pg_user
     if pg_db is not None:
         app.config['DBBACT_POSTGRES_DATABASE'] = pg_db
-    if isinstance(seq_trans_api, str):
+    if seq_trans_api is not None:
         app.config['DBBACT_SEQUENCE_TRANSLATOR_ADDR'] = seq_trans_api
 
     # try to set the seq translator api address accroding to server type if needed
     if app.config.get('DBBACT_SEQUENCE_TRANSLATOR_ADDR') is True:
         if app.config.get('DBBACT_SERVER_TYPE') == 'main':
-            if seq_trans_api is True:
-                seq_trans_api = 'http://0.0.0.0:5021'
+            seq_trans_api = 'http://0.0.0.0:5021'
         elif app.config.get('DBBACT_SERVER_TYPE') == 'develop':
-            if seq_trans_api is True:
-                seq_trans_api = 'http://0.0.0.0:5022'
+            seq_trans_api = 'http://0.0.0.0:5022'
         elif app.config.get('DBBACT_SERVER_TYPE') == 'test':
-            if seq_trans_api is True:
-                seq_trans_api = 'http://0.0.0.0:5023'
+            seq_trans_api = 'http://0.0.0.0:5023'
         else:
             debug(6, 'unknown server_type %s. Not using sequence translator')
             seq_trans_api = None
