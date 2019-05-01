@@ -11,7 +11,7 @@ from . import dbannotations
 SEED_SEQ_LEN = 100
 
 
-def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', commit=True):
+def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', commit=True, seq_translate_api=None):
     """
     Add sequence entries to database if they do not exist yet
     input:
@@ -42,13 +42,14 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
         return "primer %s not found" % primer, None
     debug(1, 'primerid %s' % idprimer)
     try:
+        seqs_to_add_to_translator = {}
         for idx, cseq in enumerate(sequences):
             if len(cseq) < SEED_SEQ_LEN:
                 errmsg = 'sequence too short (<%d) for sequence %s' % (SEED_SEQ_LEN, cseq)
                 debug(4, errmsg)
                 return errmsg, None
-            # test if already exists, skip it
-            err, cseqid = GetSequenceId(con, cur, sequence=cseq, idprimer=idprimer, no_shorter=True, no_longer=True)
+            # test if already exists, skip it. NOTE: we do not want the sequence translator sequences as result (we look for our sequence)
+            err, cseqid = GetSequenceId(con, cur, sequence=cseq, idprimer=idprimer, no_shorter=True, no_longer=True, seq_translate_api=None)
             if len(cseqid) == 0:
                 # not found, so need to add this sequence
                 if taxonomies is None:
@@ -64,9 +65,16 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 cur.execute('INSERT INTO SequencesTable (idPrimer,sequence,length,taxonomy,ggid,seedsequence) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id', [idprimer, cseq, len(cseq), ctax, cggid, cseedseq])
                 cseqid = cur.fetchone()
                 numadded += 1
+                seqs_to_add_to_translator[cseqid] = cseq
             if len(cseqid) > 1:
                 debug(8, 'AddSequences - Same sequence appears twice in database: %s' % cseq)
             seqids.append(cseqid[0])
+        if seq_translate_api is not None:
+            res = requests.post(seq_translate_api + '/add_sequences_to_queue', json={'seq_info': seqs_to_add_to_translator})
+            if not res.ok:
+                msg = 'add new sequences to sequence translator failed. error: %s' % res.content
+                debug(7, msg)
+                return msg, None
         if commit:
             con.commit()
         debug(3, "Added %d sequences (out of %d)" % (numadded, len(sequences)))
