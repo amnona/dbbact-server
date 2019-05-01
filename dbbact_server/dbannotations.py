@@ -591,7 +591,7 @@ def GetUserAnnotations(con, cur, foruserid, userid=0):
     return '', details
 
 
-def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0):
+def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_translate_api=None):
     """
     Get all annotations for a sequence. Returns a list of annotations (empty list if sequence is not found)
 
@@ -604,6 +604,9 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0):
         None to not compare region, or the regionid the sequence is from
     userid : int (optional)
         the id of the user requesting the annotations. Private annotations with non-matching user will not be returned
+    seq_translate_api: str or None, optional
+        str: the address of the sequence translator rest-api (default 0.0.0.0:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
+        None: get only exact matches
 
     Returns
     -------
@@ -614,7 +617,7 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0):
     """
     details = []
     debug(1, 'GetSequenceAnnotations sequence %s' % sequence)
-    err, sid = dbsequences.GetSequenceId(con, cur, sequence, region)
+    err, sid = dbsequences.GetSequenceId(con, cur, sequence, region, seq_translate_api=seq_translate_api)
     if len(sid) == 0:
         debug(2, 'Sequence %s not found for GetSequenceAnnotations.' % sequence)
         return '', []

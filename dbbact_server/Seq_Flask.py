@@ -390,7 +390,7 @@ def get_sequence_list_annotations():
         return('sequences parameter missing', 400)
     seqannotations = []
     for cseq in sequences:
-        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id)
+        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id, seq_translate_api=g.seq_translate_api)
         # if err:
         #   debug(6,err)
         #   return ('Problem geting details. error=%s' % err,400)
@@ -1153,18 +1153,3 @@ def add_primer_region():
         return ('Problem adding new region. error=%s' % err, 400)
     res = json.dumps('ok')
     return res
-
-
-@Seq_Flask_Obj.route('/sequences/test', methods=['GET'])
-@auto.doc()
-def seqtest():
-    import time
-    print('test')
-    alldat = request.get_json()
-    stime = alldat.get('sleep')
-    print('sleeping %d secs' % stime)
-    for t in range(stime):
-        print(t)
-        time.sleep(1)
-    print('good morning')
-    return json.dumps({'tada': 'pita'})

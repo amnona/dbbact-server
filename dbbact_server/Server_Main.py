@@ -62,6 +62,8 @@ def before_request():
                                     password=app.config.get('DBBACT_POSTGRES_PASSWORD'))
     g.con = con
     g.cur = cur
+    # address of the sequence translator rest api
+    g.seq_translate_api = app.config.get('DBBACT_SEQUENCE_TRANSLATOR_ADDR')
 
 
 # and when the request is over, disconnect
@@ -183,6 +185,8 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
         app.config['DBBACT_POSTGRES_PASSWORD'] = pg_user
     if pg_db is not None:
         app.config['DBBACT_POSTGRES_DATABASE'] = pg_db
+
+    app.config['DBBACT_SEQUENCE_TRANSLATOR_ADDR'] = 'http://0.0.0.0:5021'
 
     return app
 
