@@ -123,7 +123,7 @@ def SeqFromID(con, cur, seqids):
     return '', sequences
 
 
-def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False):
+def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None):
     """
     Get sequence ids for a sequence or list of sequences
 
@@ -145,7 +145,7 @@ def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False):
         sequences = [sequences]
     ids = []
     for cseq in sequences:
-        err, cid = GetSequenceId(con, cur, cseq, no_shorter=no_shorter, no_longer=no_longer)
+        err, cid = GetSequenceId(con, cur, cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api)
         if err:
             # skip - or should we abort and return an error?
             continue
