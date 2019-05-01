@@ -180,17 +180,6 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
     set_env_params()
     if server_type is not None:
         app.config['DBBACT_SERVER_TYPE'] = server_type
-        if server_type == 'main':
-            if seq_trans_api is True:
-                seq_trans_api = 'http://0.0.0.0:5021'
-        elif server_type == 'develop':
-            if seq_trans_api is True:
-                seq_trans_api = 'http://0.0.0.0:5022'
-        elif server_type == 'test':
-            if seq_trans_api is True:
-                seq_trans_api = 'http://0.0.0.0:5023'
-        else:
-            debug(6, 'unknown server_type %s. Not using sequence translator')
     if pg_host is not None:
         app.config['DBBACT_POSTGRES_HOST'] = pg_host
     if pg_port is not None:
@@ -201,11 +190,23 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
         app.config['DBBACT_POSTGRES_PASSWORD'] = pg_user
     if pg_db is not None:
         app.config['DBBACT_POSTGRES_DATABASE'] = pg_db
+    if isinstance(seq_trans_api, str):
+        app.config['DBBACT_SEQUENCE_TRANSLATOR_ADDR'] = seq_trans_api
 
-    if seq_trans_api == True:
-        debug(6, 'cannot set sequence translator since server_type is not set. Not using sequence translator')
-        seq_trans_api = None
-    if seq_trans_api is not None:
+    # try to set the seq translator api address accroding to server type if needed
+    if app.config.get('DBBACT_SEQUENCE_TRANSLATOR_ADDR') is True:
+        if app.config.get('DBBACT_SERVER_TYPE') == 'main':
+            if seq_trans_api is True:
+                seq_trans_api = 'http://0.0.0.0:5021'
+        elif app.config.get('DBBACT_SERVER_TYPE') == 'develop':
+            if seq_trans_api is True:
+                seq_trans_api = 'http://0.0.0.0:5022'
+        elif app.config.get('DBBACT_SERVER_TYPE') == 'test':
+            if seq_trans_api is True:
+                seq_trans_api = 'http://0.0.0.0:5023'
+        else:
+            debug(6, 'unknown server_type %s. Not using sequence translator')
+            seq_trans_api = None
         app.config['DBBACT_SEQUENCE_TRANSLATOR_ADDR'] = seq_trans_api
 
     return app
