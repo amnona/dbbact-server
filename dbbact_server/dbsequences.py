@@ -65,7 +65,7 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 cur.execute('INSERT INTO SequencesTable (idPrimer,sequence,length,taxonomy,ggid,seedsequence) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id', [idprimer, cseq, len(cseq), ctax, cggid, cseedseq])
                 cseqid = cur.fetchone()
                 numadded += 1
-                seqs_to_add_to_translator[cseqid] = cseq
+                seqs_to_add_to_translator[cseqid[0]] = cseq
             if len(cseqid) > 1:
                 debug(8, 'AddSequences - Same sequence appears twice in database: %s' % cseq)
             seqids.append(cseqid[0])
