@@ -59,6 +59,10 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 	removeFile(stop_file)
 	while not isFileExist(stop_file):
 		for idx, (ccommand, cbash) in enumerate(commands.items()):
+			cuser = user
+			cpassword = password
+			cdatabase = database
+			cport = port
 			if command_params is not None:
 				for cpar in command_params:
 					cpar_split = cpar.split(':')
@@ -66,8 +70,20 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 						debug(5, 'command parameters %s should be command:param_name:value' % cpar)
 						continue
 					if ccommand == cpar_split[0]:
+						if cpar_split[1] == 'user':
+							cuser = cpar_split[2]
+							continue
+						if cpar_split[1] == 'database':
+							cdatabase = cpar_split[2]
+							continue
+						if cpar_split[1] == 'port':
+							cport = cpar_split[2]
+							continue
+						if cpar_split[1] == 'password':
+							cpassword = cpar_split[2]
+							continue
 						cbash += ' --%s %s' % (cpar_split[1], cpar_split[2])
-			cbash += ' --port %s --database %s --user %s --password %s' % (port, database, user, password)
+			cbash += ' --port %s --database %s --user %s --password %s' % (cport, cdatabase, cuser, cpassword)
 			if host is not None:
 				cbash += ' --host %s' % host
 			if debug_level is not None:
