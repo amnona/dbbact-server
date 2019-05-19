@@ -101,7 +101,7 @@ def add_annotations():
     private = alldat.get('private')
     userid = current_user.user_id
     annotationlist = alldat.get('annotationList')
-    err, annotationid = dbannotations.AddSequenceAnnotations(g.con, g.cur, sequences, primer, expid, annotationtype, annotationlist, method, description, agenttype, private, userid=userid, commit=True)
+    err, annotationid = dbannotations.AddSequenceAnnotations(g.con, g.cur, sequences, primer, expid, annotationtype, annotationlist, method, description, agenttype, private, userid=userid, commit=True, seq_translate_api=g.seq_translate_api)
     if not err:
         debug(2, 'added sequece annotations')
         return json.dumps({"annotationId": annotationid})

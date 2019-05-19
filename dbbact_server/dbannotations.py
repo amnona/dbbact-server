@@ -11,7 +11,7 @@ from .utils import debug
 
 
 def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, annotationdetails, method='',
-                           description='', agenttype='', private='n', userid=None, commit=True):
+                           description='', agenttype='', private='n', userid=None, commit=True, seq_translate_api=None):
     """
     Add an annotation to the annotation table
 
@@ -42,6 +42,8 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
         username of the user creating this annotation or None (default) for anonymous user
     commit : bool (optional)
         True (default) to commit, False to wait with the commit
+    seq_translate_api: str or None (optional)
+        address of the sequence translator API (to add new sequences to translation waiting queue). If none, don't add to waiting queue
 
     output:
     err : str
@@ -52,7 +54,7 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
     # add the sequences after removing duplicates
     sequences = [x.lower() for x in sequences]
     sequences = list(set(sequences))
-    err, seqids = dbsequences.AddSequences(con, cur, sequences, primer=primer, commit=False)
+    err, seqids = dbsequences.AddSequences(con, cur, sequences, primer=primer, commit=False, seq_translate_api=seq_translate_api)
     if err:
         return err, -1
     err, annotationid = AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method, description, agenttype, private, userid, commit=False, numseqs=len(set(seqids)))

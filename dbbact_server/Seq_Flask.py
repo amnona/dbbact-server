@@ -59,7 +59,7 @@ def add_sequences():
     if primer is None:
         return(getdoc(cfunc))
 
-    err, seqids = dbsequences.AddSequences(g.con, g.cur, sequences=sequences, taxonomies=taxonomies, ggids=ggids, primer=primer)
+    err, seqids = dbsequences.AddSequences(g.con, g.cur, sequences=sequences, taxonomies=taxonomies, ggids=ggids, primer=primer, seq_translate_api=g.seq_translate_api)
     if err:
         return(err, 400)
     debug(2, 'added/found %d sequences' % len(seqids))

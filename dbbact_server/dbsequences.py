@@ -70,11 +70,14 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 debug(8, 'AddSequences - Same sequence appears twice in database: %s' % cseq)
             seqids.append(cseqid[0])
         if seq_translate_api is not None:
+            debug(1, 'adding sequence to sequence translator queue')
             res = requests.post(seq_translate_api + '/add_sequences_to_queue', json={'seq_info': seqs_to_add_to_translator})
             if not res.ok:
                 msg = 'add new sequences to sequence translator failed. error: %s' % res.content
                 debug(7, msg)
                 return msg, None
+        else:
+            debug(5, 'sequence translator not activated for add_sequence')
         if commit:
             con.commit()
         debug(3, "Added %d sequences (out of %d)" % (numadded, len(sequences)))
