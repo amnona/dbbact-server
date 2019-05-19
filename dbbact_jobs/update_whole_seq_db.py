@@ -183,7 +183,7 @@ def update_whole_seq_db(con, cur, whole_seq_fasta_name, seqdbname, check_exists=
 	# prepare the dbbact sequences to get ids for
 	all_ids, seq_hash, seq_lens, short_hash = hash_sequences(con, cur, dbidVal=whole_seq_dbid, short_len=150, check_exists=check_exists)
 	if len(all_ids) == 0:
-		debug(2, "no sequences tp process.")
+		debug(2, "no sequences to process.")
 		return
 
 	debug(2, 'Getting whole seq db IDs for %d dbbact sequences' % len(all_ids))

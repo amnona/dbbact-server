@@ -134,7 +134,7 @@ def SeqFromID(con, cur, seqids):
     return '', sequences
 
 
-def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None):
+def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
     """
     Get sequence ids for a sequence or list of sequences
 
@@ -145,6 +145,9 @@ def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_t
         False (default) to enable shorter db sequences matching sequence, True to require at least length of query sequence
     no_longer : bool (optional)
         False (default) to enable longer db sequences matching sequence, True to require at least length of database sequence
+    dbname: str or None, optional
+        if None, assume sequences are acgt sequences
+        if str, assume sequences are database ids and this is the database name (i.e. 'FJ978486' for 'silva', etc.)
 
     output:
     errmsg : str
@@ -156,7 +159,7 @@ def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_t
         sequences = [sequences]
     ids = []
     for cseq in sequences:
-        err, cid = GetSequenceId(con, cur, cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api)
+        err, cid = GetSequenceId(con, cur, cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
         if err:
             # skip - or should we abort and return an error?
             continue
@@ -200,7 +203,7 @@ def GetSequenceIdFromGG(con, cur, ggid):
     return '', sid
 
 
-def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer=False, seq_translate_api=None):
+def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
     """
     Get sequence ids for a sequence
 
@@ -216,6 +219,9 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
     seq_translate_api: str or None, optional
         str: the address of the sequence translator rest-api (default 0.0.0.0:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
         None: get only exact matches
+    dbname: str or None, optional
+        if None, assume sequences are acgt sequences
+        if str, assume sequences are database ids and this is the database name (i.e. 'FJ978486' for 'silva', etc.)
 
     output:
     errmsg : str
@@ -231,44 +237,50 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
 
     sid = []
     cseq = sequence.lower()
-    if len(cseq) < SEED_SEQ_LEN:
-        errmsg = 'sequence too short (<%d) for sequence %s' % (SEED_SEQ_LEN, cseq)
-        debug(4, errmsg)
-        return errmsg, sid
+    # if looking for dbbact sequence matches
+    if dbname is None:
+        if len(cseq) < SEED_SEQ_LEN:
+            errmsg = 'sequence too short (<%d) for sequence %s' % (SEED_SEQ_LEN, cseq)
+            debug(4, errmsg)
+            return errmsg, sid
 
-    # look for all sequences matching the seed
-    cseedseq = cseq[:SEED_SEQ_LEN]
-    cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
-    # if cur.rowcount == 0:
-    #     errmsg = 'sequence %s not found' % sequence
-    #     debug(1, errmsg)
-    #     return errmsg, sid
+        # look for all sequences matching the seed
+        cseedseq = cseq[:SEED_SEQ_LEN]
+        cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
+        # if cur.rowcount == 0:
+        #     errmsg = 'sequence %s not found' % sequence
+        #     debug(1, errmsg)
+        #     return errmsg, sid
 
-    cseqlen = len(cseq)
-    res = cur.fetchall()
-    for cres in res:
-        resid = cres[0]
-        resseq = cres[1]
-        if no_shorter:
-            if len(resseq) < cseqlen:
-                continue
-            comparelen = cseqlen
-        else:
-            comparelen = min(len(resseq), cseqlen)
-        if no_longer:
-            if len(resseq) > cseqlen:
-                continue
-        if cseq[:comparelen] == resseq[:comparelen]:
-            if idprimer is None:
-                sid.append(resid)
-            cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
-            res = cur.fetchone()
-            if res[0] == idprimer:
-                sid.append(resid)
+        cseqlen = len(cseq)
+        res = cur.fetchall()
+        for cres in res:
+            resid = cres[0]
+            resseq = cres[1]
+            if no_shorter:
+                if len(resseq) < cseqlen:
+                    continue
+                comparelen = cseqlen
+            else:
+                comparelen = min(len(resseq), cseqlen)
+            if no_longer:
+                if len(resseq) > cseqlen:
+                    continue
+            if cseq[:comparelen] == resseq[:comparelen]:
+                if idprimer is None:
+                    sid.append(resid)
+                cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
+                res = cur.fetchone()
+                if res[0] == idprimer:
+                    sid.append(resid)
 
     if seq_translate_api is not None:
-        debug(6, 'translating')
-        res = requests.post(seq_translate_api + '/get_ids_for_seqs', json={'sequences': [sequence]})
+        if dbname is None:
+            debug(2, 'translating sequence to other regions')
+            res = requests.post(seq_translate_api + '/get_ids_for_seqs', json={'sequences': [sequence]})
+        else:
+            debug(2, 'getting dbids from wholeseq ids')
+            res = requests.post(seq_translate_api + '/get_dbbact_ids_from_wholeseq_ids', json={'whole_seq_ids': [sequence], 'dbname': dbname})
         if res.ok:
             trans_ids = res.json()['dbbact_ids'][0]
         else:

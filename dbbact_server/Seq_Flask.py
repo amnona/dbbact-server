@@ -70,14 +70,14 @@ def add_sequences():
 @auto.doc()
 def get_sequenceid():
     """
-    Title: Get id for a given new sequences (or return -1 if does not exist)
+    Title: Get id for a given sequence (or return -1 if does not exist)
     URL: /sequences/getid
     Method: GET
     URL Params:
     Data Params: JSON
         {
             "sequence" : str
-                the sequence to get data about
+                the sequence to get data about. could be 'acgt' or SILVA ID (in case dbname is set to 'silva')
             "no_shorter" : bool (optional)
                 False (default) to get also shorter sequences from DB if matching.
                 True to get only sequences at least as long as the query
@@ -87,6 +87,8 @@ def get_sequenceid():
             "use_sequence_translator": bool (optional)
                 True to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False (default) to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
         }
     Success Response:
         Code : 201
@@ -107,6 +109,7 @@ def get_sequenceid():
     no_shorter = alldat.get('no_shorter', False)
     no_longer = alldat.get('no_longer', False)
     use_sequence_translator = alldat.get('use_sequence_translator', False)
+    dbname = alldat.get('dbname', None)
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
     else:
@@ -114,7 +117,7 @@ def get_sequenceid():
     if sequence is None:
         return(getdoc(cfunc))
 
-    err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=sequence, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api)
+    err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=sequence, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
     if err:
         return(err, 400)
     debug(2, 'found sequences')
@@ -142,6 +145,8 @@ def get_sequenceid_list():
             "use_sequence_translator": bool (optional)
                 True to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False (default) to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
         }
     Success Response:
         Code : 201
@@ -160,6 +165,7 @@ def get_sequenceid_list():
     sequences = alldat.get('sequences')
     no_shorter = alldat.get('no_shorter', False)
     no_longer = alldat.get('no_longer', False)
+    dbname = alldat.get('dbname', None)
     if sequences is None:
         return(getdoc(cfunc))
     use_sequence_translator = alldat.get('use_sequence_translator', False)
@@ -170,7 +176,7 @@ def get_sequenceid_list():
 
     out_list = []
     for cseq in sequences:
-        err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api)
+        err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
         if err:
             debug(4, 'Sequence %s not found from get_sequenceid_list' % cseq)
             seqid = []
@@ -204,7 +210,7 @@ def get_taxonomy_str():
         }
     """
     debug(3, 'get_taxonomy_str', request)
-    cfunc = get_sequence_annotations
+    cfunc = get_taxonomy_str
     alldat = request.get_json()
     if alldat is None:
         return(getdoc(cfunc))
@@ -232,7 +238,7 @@ def get_sequence_annotations():
     Data Params: JSON
         {
             "sequence" : str
-                the DNA sequence string to query the database (can be any length)
+                the DNA sequence string to query the database (can be any length). Can also be a SILVA ID if dbname is set to "silva"
             "region" : int (optional)
                 the region id (default=1 which is V4 515F 806R)
             "get_term_info" : bool (optional)
@@ -242,6 +248,8 @@ def get_sequence_annotations():
             "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
     Success Response:
         Code : 200
         Content :
@@ -313,6 +321,7 @@ def get_sequence_annotations():
     get_tax_info = alldat.get('get_tax_info', True)
     region = alldat.get('region')
     use_sequence_translator = alldat.get('use_sequence_translator', True)
+    dbname = alldat.get('dbname', None)
 
     taxonomy = None
     if get_tax_info:
@@ -324,7 +333,7 @@ def get_sequence_annotations():
     else:
         seq_translate_api = None
 
-    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region, seq_translate_api=seq_translate_api)
+    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region, seq_translate_api=seq_translate_api, dbname=dbname)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
@@ -464,7 +473,7 @@ def get_fast_annotations():
     Data Params: JSON
         {
             "sequences": list of str ('ACGT')
-                the list of sequence strings to query the database (can be any length)
+                the list of sequence strings to query the database (can be any length). Can be list of SILVA IDs (in case dbname is set to 'silva')
             "region": int (optional)
                 the region id (default=1 which is V4 515F 806R)
             "get_term_info": bool (optional)
@@ -478,6 +487,8 @@ def get_fast_annotations():
             "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
     Success Response:
         Code : 200
         Content :
@@ -563,12 +574,13 @@ def get_fast_annotations():
     get_taxonomy = alldat.get('get_taxonomy', True)
     get_parents = alldat.get('get_parents', True)
     use_sequence_translator = alldat.get('use_sequence_translator', True)
+    dbname = alldat.get('dbname', None)
     get_all_exp_annotations = alldat.get('get_all_exp_annotations', True)
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
     else:
         seq_translate_api = None
-    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations, seq_translate_api=seq_translate_api)
+    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations, seq_translate_api=seq_translate_api, dbname=dbname)
     if err:
         errmsg = 'error encountered while getting the fast annotations: %s' % err
         debug(6, errmsg)

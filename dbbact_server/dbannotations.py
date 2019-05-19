@@ -593,7 +593,7 @@ def GetUserAnnotations(con, cur, foruserid, userid=0):
     return '', details
 
 
-def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_translate_api=None):
+def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_translate_api=None, dbname=None):
     """
     Get all annotations for a sequence. Returns a list of annotations (empty list if sequence is not found)
 
@@ -619,7 +619,7 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_transl
     """
     details = []
     debug(1, 'GetSequenceAnnotations sequence %s' % sequence)
-    err, sid = dbsequences.GetSequenceId(con, cur, sequence, region, seq_translate_api=seq_translate_api)
+    err, sid = dbsequences.GetSequenceId(con, cur, sequence, region, seq_translate_api=seq_translate_api, dbname=dbname)
     if len(sid) == 0:
         debug(2, 'Sequence %s not found for GetSequenceAnnotations.' % sequence)
         return '', []
@@ -893,7 +893,7 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
     return('')
 
 
-def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info=True, get_all_exp_annotations=True, get_taxonomy=True, get_parents=True, seq_translate_api=None):
+def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info=True, get_all_exp_annotations=True, get_taxonomy=True, get_parents=True, seq_translate_api=None, dbname=None):
     """
     Get annotations for a list of sequences in a compact form
 
@@ -948,7 +948,7 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
     for cseqpos, cseq in enumerate(sequences):
         cseqannotationids = []
         # get the sequenceid
-        err, sid = dbsequences.GetSequenceId(con, cur, cseq, region, seq_translate_api=seq_translate_api)
+        err, sid = dbsequences.GetSequenceId(con, cur, cseq, region, seq_translate_api=seq_translate_api, dbname=dbname)
         # if not in database - no annotations
         if len(sid) == 0:
             continue
