@@ -1,5 +1,6 @@
 from collections import defaultdict
 import psycopg2
+import requests
 
 from . import dbprimers
 from .utils import debug
@@ -10,7 +11,7 @@ from . import dbannotations
 SEED_SEQ_LEN = 100
 
 
-def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', commit=True):
+def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', commit=True, seq_translate_api=None):
     """
     Add sequence entries to database if they do not exist yet
     input:
@@ -41,13 +42,14 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
         return "primer %s not found" % primer, None
     debug(1, 'primerid %s' % idprimer)
     try:
+        seqs_to_add_to_translator = {}
         for idx, cseq in enumerate(sequences):
             if len(cseq) < SEED_SEQ_LEN:
                 errmsg = 'sequence too short (<%d) for sequence %s' % (SEED_SEQ_LEN, cseq)
                 debug(4, errmsg)
                 return errmsg, None
-            # test if already exists, skip it
-            err, cseqid = GetSequenceId(con, cur, sequence=cseq, idprimer=idprimer, no_shorter=True, no_longer=True)
+            # test if already exists, skip it. NOTE: we do not want the sequence translator sequences as result (we look for our sequence)
+            err, cseqid = GetSequenceId(con, cur, sequence=cseq, idprimer=idprimer, no_shorter=True, no_longer=True, seq_translate_api=None)
             if len(cseqid) == 0:
                 # not found, so need to add this sequence
                 if taxonomies is None:
@@ -63,9 +65,16 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 cur.execute('INSERT INTO SequencesTable (idPrimer,sequence,length,taxonomy,ggid,seedsequence) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id', [idprimer, cseq, len(cseq), ctax, cggid, cseedseq])
                 cseqid = cur.fetchone()
                 numadded += 1
+                seqs_to_add_to_translator[cseqid] = cseq
             if len(cseqid) > 1:
                 debug(8, 'AddSequences - Same sequence appears twice in database: %s' % cseq)
             seqids.append(cseqid[0])
+        if seq_translate_api is not None:
+            res = requests.post(seq_translate_api + '/add_sequences_to_queue', json={'seq_info': seqs_to_add_to_translator})
+            if not res.ok:
+                msg = 'add new sequences to sequence translator failed. error: %s' % res.content
+                debug(7, msg)
+                return msg, None
         if commit:
             con.commit()
         debug(3, "Added %d sequences (out of %d)" % (numadded, len(sequences)))
@@ -122,7 +131,7 @@ def SeqFromID(con, cur, seqids):
     return '', sequences
 
 
-def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False):
+def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None):
     """
     Get sequence ids for a sequence or list of sequences
 
@@ -144,7 +153,7 @@ def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False):
         sequences = [sequences]
     ids = []
     for cseq in sequences:
-        err, cid = GetSequenceId(con, cur, cseq, no_shorter=no_shorter, no_longer=no_longer)
+        err, cid = GetSequenceId(con, cur, cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api)
         if err:
             # skip - or should we abort and return an error?
             continue
@@ -188,7 +197,7 @@ def GetSequenceIdFromGG(con, cur, ggid):
     return '', sid
 
 
-def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer=False):
+def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer=False, seq_translate_api=None):
     """
     Get sequence ids for a sequence
 
@@ -201,6 +210,9 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
         False (default) to enable shorter db sequences matching sequence, True to require at least length of query sequence
     no_longer : bool (optional)
         False (default) to enable longer db sequences matching sequence, True to require at least length of database sequence
+    seq_translate_api: str or None, optional
+        str: the address of the sequence translator rest-api (default 0.0.0.0:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
+        None: get only exact matches
 
     output:
     errmsg : str
@@ -224,10 +236,10 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
     # look for all sequences matching the seed
     cseedseq = cseq[:SEED_SEQ_LEN]
     cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
-    if cur.rowcount == 0:
-        errmsg = 'sequence %s not found' % sequence
-        debug(1, errmsg)
-        return errmsg, sid
+    # if cur.rowcount == 0:
+    #     errmsg = 'sequence %s not found' % sequence
+    #     debug(1, errmsg)
+    #     return errmsg, sid
 
     cseqlen = len(cseq)
     res = cur.fetchall()
@@ -250,10 +262,25 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
             res = cur.fetchone()
             if res[0] == idprimer:
                 sid.append(resid)
+
+    if seq_translate_api is not None:
+        debug(6, 'translating')
+        res = requests.post(seq_translate_api + '/get_ids_for_seqs', json={'sequences': [sequence]})
+        if res.ok:
+            trans_ids = res.json()['dbbact_ids'][0]
+        else:
+            debug(5, 'got error from sequence translator: %s' % res.content)
+            trans_ids = []
+        sid.extend(trans_ids)
+    else:
+        debug(6, 'not translating')
+
     if len(sid) == 0:
         errmsg = 'sequence %s not found' % sequence
         debug(1, errmsg)
         return errmsg, sid
+
+    sid = list(set(sid))
     return '', sid
 
     # # if no regionid specified, fetch only 1 (faster)
@@ -495,15 +522,6 @@ def GetGgAnnotationIDs(con, cur, gg_str, userid=None):
     ggStr = gg_str
     debug(1, 'GetGgAnnotationIDs for gg %s' % gg_str)
 
-    # cur.execute("SELECT id,sequence,ggid FROM sequencestable where id in (select distinct dbbactid from wholeseqidstable where dbid=2 and wholeseqid != 'na' and wholeseqid ILIKE %s)", [ggStr])
-
-    # res = cur.fetchall()
-    # seqids = []
-    # seqnames = []
-    # for cres in res:
-    #     seqids.append(cres[0])
-    #     seqnames.append(cres[1])
-    # debug(1, 'found %d matching sequences for the gg' % len(seqids))
     err, seqids, seqnames = get_seqs_from_db_id(con, cur, 'gg', ggStr)
     if err != '':
         return err, [], [], []
@@ -550,13 +568,6 @@ def GetSilvaAnnotationIDs(con, cur, silva_str, userid=None):
     err, seqids, seqnames = get_seqs_from_db_id(con, cur, 'silva', silva_str)
     if err != '':
         return err, [], [], []
-    # cur.execute("SELECT id,sequence FROM sequencestable where id in (select distinct dbbactid from wholeseqidstable where dbid=1 and wholeseqid != 'na' and wholeseqid ILIKE %s)", [silvaStr])
-    # res = cur.fetchall()
-    # seqids = []
-    # seqnames = []
-    # for cres in res:
-    #     seqids.append(cres[0])
-    #     seqnames.append(cres[1])
     debug(1, 'found %d matching sequences for the silva' % len(seqids))
     annotationids_dict = defaultdict(int)
     for cseq in seqids:
@@ -757,152 +768,6 @@ def GetSequenceWithNoHashID(con, cur):
         errmsg = 'database error when fetching samples with no hashid: %s' % e
         debug(5, errmsg)
         return errmsg, -1
-
-
-def get_whole_seq_db_id_from_name(con, cur, whole_seq_db_name, whole_seq_db_version=None):
-    '''
-    Get the id of the whole sequence database based on name and optional version
-
-    Parameters
-    ----------
-    whole_seq_db_name: str
-        name (i.e. SILVA/GREENGENES)
-    whole_seq_db_version: str or None, optional
-        if not None, match also the version
-
-    Returns:
-    err: str or empty if ok
-    id: int
-        the WholeSeqDatabaseTable id
-    '''
-    whole_seq_db_name = whole_seq_db_name.lower()
-    debug(1, 'get_whole_seq_db_id_from_name for db %s version %s' % (whole_seq_db_name, whole_seq_db_version))
-    try:
-        if whole_seq_db_version is None:
-            cur.execute('SELECT dbid FROM WholeSeqDatabaseTable WHERE dbName=%s', [whole_seq_db_name])
-        else:
-            cur.execute('SELECT (dbId) FROM WholeSeqDatabaseTable WHERE "dbName"=%s AND version=%s', [whole_seq_db_name, whole_seq_db_version])
-        if cur.rowcount == 0:
-            debug(1, 'no match to database found')
-            return('No match found', None)
-        res = cur.fetchone()
-        dbid = res['dbid']
-        debug(1, 'database id is: %d' % dbid)
-        return '', dbid
-    except Exception as e:
-        msg = 'error encountered when getting whole sequence database id: %s' % e
-        debug(3, msg)
-        return msg, None
-
-
-def SequencesWholeToFile(con, cur, fileName, dbid):
-    '''
-    Save list of sequences to file, this will be used later 'whole' ids script
-
-    Parameters
-    ----------
-    con,cur
-    fileName - output file name
-    dbid - type of db (e.g. silva)
-
-    Returns
-    -------
-    error message
-    '''
-    debug(1, 'SequencesWholeToFile')
-
-    try:
-        # cur.execute("SELECT id,sequence,ggid FROM sequencestable")
-        cur.execute("SELECT id,sequence,ggid FROM sequencestable where id not in (select distinct dbbactid from wholeseqidstable where dbid=%s)" % dbid)
-
-        seq_count = 0
-        with open(fileName, 'w') as fl:
-            for cres in cur:
-                fl.write('>%s\n%s\n' % (cres[0], cres[1]))
-                seq_count += 1
-    except psycopg2.DatabaseError as e:
-        debug(7, 'database error %s' % e)
-        return "database error %s" % e
-    return ''
-
-
-def AddWholeSeqId(con, cur, dbidVal, dbbactidVal, wholeseqidVal, commit=True):
-    '''
-    Add record to wholeseqidstable table
-
-    Parameters
-    ----------
-    con,cur
-    dbidVal - db type (e.g. silva, gg)
-    dbbactidVal - sequnence id in dbbact
-    wholeseqidVal - the id in different db (e.g. silva, gg)
-    commit: true to commit, false to insert without commit
-
-    Returns
-    -------
-    error message
-    '''
-    debug(1, 'AddWholeSeqId')
-    try:
-        # check if we already have this entry
-        err, existFlag = WholeSeqIdExists(con, cur, dbidVal, dbbactidVal, wholeseqidVal)
-        if not existFlag:
-            cur.execute('INSERT INTO wholeseqidstable (dbid, dbbactid, wholeseqid) VALUES (%s, %s, %s)', [dbidVal, dbbactidVal, wholeseqidVal])
-            if commit:
-                con.commit()
-        return
-    except psycopg2.DatabaseError as e:
-        debug(7, 'database error %s' % e)
-        return "database error %s" % e
-    # try:
-    #     err, existFlag = WholeSeqIdExists(con, cur, dbidVal, dbbactidVal, 'na')
-    #     if existFlag is False:
-    #         cur.execute('INSERT INTO wholeseqidstable (dbid, dbbactid, wholeseqid) VALUES (%s, %s, %s)', [dbidVal, dbbactidVal, wholeseqidVal])
-    #     else:
-    #         cur.execute('UPDATE wholeseqidstable set wholeseqid = %s where (dbid = %s and dbbactid = %s)', [wholeseqidVal, dbidVal, dbbactidVal])
-    #     if commit:
-    #         con.commit()
-    # except psycopg2.DatabaseError as e:
-    #     debug(7, 'database error %s' % e)
-    #     return "database error %s" % e
-    # return ''
-
-
-def WholeSeqIdExists(con, cur, dbidVal, dbbactidVal, wholeseqidVal=None):
-    '''
-    Check if record already exists in wholeseqidstable table
-
-    Parameters
-    ----------
-    con,cur
-    dbidVal - db type (e.g. silva, gg)
-    dbbactidVal - sequnence id in dbbact
-    wholeseqidVal: str or None, optional
-        if not None, search for a match also for the wholeseqidVal id in different db (e.g. silva, gg)
-        if None, retrive all the ids which have at list one record
-
-    Returns
-    -------
-    err: empty ('') if query went ok, otherwise contains the database error
-    exists: True if record exists in wholeSeqIDsTalbe, False otherwise
-    '''
-    debug(1, 'WholeSeqIdExists')
-
-    try:
-        if wholeseqidVal is not None:
-            cur.execute("SELECT * FROM wholeseqidstable where dbid = %s and dbbactid = %s and wholeseqid = %s", [dbidVal, dbbactidVal, wholeseqidVal])
-        else:
-            cur.execute("SELECT * FROM wholeseqidstable where dbid = %s and dbbactid = %s", [dbidVal, dbbactidVal])
-            # cur.execute("SELECT * FROM wholeseqidstable where dbid = %s and dbbactid = %s and wholeseqid != 'na'", [dbidVal, dbbactidVal])
-        if cur.rowcount > 0:
-            return "", True
-        else:
-            return "", False
-
-    except psycopg2.DatabaseError as e:
-        debug(7, 'database error %s' % e)
-        return "database error %s" % e, False
-    return "", False
 
 
 def GetSequenceStrByID(con, cur, seq_id):

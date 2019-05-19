@@ -84,6 +84,9 @@ def get_sequenceid():
             "no_longer" : bool (optional)
                 False (default) to get also longer sequences from DB if matching on query length.
                 True to get only sequences not longer than the query
+            "use_sequence_translator": bool (optional)
+                True to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
+                False (default) to get just annotations for dbbact sequences that match exactly the queryy sequences
         }
     Success Response:
         Code : 201
@@ -91,7 +94,7 @@ def get_sequenceid():
         {
             "seqId" : list of int
                 the sequence ids, or []] if doesn't exists
-                Note: can be more than 1 id since we are looking for
+                Note: can be more than 1 id since may contain subsequences (if no_longer is False or no_shorter is False) or different regions (if use_sequence_translator=True)
         }
     Details:
         Validation:
@@ -103,10 +106,15 @@ def get_sequenceid():
     sequence = alldat.get('sequence')
     no_shorter = alldat.get('no_shorter', False)
     no_longer = alldat.get('no_longer', False)
+    use_sequence_translator = alldat.get('use_sequence_translator', False)
+    if use_sequence_translator:
+        seq_translate_api = g.seq_translate_api
+    else:
+        seq_translate_api = None
     if sequence is None:
         return(getdoc(cfunc))
 
-    err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=sequence, no_shorter=no_shorter, no_longer=no_longer)
+    err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=sequence, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api)
     if err:
         return(err, 400)
     debug(2, 'found sequences')
@@ -131,6 +139,9 @@ def get_sequenceid_list():
             "no_longer" : bool (optional)
                 False (default) to get also longer sequences from DB if matching on query length.
                 True to get only sequences not longer than the query
+            "use_sequence_translator": bool (optional)
+                True to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
+                False (default) to get just annotations for dbbact sequences that match exactly the queryy sequences
         }
     Success Response:
         Code : 201
@@ -151,10 +162,15 @@ def get_sequenceid_list():
     no_longer = alldat.get('no_longer', False)
     if sequences is None:
         return(getdoc(cfunc))
+    use_sequence_translator = alldat.get('use_sequence_translator', False)
+    if use_sequence_translator:
+        seq_translate_api = g.seq_translate_api
+    else:
+        seq_translate_api = None
 
     out_list = []
     for cseq in sequences:
-        err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=no_shorter, no_longer=no_longer)
+        err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api)
         if err:
             debug(4, 'Sequence %s not found from get_sequenceid_list' % cseq)
             seqid = []
@@ -215,14 +231,17 @@ def get_sequence_annotations():
     URL Params:
     Data Params: JSON
         {
-            sequence : str
+            "sequence" : str
                 the DNA sequence string to query the database (can be any length)
-            region : int (optional)
+            "region" : int (optional)
                 the region id (default=1 which is V4 515F 806R)
-            get_term_info : bool (optional)
+            "get_term_info" : bool (optional)
                 True (default) to get information about all ontology predecessors of terms of all annotations of the sequence.
-            get_tax_info: book (optional)
+            "get_tax_info": book (optional)
                 True (default) to get the dbbact taxonomy string of the sequence (or None if not in dbbact)
+            "use_sequence_translator": bool (optional)
+                True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
+                False to get just annotations for dbbact sequences that match exactly the queryy sequences
     Success Response:
         Code : 200
         Content :
@@ -293,14 +312,19 @@ def get_sequence_annotations():
     get_term_info = alldat.get('get_term_info', True)
     get_tax_info = alldat.get('get_tax_info', True)
     region = alldat.get('region')
+    use_sequence_translator = alldat.get('use_sequence_translator', True)
 
     taxonomy = None
     if get_tax_info:
         err, taxonomy = dbsequences.GetSequenceTaxonomy(g.con, g.cur, sequence, userid=current_user.user_id)
         if err:
             taxonomy = 'error: err'
+    if use_sequence_translator:
+        seq_translate_api = g.seq_translate_api
+    else:
+        seq_translate_api = None
 
-    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region)
+    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region, seq_translate_api=seq_translate_api)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
@@ -323,10 +347,13 @@ def get_sequence_list_annotations():
     URL Params:
     Data Params: JSON
         {
-            sequences : list of str ('ACGT')
+            "sequences": list of str ('ACGT')
                 the list of sequence strings to query the database (can be any length)
-            region : int (optional)
+            "region": int (optional)
                 the region id (default=1 which is V4 515F 806R)
+            "use_sequence_translator": bool (optional)
+                True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
+                False to get just annotations for dbbact sequences that match exactly the queryy sequences
     Success Response:
         Code : 200
         Content :
@@ -388,9 +415,15 @@ def get_sequence_list_annotations():
     sequences = alldat.get('sequences')
     if sequences is None:
         return('sequences parameter missing', 400)
+    use_sequence_translator = alldat.get('use_sequence_translator', True)
+    if use_sequence_translator:
+        seq_translate_api = g.seq_translate_api
+    else:
+        seq_translate_api = None
+
     seqannotations = []
     for cseq in sequences:
-        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id)
+        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id, seq_translate_api=seq_translate_api)
         # if err:
         #   debug(6,err)
         #   return ('Problem geting details. error=%s' % err,400)
@@ -430,18 +463,21 @@ def get_fast_annotations():
     URL Params:
     Data Params: JSON
         {
-            sequences : list of str ('ACGT')
+            "sequences": list of str ('ACGT')
                 the list of sequence strings to query the database (can be any length)
-            region : int (optional)
+            "region": int (optional)
                 the region id (default=1 which is V4 515F 806R)
-            get_term_info: bool (optional)
+            "get_term_info": bool (optional)
                 True (default) to return also information about each term, False not to return
-            get_taxonomy: bool (optional)
+            "get_taxonomy": bool (optional)
                 True (default) to get the dbbact assigned taxonomy for each query sequence
-            get_parents: bool (optional)
+            "get_parents": bool (optional)
                 True (default) to get the parent terms for each annotation ontology term, False to just get tge annotation terms
-            get_all_exp_annotations: bool (optional)
+            "get_all_exp_annotations": bool (optional)
                 True (default) to get all the annotations from each experiment containing one annotation with the sequence, False to just get the annotations with the sequence
+            "use_sequence_translator": bool (optional)
+                True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
+                False to get just annotations for dbbact sequences that match exactly the queryy sequences
     Success Response:
         Code : 200
         Content :
@@ -526,8 +562,13 @@ def get_fast_annotations():
     get_term_info = alldat.get('get_term_info', True)
     get_taxonomy = alldat.get('get_taxonomy', True)
     get_parents = alldat.get('get_parents', True)
+    use_sequence_translator = alldat.get('use_sequence_translator', True)
     get_all_exp_annotations = alldat.get('get_all_exp_annotations', True)
-    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations)
+    if use_sequence_translator:
+        seq_translate_api = g.seq_translate_api
+    else:
+        seq_translate_api = None
+    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations, seq_translate_api=seq_translate_api)
     if err:
         errmsg = 'error encountered while getting the fast annotations: %s' % err
         debug(6, errmsg)
@@ -1153,18 +1194,3 @@ def add_primer_region():
         return ('Problem adding new region. error=%s' % err, 400)
     res = json.dumps('ok')
     return res
-
-
-@Seq_Flask_Obj.route('/sequences/test', methods=['GET'])
-@auto.doc()
-def seqtest():
-    import time
-    print('test')
-    alldat = request.get_json()
-    stime = alldat.get('sleep')
-    print('sleeping %d secs' % stime)
-    for t in range(stime):
-        print(t)
-        time.sleep(1)
-    print('good morning')
-    return json.dumps({'tada': 'pita'})
