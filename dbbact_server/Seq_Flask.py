@@ -84,7 +84,7 @@ def get_sequenceid():
             "no_longer" : bool (optional)
                 False (default) to get also longer sequences from DB if matching on query length.
                 True to get only sequences not longer than the query
-            use_sequence_translator: bool (optional)
+            "use_sequence_translator": bool (optional)
                 True to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False (default) to get just annotations for dbbact sequences that match exactly the queryy sequences
         }
@@ -94,7 +94,7 @@ def get_sequenceid():
         {
             "seqId" : list of int
                 the sequence ids, or []] if doesn't exists
-                Note: can be more than 1 id since we are looking for
+                Note: can be more than 1 id since may contain subsequences (if no_longer is False or no_shorter is False) or different regions (if use_sequence_translator=True)
         }
     Details:
         Validation:
@@ -139,7 +139,7 @@ def get_sequenceid_list():
             "no_longer" : bool (optional)
                 False (default) to get also longer sequences from DB if matching on query length.
                 True to get only sequences not longer than the query
-            use_sequence_translator: bool (optional)
+            "use_sequence_translator": bool (optional)
                 True to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False (default) to get just annotations for dbbact sequences that match exactly the queryy sequences
         }
@@ -231,15 +231,15 @@ def get_sequence_annotations():
     URL Params:
     Data Params: JSON
         {
-            sequence : str
+            "sequence" : str
                 the DNA sequence string to query the database (can be any length)
-            region : int (optional)
+            "region" : int (optional)
                 the region id (default=1 which is V4 515F 806R)
-            get_term_info : bool (optional)
+            "get_term_info" : bool (optional)
                 True (default) to get information about all ontology predecessors of terms of all annotations of the sequence.
-            get_tax_info: book (optional)
+            "get_tax_info": book (optional)
                 True (default) to get the dbbact taxonomy string of the sequence (or None if not in dbbact)
-            use_sequence_translator: bool (optional)
+            "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
     Success Response:
@@ -347,11 +347,11 @@ def get_sequence_list_annotations():
     URL Params:
     Data Params: JSON
         {
-            sequences : list of str ('ACGT')
+            "sequences": list of str ('ACGT')
                 the list of sequence strings to query the database (can be any length)
-            region : int (optional)
+            "region": int (optional)
                 the region id (default=1 which is V4 515F 806R)
-            use_sequence_translator: bool (optional)
+            "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
     Success Response:
@@ -463,19 +463,19 @@ def get_fast_annotations():
     URL Params:
     Data Params: JSON
         {
-            sequences : list of str ('ACGT')
+            "sequences": list of str ('ACGT')
                 the list of sequence strings to query the database (can be any length)
-            region : int (optional)
+            "region": int (optional)
                 the region id (default=1 which is V4 515F 806R)
-            get_term_info: bool (optional)
+            "get_term_info": bool (optional)
                 True (default) to return also information about each term, False not to return
-            get_taxonomy: bool (optional)
+            "get_taxonomy": bool (optional)
                 True (default) to get the dbbact assigned taxonomy for each query sequence
-            get_parents: bool (optional)
+            "get_parents": bool (optional)
                 True (default) to get the parent terms for each annotation ontology term, False to just get tge annotation terms
-            get_all_exp_annotations: bool (optional)
+            "get_all_exp_annotations": bool (optional)
                 True (default) to get all the annotations from each experiment containing one annotation with the sequence, False to just get the annotations with the sequence
-            use_sequence_translator: bool (optional)
+            "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
     Success Response:

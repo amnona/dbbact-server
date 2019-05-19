@@ -265,7 +265,7 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
 
     if seq_translate_api is not None:
         debug(6, 'translating')
-        res = requests.post(seq_translate_api + '/test2', json={'sequences': [sequence]})
+        res = requests.post(seq_translate_api + '/get_ids_for_seqs', json={'sequences': [sequence]})
         if res.ok:
             trans_ids = res.json()['dbbact_ids'][0]
         else:
