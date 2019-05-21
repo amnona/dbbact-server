@@ -50,7 +50,7 @@ def start_server(out_file_name='./log-test-server.txt'):
 	global server_proc
 
 	print('starting server on address %s with output to %s' % (server_addr, out_file_name))
-	cmd = ['gunicorn', 'dbbact_server.Server_Main:gunicorn(debug_level=2,server_type="test")', '-b', server_addr, '--workers', '4', '--name=test-dbbact-rest-api', '--timeout', '300']
+	cmd = ['gunicorn', 'dbbact_server.Server_Main:gunicorn(debug_level=2,server_type="test", seq_trans_api=None)', '-b', server_addr, '--workers', '4', '--name=test-dbbact-rest-api', '--timeout', '300']
 	# proc = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	outfile = open(out_file_name, 'w')
 	proc = subprocess.Popen(cmd, shell=False, stdout=outfile, stderr=outfile)
