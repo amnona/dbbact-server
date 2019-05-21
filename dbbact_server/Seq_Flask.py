@@ -59,7 +59,7 @@ def add_sequences():
     if primer is None:
         return(getdoc(cfunc))
 
-    err, seqids = dbsequences.AddSequences(g.con, g.cur, sequences=sequences, taxonomies=taxonomies, ggids=ggids, primer=primer)
+    err, seqids = dbsequences.AddSequences(g.con, g.cur, sequences=sequences, taxonomies=taxonomies, ggids=ggids, primer=primer, seq_translate_api=g.seq_translate_api)
     if err:
         return(err, 400)
     debug(2, 'added/found %d sequences' % len(seqids))
@@ -70,14 +70,14 @@ def add_sequences():
 @auto.doc()
 def get_sequenceid():
     """
-    Title: Get id for a given new sequences (or return -1 if does not exist)
+    Title: Get id for a given sequence (or return -1 if does not exist)
     URL: /sequences/getid
     Method: GET
     URL Params:
     Data Params: JSON
         {
             "sequence" : str
-                the sequence to get data about
+                the sequence to get data about. could be 'acgt' or SILVA ID (in case dbname is set to 'silva')
             "no_shorter" : bool (optional)
                 False (default) to get also shorter sequences from DB if matching.
                 True to get only sequences at least as long as the query
@@ -87,6 +87,8 @@ def get_sequenceid():
             "use_sequence_translator": bool (optional)
                 True to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False (default) to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
         }
     Success Response:
         Code : 201
@@ -107,6 +109,7 @@ def get_sequenceid():
     no_shorter = alldat.get('no_shorter', False)
     no_longer = alldat.get('no_longer', False)
     use_sequence_translator = alldat.get('use_sequence_translator', False)
+    dbname = alldat.get('dbname', None)
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
     else:
@@ -114,7 +117,7 @@ def get_sequenceid():
     if sequence is None:
         return(getdoc(cfunc))
 
-    err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=sequence, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api)
+    err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=sequence, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
     if err:
         return(err, 400)
     debug(2, 'found sequences')
@@ -142,6 +145,8 @@ def get_sequenceid_list():
             "use_sequence_translator": bool (optional)
                 True to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False (default) to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
         }
     Success Response:
         Code : 201
@@ -160,6 +165,7 @@ def get_sequenceid_list():
     sequences = alldat.get('sequences')
     no_shorter = alldat.get('no_shorter', False)
     no_longer = alldat.get('no_longer', False)
+    dbname = alldat.get('dbname', None)
     if sequences is None:
         return(getdoc(cfunc))
     use_sequence_translator = alldat.get('use_sequence_translator', False)
@@ -170,7 +176,7 @@ def get_sequenceid_list():
 
     out_list = []
     for cseq in sequences:
-        err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api)
+        err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
         if err:
             debug(4, 'Sequence %s not found from get_sequenceid_list' % cseq)
             seqid = []
@@ -186,7 +192,7 @@ def get_sequenceid_list():
 def get_taxonomy_str():
     """
     Title: Query sequence:
-    Description : Get the dbbact srored taxonomy about a given sequence
+    Description : Get the dbbact stored taxonomy about a given sequence
     URL: /sequences/get_taxonomy_str
     Method: GET
     URL Params:
@@ -204,7 +210,7 @@ def get_taxonomy_str():
         }
     """
     debug(3, 'get_taxonomy_str', request)
-    cfunc = get_sequence_annotations
+    cfunc = get_taxonomy_str
     alldat = request.get_json()
     if alldat is None:
         return(getdoc(cfunc))
@@ -232,7 +238,7 @@ def get_sequence_annotations():
     Data Params: JSON
         {
             "sequence" : str
-                the DNA sequence string to query the database (can be any length)
+                the DNA sequence string to query the database (can be any length). Can also be a SILVA ID if dbname is set to "silva"
             "region" : int (optional)
                 the region id (default=1 which is V4 515F 806R)
             "get_term_info" : bool (optional)
@@ -242,6 +248,8 @@ def get_sequence_annotations():
             "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
     Success Response:
         Code : 200
         Content :
@@ -313,6 +321,7 @@ def get_sequence_annotations():
     get_tax_info = alldat.get('get_tax_info', True)
     region = alldat.get('region')
     use_sequence_translator = alldat.get('use_sequence_translator', True)
+    dbname = alldat.get('dbname', None)
 
     taxonomy = None
     if get_tax_info:
@@ -324,7 +333,7 @@ def get_sequence_annotations():
     else:
         seq_translate_api = None
 
-    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region, seq_translate_api=seq_translate_api)
+    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region, seq_translate_api=seq_translate_api, dbname=dbname)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
@@ -348,12 +357,14 @@ def get_sequence_list_annotations():
     Data Params: JSON
         {
             "sequences": list of str ('ACGT')
-                the list of sequence strings to query the database (can be any length)
+                the list of sequence strings to query the database (can be any length), or alternatively silva IDs (if dbname='silva')
             "region": int (optional)
                 the region id (default=1 which is V4 515F 806R)
             "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
     Success Response:
         Code : 200
         Content :
@@ -416,6 +427,7 @@ def get_sequence_list_annotations():
     if sequences is None:
         return('sequences parameter missing', 400)
     use_sequence_translator = alldat.get('use_sequence_translator', True)
+    dbname = alldat.get('dbname', None)
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
     else:
@@ -423,7 +435,7 @@ def get_sequence_list_annotations():
 
     seqannotations = []
     for cseq in sequences:
-        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id, seq_translate_api=seq_translate_api)
+        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id, seq_translate_api=seq_translate_api, dbname=dbname)
         # if err:
         #   debug(6,err)
         #   return ('Problem geting details. error=%s' % err,400)
@@ -464,7 +476,7 @@ def get_fast_annotations():
     Data Params: JSON
         {
             "sequences": list of str ('ACGT')
-                the list of sequence strings to query the database (can be any length)
+                the list of sequence strings to query the database (can be any length). Alternatively, can be list of SILVA IDs (in case dbname is set to 'silva')
             "region": int (optional)
                 the region id (default=1 which is V4 515F 806R)
             "get_term_info": bool (optional)
@@ -478,6 +490,8 @@ def get_fast_annotations():
             "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
     Success Response:
         Code : 200
         Content :
@@ -563,12 +577,13 @@ def get_fast_annotations():
     get_taxonomy = alldat.get('get_taxonomy', True)
     get_parents = alldat.get('get_parents', True)
     use_sequence_translator = alldat.get('use_sequence_translator', True)
+    dbname = alldat.get('dbname', None)
     get_all_exp_annotations = alldat.get('get_all_exp_annotations', True)
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
     else:
         seq_translate_api = None
-    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations, seq_translate_api=seq_translate_api)
+    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations, seq_translate_api=seq_translate_api, dbname=dbname)
     if err:
         errmsg = 'error encountered while getting the fast annotations: %s' % err
         debug(6, errmsg)
@@ -711,95 +726,95 @@ def get_hash_annotations():
         return(errmsg, 400)
     return json.dumps({'annotations': annotations, 'seqids': seqids, 'seqstr': seqnames})
 
+# superceded by 'dbname' in get_sequence_annotations() etc.
+# @login_required
+# @Seq_Flask_Obj.route('/sequences/get_gg_annotations', methods=['GET'])
+# @auto.doc()
+# def get_gg_annotations():
+#     """
+#     Title: Get annotation ids based on gg id
+#     Description : Get annotation ids for gg id string
+#     URL: /sequences/get_hash_annotations
+#     Method: GET
+#     URL Params:
+#     Data Params: JSON
+#         {
+#             gg : str
+#                 the gg id to look for
+#         }
+#     Success Response:
+#         Code : 200
+#         Content :
+#         {
+#             'annotations' : list of (annotation, counts)
+#                 the annotation details for all annotations that contain a sequence with the requested taxonomy (see /sequences/get_annotations) and the count of taxonomy sequences with the annotation
+#             seqids : list on int
+#                 list of the sequenceids that have this taxonomy in the database
+#         }
+#     Validation:
+#         If an annotation is private, return it only if user is authenticated and created the curation. If user not authenticated, do not return it in the list
+#         If annotation is not private, return it (no need for authentication)
+#     """
+#     debug(3, 'get_gg_annotations', request)
+#     cfunc = get_gg_annotations
+#     alldat = request.get_json()
+#     if alldat is None:
+#         return(getdoc(cfunc))
+#     gg_str = alldat.get('gg_id')
+#     if gg_str is None:
+#         return('gg_id parameter missing', 400)
+#     err, annotations, seqids, seqnames = dbsequences.GetGgAnnotations(g.con, g.cur, gg_str, userid=current_user.user_id)
+#     if err:
+#         errmsg = 'error encountered searching annotations for gg id %s: %s' % (gg_str, err)
+#         debug(6, errmsg)
+#         return(errmsg, 400)
+#     return json.dumps({'annotations': annotations, 'seqids': seqids, 'seqstr': seqnames})
 
-@login_required
-@Seq_Flask_Obj.route('/sequences/get_gg_annotations', methods=['GET'])
-@auto.doc()
-def get_gg_annotations():
-    """
-    Title: Get annotation ids based on gg id
-    Description : Get annotation ids for gg id string
-    URL: /sequences/get_hash_annotations
-    Method: GET
-    URL Params:
-    Data Params: JSON
-        {
-            gg : str
-                the gg id to look for
-        }
-    Success Response:
-        Code : 200
-        Content :
-        {
-            'annotations' : list of (annotation, counts)
-                the annotation details for all annotations that contain a sequence with the requested taxonomy (see /sequences/get_annotations) and the count of taxonomy sequences with the annotation
-            seqids : list on int
-                list of the sequenceids that have this taxonomy in the database
-        }
-    Validation:
-        If an annotation is private, return it only if user is authenticated and created the curation. If user not authenticated, do not return it in the list
-        If annotation is not private, return it (no need for authentication)
-    """
-    debug(3, 'get_gg_annotations', request)
-    cfunc = get_gg_annotations
-    alldat = request.get_json()
-    if alldat is None:
-        return(getdoc(cfunc))
-    gg_str = alldat.get('gg_id')
-    if gg_str is None:
-        return('gg_id parameter missing', 400)
-    err, annotations, seqids, seqnames = dbsequences.GetGgAnnotations(g.con, g.cur, gg_str, userid=current_user.user_id)
-    if err:
-        errmsg = 'error encountered searching annotations for gg id %s: %s' % (gg_str, err)
-        debug(6, errmsg)
-        return(errmsg, 400)
-    return json.dumps({'annotations': annotations, 'seqids': seqids, 'seqstr': seqnames})
 
-
-@login_required
-@Seq_Flask_Obj.route('/sequences/get_silva_annotations', methods=['GET'])
-@auto.doc()
-def get_silva_annotations():
-    """
-    Title: Get annotation ids based on silva id
-    Description : Get annotation ids for silva id string
-    URL: /sequences/get_hash_annotations
-    Method: GET
-    URL Params:
-    Data Params: JSON
-        {
-            'silva_id' : str
-                the silva id to look for (i.e. "LC133747.1.1482")
-        }
-    Success Response:
-        Code : 200
-        Content :
-        {
-            'annotations' : list of (annotation, counts)
-                the annotation details for all annotations that contain a sequence with the requested taxonomy (see /sequences/get_annotations) and the count of taxonomy sequences with the annotation
-            'seqids' : list on int
-                list of the sequenceids that have this taxonomy in the database
-            'seqstr': list of str
-                list of the sequences that have this silva ids (i.e. ACGT of each seqid)
-        }
-    Validation:
-        If an annotation is private, return it only if user is authenticated and created the curation. If user not authenticated, do not return it in the list
-        If annotation is not private, return it (no need for authentication)
-    """
-    debug(3, 'get_silva_annotations', request)
-    cfunc = get_silva_annotations
-    alldat = request.get_json()
-    if alldat is None:
-        return(getdoc(cfunc))
-    silva_str = alldat.get('silva_id')
-    if silva_str is None:
-        return('silva_id parameter missing', 400)
-    err, annotations, seqids, seqnames = dbsequences.GetSilvaAnnotations(g.con, g.cur, silva_str, userid=current_user.user_id)
-    if err:
-        errmsg = 'error encountered searching annotations for silva id %s: %s' % (silva_str, err)
-        debug(6, errmsg)
-        return(errmsg, 400)
-    return json.dumps({'annotations': annotations, 'seqids': seqids, 'seqstr': seqnames})
+# @login_required
+# @Seq_Flask_Obj.route('/sequences/get_silva_annotations', methods=['GET'])
+# @auto.doc()
+# def get_silva_annotations():
+#     """
+#     Title: Get annotation ids based on silva id
+#     Description : Get annotation ids for silva id string
+#     URL: /sequences/get_hash_annotations
+#     Method: GET
+#     URL Params:
+#     Data Params: JSON
+#         {
+#             'silva_id' : str
+#                 the silva id to look for (i.e. "LC133747.1.1482")
+#         }
+#     Success Response:
+#         Code : 200
+#         Content :
+#         {
+#             'annotations' : list of (annotation, counts)
+#                 the annotation details for all annotations that contain a sequence with the requested taxonomy (see /sequences/get_annotations) and the count of taxonomy sequences with the annotation
+#             'seqids' : list on int
+#                 list of the sequenceids that have this taxonomy in the database
+#             'seqstr': list of str
+#                 list of the sequences that have this silva ids (i.e. ACGT of each seqid)
+#         }
+#     Validation:
+#         If an annotation is private, return it only if user is authenticated and created the curation. If user not authenticated, do not return it in the list
+#         If annotation is not private, return it (no need for authentication)
+#     """
+#     debug(3, 'get_silva_annotations', request)
+#     cfunc = get_silva_annotations
+#     alldat = request.get_json()
+#     if alldat is None:
+#         return(getdoc(cfunc))
+#     silva_str = alldat.get('silva_id')
+#     if silva_str is None:
+#         return('silva_id parameter missing', 400)
+#     err, annotations, seqids, seqnames = dbsequences.GetSilvaAnnotations(g.con, g.cur, silva_str, userid=current_user.user_id)
+#     if err:
+#         errmsg = 'error encountered searching annotations for silva id %s: %s' % (silva_str, err)
+#         debug(6, errmsg)
+#         return(errmsg, 400)
+#     return json.dumps({'annotations': annotations, 'seqids': seqids, 'seqstr': seqnames})
 
 
 @Seq_Flask_Obj.route('/sequences/get_taxonomy_sequences', methods=['GET'])
@@ -948,164 +963,164 @@ def get_sequence_string_annotations():
     res = json.dumps({'annotations': details})
     return res
 
+# Superceded by dbname='silva' in get_sequenceid() and similar functions
+# @login_required
+# @Seq_Flask_Obj.route('/sequences/get_seqs_from_external_db_id', methods=['GET', 'POST', 'OPTIONS'])
+# @auto.doc()
+# def api_get_seqs_from_db_id():
+#     '''
+#     Title: get_seqs_from_external_db_id
+#     Description : Get all dbbact sequences that match the database_id supplied for silva/greengenes
+#     URL: /sequences/get_seqs_from_external_db_id
+#     Method: GET, POST
+#     URL Params:
+#     Data Params: JSON
+#         {
+#             seq_ids : list of str
+#                 the sequence identifiers in the database (i.e. 'FJ978486.1.1387' for silva or '1111883' for greengenes)
+#             database_name : str
+#                 name of the database from which the ids originate. can be "silva" or "gg"
+#     Success Response:
+#         Code : 200
+#         Content :
+#         {
+#             "dbbact_seqs_per_id": dict of {seq_id(str): tuple of (list of dbbact ids(int), list of dbbact sequences (str))}
+#     '''
+#     debug(3, 'api_seqs_from_external_db_id', request)
+#     cfunc = api_get_seqs_from_db_id
+#     alldat = request.get_json()
+#     if alldat is None:
+#         return(getdoc(cfunc))
+#     seq_ids = alldat.get('seq_ids')
+#     database_name = alldat.get('database_name')
+#     if seq_ids is None:
+#         return('seq_ids parameter missing', 400)
+#     if database_name is None:
+#         return('database_name parameter missing', 400)
 
-@login_required
-@Seq_Flask_Obj.route('/sequences/get_seqs_from_external_db_id', methods=['GET', 'POST', 'OPTIONS'])
-@auto.doc()
-def api_get_seqs_from_db_id():
-    '''
-    Title: get_seqs_from_external_db_id
-    Description : Get all dbbact sequences that match the database_id supplied for silva/greengenes
-    URL: /sequences/get_seqs_from_external_db_id
-    Method: GET, POST
-    URL Params:
-    Data Params: JSON
-        {
-            seq_ids : list of str
-                the sequence identifiers in the database (i.e. 'FJ978486.1.1387' for silva or '1111883' for greengenes)
-            database_name : str
-                name of the database from which the ids originate. can be "silva" or "gg"
-    Success Response:
-        Code : 200
-        Content :
-        {
-            "dbbact_seqs_per_id": dict of {seq_id(str): tuple of (list of dbbact ids(int), list of dbbact sequences (str))}
-    '''
-    debug(3, 'api_seqs_from_external_db_id', request)
-    cfunc = api_get_seqs_from_db_id
-    alldat = request.get_json()
-    if alldat is None:
-        return(getdoc(cfunc))
-    seq_ids = alldat.get('seq_ids')
-    database_name = alldat.get('database_name')
-    if seq_ids is None:
-        return('seq_ids parameter missing', 400)
-    if database_name is None:
-        return('database_name parameter missing', 400)
-
-    dbbact_seqs = {}
-    for cid in seq_ids:
-        err, cdb_ids, cdb_seqs = dbsequences.get_seqs_from_db_id(g.con, g.cur, db_name=database_name, db_seq_id=cid)
-        if err:
-            debug(6, err)
-            return('Problem geting sequences for id %s. error=%s' % (cid, err), 400)
-        dbbact_seqs[cid] = (cdb_ids, cdb_seqs)
-    res = json.dumps({'dbbact_seqs_per_id': dbbact_seqs})
-    return res
+#     dbbact_seqs = {}
+#     for cid in seq_ids:
+#         err, cdb_ids, cdb_seqs = dbsequences.get_seqs_from_db_id(g.con, g.cur, db_name=database_name, db_seq_id=cid)
+#         if err:
+#             debug(6, err)
+#             return('Problem geting sequences for id %s. error=%s' % (cid, err), 400)
+#         dbbact_seqs[cid] = (cdb_ids, cdb_seqs)
+#     res = json.dumps({'dbbact_seqs_per_id': dbbact_seqs})
+#     return res
 
 
-@login_required
-@Seq_Flask_Obj.route('/sequences/get_fast_annotations_external_db_id', methods=['GET'])
-@auto.doc()
-def get_fast_annotations_external_db_id():
-    """
-    Title: Get Fast Annotations from external database ids (i.e silva/gg)
-    Description : Get annotations for a list of external database sequences in a compressed form
-    URL: /sequences/get_fast_annotations
-    Method: GET
-    URL Params:
-    Data Params: JSON
-        {
-            seq_db_ids: list of str
-                the silva/greengenes sequence identifiers to search for
-                (i.e. 'FJ978486.1.1387' for silva or '1111883' for greengenes)
-            db_name : str
-                the database for which the id originated. options are "silva" or "gg"
-            get_term_info : bool (optional)
-                True (default) to get the information about each term, False to skip this step
-            get_all_exp_annotations: bool (optional)
-                True (default) to get all annotations for each experiment which the sequence appear in at least one annotation.
-                False to get just the annotations where the sequence appears
+# @login_required
+# @Seq_Flask_Obj.route('/sequences/get_fast_annotations_external_db_id', methods=['GET'])
+# @auto.doc()
+# def get_fast_annotations_external_db_id():
+#     """
+#     Title: Get Fast Annotations from external database ids (i.e silva/gg)
+#     Description : Get annotations for a list of external database sequences in a compressed form
+#     URL: /sequences/get_fast_annotations
+#     Method: GET
+#     URL Params:
+#     Data Params: JSON
+#         {
+#             seq_db_ids: list of str
+#                 the silva/greengenes sequence identifiers to search for
+#                 (i.e. 'FJ978486.1.1387' for silva or '1111883' for greengenes)
+#             db_name : str
+#                 the database for which the id originated. options are "silva" or "gg"
+#             get_term_info : bool (optional)
+#                 True (default) to get the information about each term, False to skip this step
+#             get_all_exp_annotations: bool (optional)
+#                 True (default) to get all annotations for each experiment which the sequence appear in at least one annotation.
+#                 False to get just the annotations where the sequence appears
 
-    Success Response:
-        Code : 200
-        Content :
-        {
-            annotations: dict of (annotationid: details):
-                    annotationid : the annotationid used in seqannotations
-                    details:
-                {
-                    "annotationid" : int
-                        the id of the annotation
-                    "user" : str
-                        name of the user who added this annotation
-                        (userName from UsersTable)
-                    "addedDate" : str (DD-MM-YYYY HH:MM:SS)
-                        date when the annotation was added
-                        (addedDate from CurationsTable)
-                    "expid" : int
-                        the ID of the experiment from which this annotation originated
-                        (uniqueId from ExperimentsTable)
-                        (see Query Experiment)
-                    "currType" : str
-                        curration type (differential expression/contaminant/etc.)
-                        (description from CurationTypesTable)
-                    "method" : str
-                        The method used to detect this behavior (i.e. observation/ranksum/clustering/etc")
-                        (description from MethodTypesTable)
-                    "agentType" : str
-                        Name of the program which submitted this annotation (i.e. heatsequer)
-                        (description from AgentTypesTable)
-                    "description" : str
-                        Free text describing this annotation (i.e. "lower in green tomatoes comapred to red ones")
-                    "private" : bool
-                        True if the curation is private, False if not
-                    "CurationList" : list of
-                        {
-                            "detail" : str
-                                the type of detail (i.e. ALL/HIGH/LOW)
-                                (description from CurationDetailsTypeTable)
-                            "term" : str
-                                the ontology term for this detail (i.e. feces/ibd/homo sapiens)
-                                (description from OntologyTable)
-                        }
-                    "parents" : list of tuples (type, list of terms)
-                        {
-                            type : type of the annotation type ('high'/'low','all')
-                            list of terms - list of ontology terms which are annotated or parents of annotated ontology term
-                        }
-                }
-            seq_db_id_seqs : list of list of str
-                the seqyences (ACGT) associated with each seq_db_id. in order of the query seq_db_ids
-                (so the first entry is a list of all dbbact sequences associated with the first silva/gg id)
+#     Success Response:
+#         Code : 200
+#         Content :
+#         {
+#             annotations: dict of (annotationid: details):
+#                     annotationid : the annotationid used in seqannotations
+#                     details:
+#                 {
+#                     "annotationid" : int
+#                         the id of the annotation
+#                     "user" : str
+#                         name of the user who added this annotation
+#                         (userName from UsersTable)
+#                     "addedDate" : str (DD-MM-YYYY HH:MM:SS)
+#                         date when the annotation was added
+#                         (addedDate from CurationsTable)
+#                     "expid" : int
+#                         the ID of the experiment from which this annotation originated
+#                         (uniqueId from ExperimentsTable)
+#                         (see Query Experiment)
+#                     "currType" : str
+#                         curration type (differential expression/contaminant/etc.)
+#                         (description from CurationTypesTable)
+#                     "method" : str
+#                         The method used to detect this behavior (i.e. observation/ranksum/clustering/etc")
+#                         (description from MethodTypesTable)
+#                     "agentType" : str
+#                         Name of the program which submitted this annotation (i.e. heatsequer)
+#                         (description from AgentTypesTable)
+#                     "description" : str
+#                         Free text describing this annotation (i.e. "lower in green tomatoes comapred to red ones")
+#                     "private" : bool
+#                         True if the curation is private, False if not
+#                     "CurationList" : list of
+#                         {
+#                             "detail" : str
+#                                 the type of detail (i.e. ALL/HIGH/LOW)
+#                                 (description from CurationDetailsTypeTable)
+#                             "term" : str
+#                                 the ontology term for this detail (i.e. feces/ibd/homo sapiens)
+#                                 (description from OntologyTable)
+#                         }
+#                     "parents" : list of tuples (type, list of terms)
+#                         {
+#                             type : type of the annotation type ('high'/'low','all')
+#                             list of terms - list of ontology terms which are annotated or parents of annotated ontology term
+#                         }
+#                 }
+#             seq_db_id_seqs : list of list of str
+#                 the seqyences (ACGT) associated with each seq_db_id. in order of the query seq_db_ids
+#                 (so the first entry is a list of all dbbact sequences associated with the first silva/gg id)
 
-            seq_db_id_annotations: list of (list of dict of {annotationid(int): count(int)})
-                the ids and counts of the annotations matching each seq_db_id (i.e. silva/gg) ordered by the query order.
-                the dbbact annotation ids (matching the annotations dict) are the key, and the number of dbbact sequences having this annotation is the value (note that each seq_db_id can appear in several dbbact sequences,
-                and therefore may match several sequences with this annotation, so this will manifest in the count).
-            term_info : dict of {term, dict}:
-            Information about each term which appears in the annotation parents. Key is the ontolgy term. the value dict is:
-            {
-                    'total_annotations' : int
-                        total number of annotations where this term appears (as a parent)
-                    'total_sequences' : int
-                        total number of sequences in annotations where this term appears (as a parent)
-            }
-        }
-    Details :
-        Return a dict of details for all the annotations associated with at least one of the sequences used as input, and a list of seqpos and the associated annotationids describing it
-        (i.e. a sparse representation of the annotations vector for the input sequence list)
-    Validation:
-        If an annotation is private, return it only if user is authenticated and created the curation. If user not authenticated, do not return it in the list
-        If annotation is not private, return it (no need for authentication)
-    """
-    debug(3, 'get_fast_annotations_external_db_id', request)
-    cfunc = get_fast_annotations_external_db_id
-    alldat = request.get_json()
-    if alldat is None:
-        return(getdoc(cfunc))
-    seq_db_ids = alldat.get('seq_db_ids')
-    if seq_db_ids is None:
-        return('seq_db_ids parameter missing', 400)
-    db_name = alldat.get('db_name', 'silva')
-    get_term_info = alldat.get('get_term_info', True)
-    err, annotations, seq_db_id_seqs, term_info, seq_db_id_annotations = dbannotations.get_fast_annotations_gg_silva(g.con, g.cur, seq_db_ids, db_name=db_name, userid=current_user.user_id, get_term_info=get_term_info)
-    if err:
-        errmsg = 'error encountered while getting the external db fast annotations: %s' % err
-        debug(6, errmsg)
-        return(errmsg, 400)
-    res = {'annotations': annotations, 'seq_db_id_seqs': seq_db_id_seqs, 'term_info': term_info, 'seq_db_id_annotations': seq_db_id_annotations}
-    return json.dumps(res)
+#             seq_db_id_annotations: list of (list of dict of {annotationid(int): count(int)})
+#                 the ids and counts of the annotations matching each seq_db_id (i.e. silva/gg) ordered by the query order.
+#                 the dbbact annotation ids (matching the annotations dict) are the key, and the number of dbbact sequences having this annotation is the value (note that each seq_db_id can appear in several dbbact sequences,
+#                 and therefore may match several sequences with this annotation, so this will manifest in the count).
+#             term_info : dict of {term, dict}:
+#             Information about each term which appears in the annotation parents. Key is the ontolgy term. the value dict is:
+#             {
+#                     'total_annotations' : int
+#                         total number of annotations where this term appears (as a parent)
+#                     'total_sequences' : int
+#                         total number of sequences in annotations where this term appears (as a parent)
+#             }
+#         }
+#     Details :
+#         Return a dict of details for all the annotations associated with at least one of the sequences used as input, and a list of seqpos and the associated annotationids describing it
+#         (i.e. a sparse representation of the annotations vector for the input sequence list)
+#     Validation:
+#         If an annotation is private, return it only if user is authenticated and created the curation. If user not authenticated, do not return it in the list
+#         If annotation is not private, return it (no need for authentication)
+#     """
+#     debug(3, 'get_fast_annotations_external_db_id', request)
+#     cfunc = get_fast_annotations_external_db_id
+#     alldat = request.get_json()
+#     if alldat is None:
+#         return(getdoc(cfunc))
+#     seq_db_ids = alldat.get('seq_db_ids')
+#     if seq_db_ids is None:
+#         return('seq_db_ids parameter missing', 400)
+#     db_name = alldat.get('db_name', 'silva')
+#     get_term_info = alldat.get('get_term_info', True)
+#     err, annotations, seq_db_id_seqs, term_info, seq_db_id_annotations = dbannotations.get_fast_annotations_gg_silva(g.con, g.cur, seq_db_ids, db_name=db_name, userid=current_user.user_id, get_term_info=get_term_info)
+#     if err:
+#         errmsg = 'error encountered while getting the external db fast annotations: %s' % err
+#         debug(6, errmsg)
+#         return(errmsg, 400)
+#     res = {'annotations': annotations, 'seq_db_id_seqs': seq_db_id_seqs, 'term_info': term_info, 'seq_db_id_annotations': seq_db_id_annotations}
+#     return json.dumps(res)
 
 
 @login_required

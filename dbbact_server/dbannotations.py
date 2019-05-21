@@ -11,7 +11,7 @@ from .utils import debug
 
 
 def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, annotationdetails, method='',
-                           description='', agenttype='', private='n', userid=None, commit=True):
+                           description='', agenttype='', private='n', userid=None, commit=True, seq_translate_api=None):
     """
     Add an annotation to the annotation table
 
@@ -42,6 +42,8 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
         username of the user creating this annotation or None (default) for anonymous user
     commit : bool (optional)
         True (default) to commit, False to wait with the commit
+    seq_translate_api: str or None (optional)
+        address of the sequence translator API (to add new sequences to translation waiting queue). If none, don't add to waiting queue
 
     output:
     err : str
@@ -52,7 +54,7 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
     # add the sequences after removing duplicates
     sequences = [x.lower() for x in sequences]
     sequences = list(set(sequences))
-    err, seqids = dbsequences.AddSequences(con, cur, sequences, primer=primer, commit=False)
+    err, seqids = dbsequences.AddSequences(con, cur, sequences, primer=primer, commit=False, seq_translate_api=seq_translate_api)
     if err:
         return err, -1
     err, annotationid = AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method, description, agenttype, private, userid, commit=False, numseqs=len(set(seqids)))
@@ -591,7 +593,7 @@ def GetUserAnnotations(con, cur, foruserid, userid=0):
     return '', details
 
 
-def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_translate_api=None):
+def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_translate_api=None, dbname=None):
     """
     Get all annotations for a sequence. Returns a list of annotations (empty list if sequence is not found)
 
@@ -617,7 +619,7 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_transl
     """
     details = []
     debug(1, 'GetSequenceAnnotations sequence %s' % sequence)
-    err, sid = dbsequences.GetSequenceId(con, cur, sequence, region, seq_translate_api=seq_translate_api)
+    err, sid = dbsequences.GetSequenceId(con, cur, sequence, region, seq_translate_api=seq_translate_api, dbname=dbname)
     if len(sid) == 0:
         debug(2, 'Sequence %s not found for GetSequenceAnnotations.' % sequence)
         return '', []
@@ -891,14 +893,14 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
     return('')
 
 
-def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info=True, get_all_exp_annotations=True, get_taxonomy=True, get_parents=True, seq_translate_api=None):
+def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info=True, get_all_exp_annotations=True, get_taxonomy=True, get_parents=True, seq_translate_api=None, dbname=None):
     """
     Get annotations for a list of sequences in a compact form
 
     input:
     con,cur :
     sequences : list of str ('ACGT')
-        the sequences to search for in the database
+        the sequences to search for in the database. Alterantively, can be SILVA IDs if dbname='silva'.
     region : int (optional)
         None to not compare region, or the regionid the sequence is from
     userid : int (optional)
@@ -912,6 +914,9 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
         True to get the taxonomy for each sequence (returned in the 'taxonomy' field)
     get_parents: bool, True
         True to get the parent terms for each annotation term, False to just get the annotation terms
+    dbname: str or None, optional
+        if None, assume sequences are acgt sequences
+        if str, assume sequences are database ids and this is the database name (i.e. 'FJ978486' for 'silva', etc.)
 
     output:
     err : str
@@ -946,7 +951,7 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
     for cseqpos, cseq in enumerate(sequences):
         cseqannotationids = []
         # get the sequenceid
-        err, sid = dbsequences.GetSequenceId(con, cur, cseq, region, seq_translate_api=seq_translate_api)
+        err, sid = dbsequences.GetSequenceId(con, cur, cseq, region, seq_translate_api=seq_translate_api, dbname=dbname)
         # if not in database - no annotations
         if len(sid) == 0:
             continue
