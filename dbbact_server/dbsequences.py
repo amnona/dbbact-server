@@ -477,126 +477,128 @@ def GetHashAnnotationIDs(con, cur, hash_str, userid=None):
     return '', annotationids, seqids, seqnames
 
 
-def get_seqs_from_db_id(con, cur, db_name, db_seq_id):
-    '''Get all sequences that match the db_seq_id supplied for silva/greengenes
+# superceded by dbbact_sequence_translator rest API
+# def get_seqs_from_db_id(con, cur, db_name, db_seq_id):
+#     '''Get all sequences that match the db_seq_id supplied for silva/greengenes
 
-    Parameters
-    ----------
-    con, cur
-    db_name: str
-        name of the database from which the id originates. can be "silva" or "gg"
-    db_seq_id: str
-        the sequence identifier in the database (i.e. 'FJ978486.1.1387' for silva or '1111883' for greengenes)
+#     Parameters
+#     ----------
+#     con, cur
+#     db_name: str
+#         name of the database from which the id originates. can be "silva" or "gg"
+#     db_seq_id: str
+#         the sequence identifier in the database (i.e. 'FJ978486.1.1387' for silva or '1111883' for greengenes)
 
-    Returns
-    -------
-    error: str or '' if ok
-    list of int
-        the dbbact ids for all the dbbact sequences matching the db_seq_id
-    list of str
-        the actual sequences for the dbbact sequences matching the db_seq_id (same order)
-    '''
-    database_ids = {'silva': 1, 'gg': 2}
-    if db_name in database_ids:
-        db_id = database_ids[db_name]
-    else:
-        err = 'database id %s not found. options are: %s' % database_ids.keys()
-        debug(9, err)
-        return err, [], []
-    db_seq_id = db_seq_id.lower()
-    cur.execute("SELECT id,sequence FROM SequencesTable where id in (select distinct dbbactid from WholeSeqIDsTable where WholeSeqID=%s AND dbid=%s)", [db_seq_id, db_id])
-    seq_ids = []
-    sequences = []
-    res = cur.fetchall()
-    for cres in res:
-        seq_ids.append(cres[0])
-        sequences.append(cres[1])
-    debug(1, 'found %d dbbact sequences for seqid %s' % (len(seq_ids), db_seq_id))
-    return '', seq_ids, sequences
-
-
-def GetGgAnnotationIDs(con, cur, gg_str, userid=None):
-    '''
-    Get annotationids for all annotations containing any sequence matching the gg id (substring)
-
-    Parameters
-    ----------
-    con,cur
-    gg : str
-        the gg id substring to look for
-    userid : int (optional)
-        the userid of the querying user (to enable searching private annotations)
-
-    Returns
-    -------
-    annotationids : list of (int, int) (annotationid, count)
-        list containing the ids of all annotations that contain a sequence with the Hash and the count of number of sequences from the Hash in that annotation
-    seqids : list of int
-        list of the sequenceids that have this annotation
-    '''
-    gg_str = gg_str.lower()
-    ggStr = gg_str
-    debug(1, 'GetGgAnnotationIDs for gg %s' % gg_str)
-
-    err, seqids, seqnames = get_seqs_from_db_id(con, cur, 'gg', ggStr)
-    if err != '':
-        return err, [], [], []
-
-    annotationids_dict = defaultdict(int)
-    for cseq in seqids:
-        cur.execute('SELECT annotationid from sequencesAnnotationTable where seqid=%s', [cseq])
-        res = cur.fetchall()
-        for cres in res:
-            annotationids_dict[cres[0]] += 1
-    # NOTE: need to add user validation for the ids!!!!!!
-    debug(1, 'found %d unique annotations for the gg' % len(annotationids_dict))
-    annotationids = []
-    for k, v in annotationids_dict.items():
-        annotationids.append((k, v))
-    return '', annotationids, seqids, seqnames
+#     Returns
+#     -------
+#     error: str or '' if ok
+#     list of int
+#         the dbbact ids for all the dbbact sequences matching the db_seq_id
+#     list of str
+#         the actual sequences for the dbbact sequences matching the db_seq_id (same order)
+#     '''
+#     database_ids = {'silva': 1, 'gg': 2}
+#     if db_name in database_ids:
+#         db_id = database_ids[db_name]
+#     else:
+#         err = 'database id %s not found. options are: %s' % database_ids.keys()
+#         debug(9, err)
+#         return err, [], []
+#     db_seq_id = db_seq_id.lower()
+#     cur.execute("SELECT id,sequence FROM SequencesTable where id in (select distinct dbbactid from WholeSeqIDsTable where WholeSeqID=%s AND dbid=%s)", [db_seq_id, db_id])
+#     seq_ids = []
+#     sequences = []
+#     res = cur.fetchall()
+#     for cres in res:
+#         seq_ids.append(cres[0])
+#         sequences.append(cres[1])
+#     debug(1, 'found %d dbbact sequences for seqid %s' % (len(seq_ids), db_seq_id))
+#     return '', seq_ids, sequences
 
 
-def GetSilvaAnnotationIDs(con, cur, silva_str, userid=None):
-    '''
-    Get annotationids for all annotations containing any sequence matching the silva id (substring)
+# superceded by dbbact_sequence_translator REST-API and the dbbact parameter in GetSequenceAnnotations() etc.
+# def GetGgAnnotationIDs(con, cur, gg_str, userid=None):
+#     '''
+#     Get annotationids for all annotations containing any sequence matching the gg id (substring)
 
-    Parameters
-    ----------
-    con,cur
-    Silva : str
-        the silva substring to look for
-    userid : int (optional)
-        the userid of the querying user (to enable searching private annotations)
+#     Parameters
+#     ----------
+#     con,cur
+#     gg : str
+#         the gg id substring to look for
+#     userid : int (optional)
+#         the userid of the querying user (to enable searching private annotations)
 
-    Returns
-    -------
-    err: str
-        the error encountered or '' if successful
-    annotationids : list of (int, int) (annotationid, count)
-        list containing the ids of all annotations that contain a sequence with the silvaID and the count of number of sequences with the silvaID in that annotation
-    seqids : list of int
-        list of the sequenceids that have this silvaID
-    seqnames: list of str
-        the sequences matching the silvaID
-    '''
-    debug(1, 'GetSilvaAnnotationIDs for Silva %s' % silva_str)
+#     Returns
+#     -------
+#     annotationids : list of (int, int) (annotationid, count)
+#         list containing the ids of all annotations that contain a sequence with the Hash and the count of number of sequences from the Hash in that annotation
+#     seqids : list of int
+#         list of the sequenceids that have this annotation
+#     '''
+#     gg_str = gg_str.lower()
+#     ggStr = gg_str
+#     debug(1, 'GetGgAnnotationIDs for gg %s' % gg_str)
 
-    err, seqids, seqnames = get_seqs_from_db_id(con, cur, 'silva', silva_str)
-    if err != '':
-        return err, [], [], []
-    debug(1, 'found %d matching sequences for the silva' % len(seqids))
-    annotationids_dict = defaultdict(int)
-    for cseq in seqids:
-        cur.execute('SELECT annotationid from sequencesAnnotationTable where seqid=%s', [cseq])
-        res = cur.fetchall()
-        for cres in res:
-            annotationids_dict[cres[0]] += 1
-    # NOTE: need to add user validation for the ids!!!!!!
-    debug(1, 'found %d unique annotations for the Silva' % len(annotationids_dict))
-    annotationids = []
-    for k, v in annotationids_dict.items():
-        annotationids.append((k, v))
-    return '', annotationids, seqids, seqnames
+#     err, seqids, seqnames = get_seqs_from_db_id(con, cur, 'gg', ggStr)
+#     if err != '':
+#         return err, [], [], []
+
+#     annotationids_dict = defaultdict(int)
+#     for cseq in seqids:
+#         cur.execute('SELECT annotationid from sequencesAnnotationTable where seqid=%s', [cseq])
+#         res = cur.fetchall()
+#         for cres in res:
+#             annotationids_dict[cres[0]] += 1
+#     # NOTE: need to add user validation for the ids!!!!!!
+#     debug(1, 'found %d unique annotations for the gg' % len(annotationids_dict))
+#     annotationids = []
+#     for k, v in annotationids_dict.items():
+#         annotationids.append((k, v))
+#     return '', annotationids, seqids, seqnames
+
+
+# def GetSilvaAnnotationIDs(con, cur, silva_str, userid=None):
+#     '''
+#     Get annotationids for all annotations containing any sequence matching the silva id (substring)
+
+#     Parameters
+#     ----------
+#     con,cur
+#     Silva : str
+#         the silva substring to look for
+#     userid : int (optional)
+#         the userid of the querying user (to enable searching private annotations)
+
+#     Returns
+#     -------
+#     err: str
+#         the error encountered or '' if successful
+#     annotationids : list of (int, int) (annotationid, count)
+#         list containing the ids of all annotations that contain a sequence with the silvaID and the count of number of sequences with the silvaID in that annotation
+#     seqids : list of int
+#         list of the sequenceids that have this silvaID
+#     seqnames: list of str
+#         the sequences matching the silvaID
+#     '''
+#     debug(1, 'GetSilvaAnnotationIDs for Silva %s' % silva_str)
+
+#     err, seqids, seqnames = get_seqs_from_db_id(con, cur, 'silva', silva_str)
+#     if err != '':
+#         return err, [], [], []
+#     debug(1, 'found %d matching sequences for the silva' % len(seqids))
+#     annotationids_dict = defaultdict(int)
+#     for cseq in seqids:
+#         cur.execute('SELECT annotationid from sequencesAnnotationTable where seqid=%s', [cseq])
+#         res = cur.fetchall()
+#         for cres in res:
+#             annotationids_dict[cres[0]] += 1
+#     # NOTE: need to add user validation for the ids!!!!!!
+#     debug(1, 'found %d unique annotations for the Silva' % len(annotationids_dict))
+#     annotationids = []
+#     for k, v in annotationids_dict.items():
+#         annotationids.append((k, v))
+#     return '', annotationids, seqids, seqnames
 
 
 def GetHashAnnotations(con, cur, hash_str, userid=None):
@@ -642,90 +644,91 @@ def GetHashAnnotations(con, cur, hash_str, userid=None):
     return '', annotations, seqids, seqnames
 
 
-def GetGgAnnotations(con, cur, gg_str, userid=None):
-    '''
-    Get annotations for all annotations containing any sequence matching the hash (substring)
+# superceded by dbname parameter in GetSequenceAnnotations() etc.
+# def GetGgAnnotations(con, cur, gg_str, userid=None):
+#     '''
+#     Get annotations for all annotations containing any sequence matching the hash (substring)
 
-    Parameters
-    ----------
-    con,cur
-    gg_str : str
-        the gg id substring to look for
-    userid : int (optional)
-        the userid of the querying user (to enable searching private annotations)
+#     Parameters
+#     ----------
+#     con,cur
+#     gg_str : str
+#         the gg id substring to look for
+#     userid : int (optional)
+#         the userid of the querying user (to enable searching private annotations)
 
-    Returns
-    -------
-    annotations : list of tuples (annotation, counts)
-        list containing the details for all annotations that contain a sequence with the taxonomy
-        annotation - (see dbannotations.GetAnnotationsFromID() )
-        counts - the number of sequences from taxonomy appearing in this annotations
-    seqids : list of int
-        list of the sequenceids which have this taxonomy
-    seqnames : list of sequence strings
-    '''
-    debug(1, 'GetGgAnnotations for hash %s' % gg_str)
-    # get the annotation ids
-    err, annotationids, seqids, seqnames = GetGgAnnotationIDs(con, cur, gg_str, userid)
-    if err:
-        errmsg = 'Failed to get annotationIDs for gg_str %s: %s' % (gg_str, err)
-        debug(6, errmsg)
-        return errmsg, None
-    # and get the annotation details for each
-    annotations = []
-    for cres in annotationids:
-        cid = cres[0]
-        ccount = cres[1]
-        err, cdetails = dbannotations.GetAnnotationsFromID(con, cur, cid)
-        if err:
-            debug(6, err)
-            continue
-        annotations.append((cdetails, ccount))
-    debug(1, 'got %d details' % len(annotations))
-    return '', annotations, seqids, seqnames
+#     Returns
+#     -------
+#     annotations : list of tuples (annotation, counts)
+#         list containing the details for all annotations that contain a sequence with the taxonomy
+#         annotation - (see dbannotations.GetAnnotationsFromID() )
+#         counts - the number of sequences from taxonomy appearing in this annotations
+#     seqids : list of int
+#         list of the sequenceids which have this taxonomy
+#     seqnames : list of sequence strings
+#     '''
+#     debug(1, 'GetGgAnnotations for hash %s' % gg_str)
+#     # get the annotation ids
+#     err, annotationids, seqids, seqnames = GetGgAnnotationIDs(con, cur, gg_str, userid)
+#     if err:
+#         errmsg = 'Failed to get annotationIDs for gg_str %s: %s' % (gg_str, err)
+#         debug(6, errmsg)
+#         return errmsg, None
+#     # and get the annotation details for each
+#     annotations = []
+#     for cres in annotationids:
+#         cid = cres[0]
+#         ccount = cres[1]
+#         err, cdetails = dbannotations.GetAnnotationsFromID(con, cur, cid)
+#         if err:
+#             debug(6, err)
+#             continue
+#         annotations.append((cdetails, ccount))
+#     debug(1, 'got %d details' % len(annotations))
+#     return '', annotations, seqids, seqnames
 
 
-def GetSilvaAnnotations(con, cur, silva_str, userid=None):
-    '''
-    Get annotations for all annotations containing any sequence matching the silvaID (substring)
+# def GetSilvaAnnotations(con, cur, silva_str, userid=None):
+#     '''
+#     Get annotations for all annotations containing any sequence matching the silvaID (substring)
 
-    Parameters
-    ----------
-    con,cur
-    silva_str : str
-        the silva id substring to look for
-    userid : int (optional)
-        the userid of the querying user (to enable searching private annotations)
+#     Parameters
+#     ----------
+#     con,cur
+#     silva_str : str
+#         the silva id substring to look for
+#     userid : int (optional)
+#         the userid of the querying user (to enable searching private annotations)
 
-    Returns
-    -------
-    annotations : list of tuples (annotation, counts)
-        list containing the details for all annotations that contain a sequence with the taxonomy
-        annotation - (see dbannotations.GetAnnotationsFromID() )
-        counts - the number of sequences from taxonomy appearing in this annotations
-    seqids : list of int
-        list of the sequenceids which have this taxonomy
-    seqnames : list of sequence strings
-    '''
-    debug(1, 'GetSilvaAnnotations for silva ID %s' % silva_str)
-    # get the annotation ids
-    err, annotationids, seqids, seqnames = GetSilvaAnnotationIDs(con, cur, silva_str, userid)
-    if err:
-        errmsg = 'Failed to get annotationIDs for silva_str %s: %s' % (silva_str, err)
-        debug(6, errmsg)
-        return errmsg, None
-    # and get the annotation details for each
-    annotations = []
-    for cres in annotationids:
-        cid = cres[0]
-        ccount = cres[1]
-        err, cdetails = dbannotations.GetAnnotationsFromID(con, cur, cid)
-        if err:
-            debug(6, err)
-            continue
-        annotations.append((cdetails, ccount))
-    debug(1, 'got %d details' % len(annotations))
-    return '', annotations, seqids, seqnames
+#     Returns
+#     -------
+#     annotations : list of tuples (annotation, counts)
+#         list containing the details for all annotations that contain a sequence with the taxonomy
+#         annotation - (see dbannotations.GetAnnotationsFromID() )
+#         counts - the number of sequences from taxonomy appearing in this annotations
+#     seqids : list of int
+#         list of the sequenceids which have this taxonomy
+#     seqnames : list of sequence strings
+#     '''
+#     debug(1, 'GetSilvaAnnotations for silva ID %s' % silva_str)
+#     # get the annotation ids
+#     err, annotationids, seqids, seqnames = GetSilvaAnnotationIDs(con, cur, silva_str, userid)
+#     if err:
+#         errmsg = 'Failed to get annotationIDs for silva_str %s: %s' % (silva_str, err)
+#         debug(6, errmsg)
+#         return errmsg, None
+#     # and get the annotation details for each
+#     annotations = []
+#     for cres in annotationids:
+#         cid = cres[0]
+#         ccount = cres[1]
+#         err, cdetails = dbannotations.GetAnnotationsFromID(con, cur, cid)
+#         if err:
+#             debug(6, err)
+#             continue
+#         annotations.append((cdetails, ccount))
+#     debug(1, 'got %d details' % len(annotations))
+#     return '', annotations, seqids, seqnames
 
 
 def GetSequenceWithNoTaxonomyID(con, cur):
