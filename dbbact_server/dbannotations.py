@@ -1245,80 +1245,81 @@ def get_annotation_term_pairs(cann, max_terms=20, get_pairs=True, get_singles=Tr
     return term_pairs
 
 
-def get_fast_annotations_gg_silva(con, cur, seq_db_ids, db_name='silva', userid=0, get_term_info=True, get_all_exp_annotations=True):
-    '''
-    Get annotations for a list of sequences in a compact form based on the silva/greengenes ids
+# depracated (superceded by dbname pamater in get_annotations())
+# def get_fast_annotations_gg_silva(con, cur, seq_db_ids, db_name='silva', userid=0, get_term_info=True, get_all_exp_annotations=True):
+#     '''
+#     Get annotations for a list of sequences in a compact form based on the silva/greengenes ids
 
-    input:
-    con,cur :
-    seq_db_ids: list of str
-        the sequences database identifiers to search for (i.e. 'FJ978486.1.1387' for silva or '1111883' for greengenes)
-   db_name : str (optional)
-        the database for which the id originated. options are "silva" or "gg"
-    userid : int (optional)
-        the id of the user requesting the annotations. Provate annotations with non-matching user will not be returned
-    get_term_info : bool (optional)
-        True (default) to get the information about each term, False to skip this step
-    get_all_exp_annotations: bool (optional)
-        True (default) to get all annotations for each experiment which the sequence appear in at least one annotation.
-        False to get just the annotations where the sequence appears
+#     input:
+#     con,cur :
+#     seq_db_ids: list of str
+#         the sequences database identifiers to search for (i.e. 'FJ978486.1.1387' for silva or '1111883' for greengenes)
+#    db_name : str (optional)
+#         the database for which the id originated. options are "silva" or "gg"
+#     userid : int (optional)
+#         the id of the user requesting the annotations. Provate annotations with non-matching user will not be returned
+#     get_term_info : bool (optional)
+#         True (default) to get the information about each term, False to skip this step
+#     get_all_exp_annotations: bool (optional)
+#         True (default) to get all annotations for each experiment which the sequence appear in at least one annotation.
+#         False to get just the annotations where the sequence appears
 
-    output:
-    err : str
-        The error encountered or '' if ok
-    annotations : dict of {annotationid : annotation details (see GetAnnotationsFromID() }
-        a dict containing all annotations relevant to any of the sequences and the details about them
-        * includes 'parents' - list of all ontology term parents for each annotation
-    seq_db_id_seqs : list of list of str
-        the seqyences (ACGT) associated with each seq_db_id. in order of the query seq_db_ids
-        (so the first entry is a list of all dbbact sequences associated with the first silva/gg id)
-    term_info : dict of {term, dict}
-        Information about each term which appears in the annotation parents. Key is the ontolgy term. the value dict is:
-            'total_annotations' : int
-                total number of annotations where this term appears (as a parent)
-            'total_sequences' : int
-                total number of sequences in annotations where this term appears (as a parent)
-    seq_db_id_annotations: list of (list of dict of {annotationid(int): count(int)})
-        the ids and counts of the annotations matching each seq_db_id (i.e. silva/gg) ordered by the query order.
-        the dbbact annotation ids (matching the annotations dict) are the key, and the number of dbbact sequences having this annotation is the value (note that each seq_db_id can appear in several dbbact sequences,
-        and therefore may match several sequences with this annotation, so this will manifest in the count).
-    '''
-    debug(2, 'getting fast annotations gg_silva for %d ids' % len(seq_db_ids))
-    # the dbbact sequences associated with each seq_db_id
-    seq_db_id_seqs = []
-    # the dbbact sequence ids for each silva/gg db_id
-    seq_ids = {}
-    # all the sequences we encountered (since can have same sequence matching multiple db_ids)
-    all_seqs = set()
-    # get the dbbact ids for each db_id
-    for cid in seq_db_ids:
-        err, ids, seqs = dbsequences.get_seqs_from_db_id(con, cur, db_name=db_name, db_seq_id=cid)
-        if err:
-            return err, {}, [], {}, []
-        seq_ids[cid] = seqs
-        all_seqs = all_seqs.union(set(seqs))
-        seq_db_id_seqs.append(seqs)
-    # get the annotations for all the sequences
-    all_seqs = list(all_seqs)
-    debug(2, 'got %d unique sequences for all db_ids' % len(all_seqs))
-    err, annotations, seqannotations, term_info = GetFastAnnotations(con, cur, all_seqs, region=None, userid=userid, get_term_info=get_term_info, get_all_exp_annotations=get_all_exp_annotations)
-    if err:
-        return err, {}, [], {}, []
+#     output:
+#     err : str
+#         The error encountered or '' if ok
+#     annotations : dict of {annotationid : annotation details (see GetAnnotationsFromID() }
+#         a dict containing all annotations relevant to any of the sequences and the details about them
+#         * includes 'parents' - list of all ontology term parents for each annotation
+#     seq_db_id_seqs : list of list of str
+#         the seqyences (ACGT) associated with each seq_db_id. in order of the query seq_db_ids
+#         (so the first entry is a list of all dbbact sequences associated with the first silva/gg id)
+#     term_info : dict of {term, dict}
+#         Information about each term which appears in the annotation parents. Key is the ontolgy term. the value dict is:
+#             'total_annotations' : int
+#                 total number of annotations where this term appears (as a parent)
+#             'total_sequences' : int
+#                 total number of sequences in annotations where this term appears (as a parent)
+#     seq_db_id_annotations: list of (list of dict of {annotationid(int): count(int)})
+#         the ids and counts of the annotations matching each seq_db_id (i.e. silva/gg) ordered by the query order.
+#         the dbbact annotation ids (matching the annotations dict) are the key, and the number of dbbact sequences having this annotation is the value (note that each seq_db_id can appear in several dbbact sequences,
+#         and therefore may match several sequences with this annotation, so this will manifest in the count).
+#     '''
+#     debug(2, 'getting fast annotations gg_silva for %d ids' % len(seq_db_ids))
+#     # the dbbact sequences associated with each seq_db_id
+#     seq_db_id_seqs = []
+#     # the dbbact sequence ids for each silva/gg db_id
+#     seq_ids = {}
+#     # all the sequences we encountered (since can have same sequence matching multiple db_ids)
+#     all_seqs = set()
+#     # get the dbbact ids for each db_id
+#     for cid in seq_db_ids:
+#         err, ids, seqs = dbsequences.get_seqs_from_db_id(con, cur, db_name=db_name, db_seq_id=cid)
+#         if err:
+#             return err, {}, [], {}, []
+#         seq_ids[cid] = seqs
+#         all_seqs = all_seqs.union(set(seqs))
+#         seq_db_id_seqs.append(seqs)
+#     # get the annotations for all the sequences
+#     all_seqs = list(all_seqs)
+#     debug(2, 'got %d unique sequences for all db_ids' % len(all_seqs))
+#     err, annotations, seqannotations, term_info = GetFastAnnotations(con, cur, all_seqs, region=None, userid=userid, get_term_info=get_term_info, get_all_exp_annotations=get_all_exp_annotations)
+#     if err:
+#         return err, {}, [], {}, []
 
-    # create the seq_db_id_annotations parameter
-    # first we need to see for each sequenceid, in what annotations is participated
-    seq_annotations_dict = {}
-    for cseqpos, cseqannotationids in seqannotations:
-        cseq = all_seqs[cseqpos]
-        seq_annotations_dict[cseq] = cseqannotationids
+#     # create the seq_db_id_annotations parameter
+#     # first we need to see for each sequenceid, in what annotations is participated
+#     seq_annotations_dict = {}
+#     for cseqpos, cseqannotationids in seqannotations:
+#         cseq = all_seqs[cseqpos]
+#         seq_annotations_dict[cseq] = cseqannotationids
 
-    seq_db_id_annotations = []
-    for cid in seq_db_ids:
-        cseqs = seq_ids[cid]
-        cseq_annotations = defaultdict(int)
-        for ccseq in cseqs:
-            for canno in seq_annotations_dict[ccseq]:
-                cseq_annotations[canno] += 1
-        seq_db_id_annotations.append(dict(cseq_annotations))
+#     seq_db_id_annotations = []
+#     for cid in seq_db_ids:
+#         cseqs = seq_ids[cid]
+#         cseq_annotations = defaultdict(int)
+#         for ccseq in cseqs:
+#             for canno in seq_annotations_dict[ccseq]:
+#                 cseq_annotations[canno] += 1
+#         seq_db_id_annotations.append(dict(cseq_annotations))
 
-    return '', annotations, seq_db_id_seqs, term_info, seq_db_id_annotations
+#     return '', annotations, seq_db_id_seqs, term_info, seq_db_id_annotations
