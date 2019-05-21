@@ -896,14 +896,15 @@ def get_sequence_info():
         Code : 200
         Content :
         {
-            'sequences' : list of dict
-                information about each sequence in the annotation
-                {
-                    'seq' : str (ACGT)
-                        the sequence
-                    'taxonomy' : str
-                        the taxonomy of the sequence (or '' if not present)
-                }
+    sequences : list of dict (one per sequence). contains:
+        'seq' : str (ACGT)
+            the sequence
+        'taxonomy' : str
+            the taxonomy of the sequence or '' if unknown
+        'total_annotations': int
+            the number of annotations which this sequence is associated with
+        'total_experiments': int
+            the total number of experiments which this sequence is associated with
         }
     Validation:
     """
