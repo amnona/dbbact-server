@@ -357,12 +357,14 @@ def get_sequence_list_annotations():
     Data Params: JSON
         {
             "sequences": list of str ('ACGT')
-                the list of sequence strings to query the database (can be any length)
+                the list of sequence strings to query the database (can be any length), or alternatively silva IDs (if dbname='silva')
             "region": int (optional)
                 the region id (default=1 which is V4 515F 806R)
             "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
+            "dbname": str, optional
+                If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
     Success Response:
         Code : 200
         Content :
@@ -425,6 +427,7 @@ def get_sequence_list_annotations():
     if sequences is None:
         return('sequences parameter missing', 400)
     use_sequence_translator = alldat.get('use_sequence_translator', True)
+    dbname = alldat.get('dbname', None)
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
     else:
@@ -432,7 +435,7 @@ def get_sequence_list_annotations():
 
     seqannotations = []
     for cseq in sequences:
-        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id, seq_translate_api=seq_translate_api)
+        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id, seq_translate_api=seq_translate_api, dbname=dbname)
         # if err:
         #   debug(6,err)
         #   return ('Problem geting details. error=%s' % err,400)
@@ -473,7 +476,7 @@ def get_fast_annotations():
     Data Params: JSON
         {
             "sequences": list of str ('ACGT')
-                the list of sequence strings to query the database (can be any length). Can be list of SILVA IDs (in case dbname is set to 'silva')
+                the list of sequence strings to query the database (can be any length). Alternatively, can be list of SILVA IDs (in case dbname is set to 'silva')
             "region": int (optional)
                 the region id (default=1 which is V4 515F 806R)
             "get_term_info": bool (optional)

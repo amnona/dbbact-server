@@ -282,6 +282,7 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
             debug(2, 'getting dbids from wholeseq ids')
             res = requests.post(seq_translate_api + '/get_dbbact_ids_from_wholeseq_ids', json={'whole_seq_ids': [sequence], 'dbname': dbname})
         if res.ok:
+            print(res.json())
             trans_ids = res.json()['dbbact_ids'][0]
         else:
             debug(5, 'got error from sequence translator: %s' % res.content)
