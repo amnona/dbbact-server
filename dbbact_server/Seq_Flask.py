@@ -110,6 +110,8 @@ def get_sequenceid():
     no_longer = alldat.get('no_longer', False)
     use_sequence_translator = alldat.get('use_sequence_translator', False)
     dbname = alldat.get('dbname', None)
+    if dbname is not None:
+        use_sequence_translator = True
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
     else:
@@ -169,6 +171,8 @@ def get_sequenceid_list():
     if sequences is None:
         return(getdoc(cfunc))
     use_sequence_translator = alldat.get('use_sequence_translator', False)
+    if dbname is not None:
+        use_sequence_translator = True
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
     else:
@@ -322,6 +326,8 @@ def get_sequence_annotations():
     region = alldat.get('region')
     use_sequence_translator = alldat.get('use_sequence_translator', True)
     dbname = alldat.get('dbname', None)
+    if dbname is not None:
+        use_sequence_translator = True
 
     taxonomy = None
     if get_tax_info:
@@ -428,6 +434,8 @@ def get_sequence_list_annotations():
         return('sequences parameter missing', 400)
     use_sequence_translator = alldat.get('use_sequence_translator', True)
     dbname = alldat.get('dbname', None)
+    if dbname is not None:
+        use_sequence_translator = True
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
     else:
@@ -578,6 +586,8 @@ def get_fast_annotations():
     get_parents = alldat.get('get_parents', True)
     use_sequence_translator = alldat.get('use_sequence_translator', True)
     dbname = alldat.get('dbname', None)
+    if dbname is not None:
+        use_sequence_translator = True
     get_all_exp_annotations = alldat.get('get_all_exp_annotations', True)
     if use_sequence_translator:
         seq_translate_api = g.seq_translate_api
