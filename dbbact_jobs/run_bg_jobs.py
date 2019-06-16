@@ -17,6 +17,7 @@ __version__ = "0.1"
 
 commands = {'update_seq_taxonomy': './update_seq_taxonomy.py',
 			'update_seq_hash': './update_seq_hash.py',
+			'update_term_info': './update_term_info.py',
 			# 'update_silva': './update_whole_seq_db.py -w SILVA',
 			# 'update_gg': './update_whole_seq_db.py -w greengenes',
 			# 'update_seq_translator': './update_whole_seq_db.py --server-type develop --wholeseqdb silva --wholeseq-file ~/whole_seqs/SILVA_132_SSURef_tax_silva.fasta',
