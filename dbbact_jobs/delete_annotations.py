@@ -3,6 +3,8 @@
 # amnonscript
 
 import argparse
+import psycopg2
+
 from dbbact_server.utils import debug, SetDebugLevel
 from dbbact_server import db_access
 from dbbact_server.dbannotations import DeleteAnnotation
@@ -32,6 +34,7 @@ def main(argv):
 	parser.add_argument('--annotationids', help='list of annotation ids to delete (space separated)', nargs='+', type=int)
 	parser.add_argument('--expids', help='list of experiment ids to delete (space separated)', nargs='+', type=int)
 	parser.add_argument('--delete', help='delete the sequences', action='store_true')
+	parser.add_argument('--noseq', help='delete only annotations where all sequences do not start with noseq (i.e. acgt to not delete v4)')
 	parser.add_argument('--log-level', help='output level (1 verbose, 10 error)', type=int, default=3)
 
 	args = parser.parse_args(argv)
@@ -51,6 +54,22 @@ def main(argv):
 		annotationids.extend(args.annotationids)
 
 	for cannotationid in annotationids:
+		# test if all sequences of the annotation don't start with sequence notseq
+		if args.noseq is not None:
+			cur2 = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+			noseq = args.noseq
+			badseqs = 0
+			cur.execute("SELECT seqid FROM SequencesAnnotationTable WHERE annotationid=%s", [cannotationid])
+			for cres in cur:
+				cseqid = cres[0]
+				cur2.execute("SELECT sequence FROM SequencesTable WHERE id=%s", [cseqid])
+				res = cur2.fetchone()[0]
+				if res[:len(noseq)] == noseq:
+					badseqs += 1
+			if badseqs > 0:
+				debug(5, "Annotation %d contains %d sequences starting with the noseq sequenece %s. not deleting" % (cannotationid, badseqs, noseq))
+				continue
+
 		# get the user that created the annotation
 		cur.execute("SELECT iduser FROM AnnotationsTable WHERE id=%s LIMIT 1", [cannotationid])
 		res = cur.fetchone()
