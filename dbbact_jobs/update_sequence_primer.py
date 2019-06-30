@@ -19,7 +19,7 @@ def update_old_primer_seqs(con, cur, old_primer, new_primer, commit=True):
 	debug(3, 'found %d sequences with old primer %d' % (cur.rowcount, old_primer))
 	seqs = []
 	for cres in cur:
-		seqs.append([0])
+		seqs.append(cres[0])
 	for cseq in seqs:
 		update_sequence_primer(con, cur, sequence=cseq, primer=new_primer, commit=False)
 	if commit:
