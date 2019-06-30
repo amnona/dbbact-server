@@ -42,7 +42,7 @@ def update_sequence_primer(con, cur, sequence, primer, commit=True):
 	-------
 	error (str) or ''
 	'''
-	debug(1, 'update_sequence_primer for sequence %s new region %s' % (sequence, primer))
+	debug(2, 'update_sequence_primer for sequence %s new region %s' % (sequence, primer))
 	# setup the primer to be the id
 	if not isinstance(primer, int):
 		primer = GetIdFromName(con, cur, primer)
@@ -50,7 +50,7 @@ def update_sequence_primer(con, cur, sequence, primer, commit=True):
 	err, seqids = GetSequenceId(con, cur, sequence=sequence, idprimer=None, no_shorter=True, no_longer=True, seq_translate_api=None)
 	if err:
 		return err
-	debug(1, 'found %d total matches to the sequence' % len(seqids))
+	debug(2, 'found %d total matches to the sequence' % len(seqids))
 	if len(seqids) == 0:
 		msg = 'trying to update sequence %s failed since it is not in SequencesTable' % sequence
 		debug(4, msg)
@@ -61,17 +61,17 @@ def update_sequence_primer(con, cur, sequence, primer, commit=True):
 		return err
 	# no region matches so choose the first, update it, and move all the others to it
 	if len(okid) == 0:
-		debug('could not find sequence with good region. chose seqid %d and updating it' % seqids[0])
+		debug(1, 'could not find sequence with good region. chose seqid %d and updating it' % seqids[0])
 		okid = seqids[0]
 		cur.execute('UPDATE SequencesTable SET idprimer=%s WHERE id=%s', [primer, okid])
 	else:
-		debug(1, 'found good sequence id %s. transferring annotations to id', okid)
+		debug(3, 'found good sequence id %s. transferring annotations to id', okid)
 		if len(okid) > 1:
-			debug(3, 'strange. found %d exact matches including region' % len(okid))
+			debug(4, 'strange. found %d exact matches including region' % len(okid))
 		okid = okid[0]
 	# now transfer all annotations from the wrong region sequence to the ok (match) sequence and delete the wrong region sequences
 	for cseqid in seqids:
-		debug(1, 'moving seqid %d to ok sequence %d and deleting' % (cseqid, okid))
+		debug(3, 'moving seqid %d to ok sequence %d and deleting' % (cseqid, okid))
 		if cseqid == okid:
 			continue
 		cur.execute('UPDATE SequencesAnnotationTable SET seqid=%s WHERE seqid=%s', [okid, cseqid])
