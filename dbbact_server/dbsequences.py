@@ -289,7 +289,7 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
             trans_ids = []
         sid.extend(trans_ids)
     else:
-        debug(6, 'not translating')
+        debug(3, 'not translating')
 
     if len(sid) == 0:
         errmsg = 'sequence %s not found' % sequence
