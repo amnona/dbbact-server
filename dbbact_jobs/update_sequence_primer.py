@@ -69,15 +69,15 @@ def update_sequence_primer(con, cur, sequence, primer, commit=True):
 		okid = seqids[0]
 		cur.execute('UPDATE SequencesTable SET idprimer=%s WHERE id=%s', [primer, okid])
 	else:
-		debug(3, 'found good sequence id %s. transferring annotations to id', okid)
+		debug(3, 'found good sequence id %s. transferring annotations to id' % okid)
 		if len(okid) > 1:
 			debug(4, 'strange. found %d exact matches including region' % len(okid))
 		okid = okid[0]
 	# now transfer all annotations from the wrong region sequence to the ok (match) sequence and delete the wrong region sequences
 	for cseqid in seqids:
-		debug(3, 'moving seqid %d to ok sequence %d and deleting' % (cseqid, okid))
 		if cseqid == okid:
 			continue
+		debug(3, 'moving seqid %d to ok sequence %d and deleting' % (cseqid, okid))
 		cur.execute('UPDATE SequencesAnnotationTable SET seqid=%s WHERE seqid=%s', [okid, cseqid])
 		cur.execute('DELETE FROM SequencesTable WHERE id=%s', [cseqid])
 	if commit:
