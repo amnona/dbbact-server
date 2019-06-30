@@ -16,7 +16,7 @@ def update_old_primer_seqs(con, cur, old_primer, new_primer, commit=True):
 	'''update all sequences with primer old_primer to new primer new_primer
 	'''
 	cur.execute("SELECT sequence FROM SequencesTable WHERE idprimer=%s", [old_primer])
-	debug(3, 'found %d sequences with old primer %d' % (cur.row_count, old_primer))
+	debug(3, 'found %d sequences with old primer %d' % (cur.rowcount, old_primer))
 	for cres in cur:
 		cseq = cres[0]
 		update_sequence_primer(con, cur, sequence=cseq, primer=new_primer, commit=False)
