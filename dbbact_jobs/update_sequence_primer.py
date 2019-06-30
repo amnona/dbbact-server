@@ -77,7 +77,7 @@ def update_sequence_primer(con, cur, sequence, primer, commit=True):
 	for cseqid in seqids:
 		if cseqid == okid:
 			continue
-		debug(3, 'moving seqid %d to ok sequence %d and deleting' % (cseqid, okid))
+		debug(4, 'moving seqid %d to ok sequence %d and deleting' % (cseqid, okid))
 		cur.execute('UPDATE SequencesAnnotationTable SET seqid=%s WHERE seqid=%s', [okid, cseqid])
 		cur.execute('DELETE FROM SequencesTable WHERE id=%s', [cseqid])
 	if commit:
