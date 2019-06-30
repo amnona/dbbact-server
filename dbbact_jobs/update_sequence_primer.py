@@ -90,14 +90,15 @@ def main(argv):
 	parser.add_argument('--database', help='postgres database', default='dbbact')
 	parser.add_argument('--user', help='postgres user', default='dbbact')
 	parser.add_argument('--password', help='postgres password', default='magNiv')
-	parser.add_argument('--primer', help='the primerid to update to', type=int, default=1)
+	parser.add_argument('--old-primer', help='the primerid of sequences to update', type=int, default=2)
+	parser.add_argument('--new-primer', help='the primerid to update to', type=int, default=1)
 	parser.add_argument('--log-level', help='output level (1 verbose, 10 error)', type=int, default=3)
 	parser.add_argument('--delete', help='delete the sequences', action='store_true')
 
 	args = parser.parse_args(argv)
 	SetDebugLevel(args.log_level)
 	con, cur = db_access.connect_db(database=args.database, user=args.user, password=args.password, port=args.port, host=args.host)
-	update_sequence_primer(con, cur, primer=args.primer, commit=args.delete)
+	update_old_primer_seqs(con, cur, old_primer=args.old_primer, new_primer=args.new_primer, commit=args.delete)
 
 
 if __name__ == "__main__":
