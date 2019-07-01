@@ -127,7 +127,10 @@ def test_server():
 	print('testing annotations')
 	res = ppost('/annotations/add', {'expId': 1, 'sequences': ['A' * 150, 'T' * 150], 'region': 'v4', 'annotationType': 'common', 'description': 'test annotation1', 'annotationList': [('all', 'mus musculus')]})
 	res = ppost('/annotations/add', {'expId': 1, 'sequences': ['C' * 150, 'C' * 150], 'region': 'v4', 'method': 'magic', 'annotationType': 'common', 'description': 'test annotation2', 'annotationList': [('all', 'feces'), ('all', 'dog')], 'user': 'test1', 'pwd': 'secret'})
-	res = ppost('/annotations/add', {'expId': 2, 'sequences': ['a' * 150, 'E' * 150, 'f' * 150], 'region': 'V34', 'annotationType': 'other', 'description': 'test annotation3', 'annotationList': [('all', 'feces'), ('all', 'cat')]})
+	res = ppost('/annotations/add', {'expId': 2, 'sequences': ['a' * 150, 'E' * 150, 'f' * 150], 'region': 'V4', 'annotationType': 'other', 'description': 'test annotation3', 'annotationList': [('all', 'feces'), ('all', 'cat')]})
+	print('pita %s' % res)
+	res = ppost('/annotations/add', {'expId': 3, 'sequences': ['a' * 150], 'region': 'V34', 'annotationType': 'other', 'description': 'test annotation4', 'annotationList': [('all', 'feces'), ('all', 'cat')]}, should_work=False)
+	print('pita2 %s' % res)
 
 	res = pget('annotations/get_all_annotations')
 	alen(res['annotations'], 3)

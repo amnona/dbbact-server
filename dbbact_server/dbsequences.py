@@ -50,6 +50,10 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 return errmsg, None
             # test if already exists, skip it. NOTE: we do not want the sequence translator sequences as result (we look for our sequence)
             err, cseqid = GetSequenceId(con, cur, sequence=cseq, idprimer=idprimer, no_shorter=True, no_longer=True, seq_translate_api=None)
+            # if we get primer mismatch error, it means the sequence is in the database but with different primers
+            if err == 'primer mismatch':
+                return 'primer mismatch for sequence %s' % cseq, None
+
             if len(cseqid) == 0:
                 # not found, so need to add this sequence
                 if taxonomies is None:
@@ -67,8 +71,11 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 numadded += 1
                 seqs_to_add_to_translator[cseqid[0]] = cseq
             if len(cseqid) > 1:
-                debug(8, 'AddSequences - Same sequence appears twice in database: %s' % cseq)
+                msg = 'AddSequences - Same sequence appears twice in database: %s' % cseq
+                debug(8, msg)
+                return msg, None
             seqids.append(cseqid[0])
+
         if seq_translate_api is not None:
             debug(1, 'adding sequence to sequence translator queue')
             res = requests.post(seq_translate_api + '/add_sequences_to_queue', json={'seq_info': seqs_to_add_to_translator})
@@ -78,10 +85,12 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 return msg, None
         else:
             debug(5, 'sequence translator not activated for add_sequence')
+
         if commit:
             con.commit()
         debug(3, "Added %d sequences (out of %d)" % (numadded, len(sequences)))
         return "", seqids
+
     except psycopg2.DatabaseError as e:
         debug(7, 'database error %s' % e)
         return "database error %s" % e, None
@@ -209,7 +218,8 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
 
     input:
     con,cur : database connection and cursor
-    sequence : str (ACGT sequences)
+    sequence : str (ACGT sequences or SILVA ID) or integer.
+        If integer, interpret as greengenesID. Otherwise, if dbname is None interpret as acgt sequence. Otherwise it is a SILVA ID
     idprimer : int (optional)
         if supplied, verify the sequence is from this idPrimer
     no_shorter : bool (optional)
@@ -226,6 +236,7 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
     output:
     errmsg : str
         "" if ok, error msg if error encountered
+        in case sequence matches but primer does not, error is "primer mismatch"
     sid : list of int
         the ids of the matching sequences (empty tuple if not found)
         Note: can be more than one as we also look for short subsequences / long supersequences
@@ -244,35 +255,47 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
             debug(4, errmsg)
             return errmsg, sid
 
-        # look for all sequences matching the seed
-        cseedseq = cseq[:SEED_SEQ_LEN]
-        cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
-        # if cur.rowcount == 0:
-        #     errmsg = 'sequence %s not found' % sequence
-        #     debug(1, errmsg)
-        #     return errmsg, sid
-
-        cseqlen = len(cseq)
-        res = cur.fetchall()
-        for cres in res:
-            resid = cres[0]
-            resseq = cres[1]
-            if no_shorter:
-                if len(resseq) < cseqlen:
-                    continue
-                comparelen = cseqlen
-            else:
-                comparelen = min(len(resseq), cseqlen)
-            if no_longer:
-                if len(resseq) > cseqlen:
-                    continue
-            if cseq[:comparelen] == resseq[:comparelen]:
-                if idprimer is None:
-                    sid.append(resid)
-                cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
+        # if looking for exact sequence, look up fast using exact match
+        if no_shorter and no_longer:
+            cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [sequence])
+            if cur.rowcount > 0:
                 res = cur.fetchone()
-                if res[0] == idprimer:
-                    sid.append(resid)
+                if idprimer is not None:
+                    if res['idprimer'] != idprimer:
+                        debug(2, 'Matching sequence %s but non-matching primer %d (query primer was %d)' % (sequence, res['idprimer'], idprimer))
+                        return 'primer mismatch', []
+                sid = [res['id']]
+        else:
+            # look for all sequences matching the seed
+            cseedseq = cseq[:SEED_SEQ_LEN]
+            cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
+            cseqlen = len(cseq)
+            res = cur.fetchall()
+            found_seq = False
+            for cres in res:
+                resid = cres[0]
+                resseq = cres[1]
+                if no_shorter:
+                    if len(resseq) < cseqlen:
+                        continue
+                    comparelen = cseqlen
+                else:
+                    comparelen = min(len(resseq), cseqlen)
+                if no_longer:
+                    if len(resseq) > cseqlen:
+                        continue
+                if cseq[:comparelen] == resseq[:comparelen]:
+                    found_seq = True
+                    if idprimer is None:
+                        sid.append(resid)
+                    else:
+                        cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
+                        res = cur.fetchone()
+                        if res[0] == idprimer:
+                            sid.append(resid)
+            # if we found the sequence but not
+            if found_seq and len(sid) == 0:
+                return 'primer mismatch', []
 
     if seq_translate_api is not None:
         if dbname is None:
