@@ -50,6 +50,10 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 return errmsg, None
             # test if already exists, skip it. NOTE: we do not want the sequence translator sequences as result (we look for our sequence)
             err, cseqid = GetSequenceId(con, cur, sequence=cseq, idprimer=idprimer, no_shorter=True, no_longer=True, seq_translate_api=None)
+            # if we get primer mismatch error, it means the sequence is in the database but with different primers
+            if err == 'primer mismatch':
+                return 'primer mismatch: The sequence in dbBact has a different primer than the requested primer (%s)\nfor sequence %s\nPlease contact dbBact support.' % (primer, cseq), None
+
             if len(cseqid) == 0:
                 # not found, so need to add this sequence
                 if taxonomies is None:
@@ -67,8 +71,11 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 numadded += 1
                 seqs_to_add_to_translator[cseqid[0]] = cseq
             if len(cseqid) > 1:
-                debug(8, 'AddSequences - Same sequence appears twice in database: %s' % cseq)
+                msg = 'AddSequences - Same sequence appears twice in database: %s' % cseq
+                debug(8, msg)
+                return msg, None
             seqids.append(cseqid[0])
+
         if seq_translate_api is not None:
             debug(1, 'adding sequence to sequence translator queue')
             res = requests.post(seq_translate_api + '/add_sequences_to_queue', json={'seq_info': seqs_to_add_to_translator})
@@ -78,10 +85,12 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
                 return msg, None
         else:
             debug(5, 'sequence translator not activated for add_sequence')
+
         if commit:
             con.commit()
         debug(3, "Added %d sequences (out of %d)" % (numadded, len(sequences)))
         return "", seqids
+
     except psycopg2.DatabaseError as e:
         debug(7, 'database error %s' % e)
         return "database error %s" % e, None
@@ -209,7 +218,8 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
 
     input:
     con,cur : database connection and cursor
-    sequence : str (ACGT sequences)
+    sequence : str (ACGT sequences or SILVA ID) or integer.
+        If integer, interpret as greengenesID. Otherwise, if dbname is None interpret as acgt sequence. Otherwise it is a SILVA ID
     idprimer : int (optional)
         if supplied, verify the sequence is from this idPrimer
     no_shorter : bool (optional)
@@ -226,6 +236,7 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
     output:
     errmsg : str
         "" if ok, error msg if error encountered
+        in case sequence matches but primer does not, error is "primer mismatch"
     sid : list of int
         the ids of the matching sequences (empty tuple if not found)
         Note: can be more than one as we also look for short subsequences / long supersequences
@@ -244,35 +255,48 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
             debug(4, errmsg)
             return errmsg, sid
 
-        # look for all sequences matching the seed
-        cseedseq = cseq[:SEED_SEQ_LEN]
-        cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
-        # if cur.rowcount == 0:
-        #     errmsg = 'sequence %s not found' % sequence
-        #     debug(1, errmsg)
-        #     return errmsg, sid
-
-        cseqlen = len(cseq)
-        res = cur.fetchall()
-        for cres in res:
-            resid = cres[0]
-            resseq = cres[1]
-            if no_shorter:
-                if len(resseq) < cseqlen:
-                    continue
-                comparelen = cseqlen
-            else:
-                comparelen = min(len(resseq), cseqlen)
-            if no_longer:
-                if len(resseq) > cseqlen:
-                    continue
-            if cseq[:comparelen] == resseq[:comparelen]:
-                if idprimer is None:
-                    sid.append(resid)
-                cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
+        # if looking for exact sequence, look up fast using exact match
+        if no_shorter and no_longer:
+            debug(8,'noshortnolong')
+            cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [sequence])
+            if cur.rowcount > 0:
                 res = cur.fetchone()
-                if res[0] == idprimer:
-                    sid.append(resid)
+                if idprimer is not None:
+                    if res['idprimer'] != idprimer:
+                        debug(8, 'Matching sequence %s but non-matching primer %d (query primer was %d)' % (sequence, res['idprimer'], idprimer))
+                        return 'primer mismatch', []
+                sid = [res['id']]
+        else:
+            # look for all sequences matching the seed
+            cseedseq = cseq[:SEED_SEQ_LEN]
+            cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
+            cseqlen = len(cseq)
+            res = cur.fetchall()
+            found_seq = False
+            for cres in res:
+                resid = cres[0]
+                resseq = cres[1]
+                if no_shorter:
+                    if len(resseq) < cseqlen:
+                        continue
+                    comparelen = cseqlen
+                else:
+                    comparelen = min(len(resseq), cseqlen)
+                if no_longer:
+                    if len(resseq) > cseqlen:
+                        continue
+                if cseq[:comparelen] == resseq[:comparelen]:
+                    found_seq = True
+                    if idprimer is None:
+                        sid.append(resid)
+                    else:
+                        cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
+                        res = cur.fetchone()
+                        if res[0] == idprimer:
+                            sid.append(resid)
+            # if we found the sequence but not
+            if found_seq and len(sid) == 0:
+                return 'primer mismatch', []
 
     if seq_translate_api is not None:
         if dbname is None:
@@ -289,7 +313,7 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
             trans_ids = []
         sid.extend(trans_ids)
     else:
-        debug(6, 'not translating')
+        debug(3, 'not translating')
 
     if len(sid) == 0:
         errmsg = 'sequence %s not found' % sequence
@@ -916,57 +940,43 @@ def GetSequenceTaxonomy(con, cur, sequence, region=None, userid=0):
     return '', taxStr
 
 
-def update_sequence_primer(con, cur, sequence, primer, commit=True):
-    '''Update the primer region for the sequence.
-    If the sequence already appears in dbBact with a different primer region, merge the two using the other region sequence
+def get_sequences_primer(con, cur, sequences):
+    '''Get the primer region id and name for the list of sequences (assumes all are from same region)
+    results are based on the region assigned to the matching sequences in dbbact
 
     Parameters
     ----------
     con, cur:
-    sequence: str
-        the exact sequence to update (acgt)
-    primer: int or str
-        the primer region id (int) or name (str - i.e. 'v4') to update
-    commit: bool, optional
-        if True, commit after update
+    sequences: list of str
+        the DNA sequences (acgt)
 
     Returns
     -------
-    error (str) or ''
+    err: str
+        the error encountered or empty string '' if ok
+    primerid: int
+        the primmer id
+    primername: str
+        name of the region (i.e. 'v4' etc.)
     '''
-    debug(1, 'update_sequence_primer for sequence %s new region %s' % (sequence, primer))
-    # setup the primer to be the id
-    if not isinstance(primer, int):
-        primer = dbprimers.GetIdFromName(con, cur, primer)
-    # get the sequence id. Note we use idprimer=None since we don't want to look for the new region
-    err, seqids = GetSequenceId(con, cur, sequence=sequence, idprimer=None, no_shorter=True, no_longer=True, seq_translate_api=None)
-    if err:
-        return err
-    debug(1, 'found %d total matches to the sequence' % len(seqids))
-    if len(seqids) == 0:
-        msg = 'trying to update sequence %s failed since it is not in SequencesTable' % sequence
-        debug(4, msg)
-        return msg
-    # do we also have the same sequence with the correct primer?
-    err, okid = GetSequenceId(con, cur, sequence=sequence, idprimer=primer, no_shorter=True, no_longer=True, seq_translate_api=None)
-    if err:
-        return err
-    # no region matches so choose the first, update it, and move all the others to it
-    if len(okid) == 0:
-        debug('could not find sequence with good region. chose seqid %d and updating it' % seqids[0])
-        okid = seqids[0]
-        cur.execute('UPDATE SequencesTable SET idprimer=%s WHERE id=%s', [primer, okid])
-    else:
-        debug(1, 'found good sequence id %s. transferring annotations to id', okid)
-        if len(okid) > 1:
-            debug(3, 'strange. found %d exact matches including region' % len(okid))
-        okid = okid[0]
-    # now transfer all annotations from the wrong region sequence to the ok (match) sequence and delete the wrong region sequences
-    for cseqid in seqids:
-        debug(1, 'moving seqid %d to ok sequence %d and deleting' % (cseqid, okid))
-        if cseqid == okid:
+    debug(1, 'get_sequences_primer for %d sequences' % len(sequences))
+    primerid = None
+    for cseq in sequences:
+        err, seqid = GetSequenceId(con, cur, sequence=cseq, no_shorter=False, no_longer=False, seq_translate_api=None)
+        if len(seqid) != 1:
             continue
-        cur.execute('UPDATE SequencesAnnotationTable SET seqid=%s WHERE seqid=%s', [okid, cseqid])
-        cur.execute('DELETE FROM SequencesTable WHERE id=%s', [cseqid])
-    debug(1, 'update finished')
-    return ''
+        cur.execute('SELECT idprimer FROM SequencesTable WHERE id=%s LIMIT 1', [seqid[0]])
+        res = cur.fetchone()
+        cpid = res['idprimer']
+        if primerid is None:
+            primerid = cpid
+        if cpid != primerid:
+            msg = 'encountered >1 primers (%d, %d) for sequences' % (primerid, cpid)
+            debug(5, msg)
+            return msg, 0, []
+    if primerid is None:
+        return 'no sequences match in dbbact.', 0, ''
+    err, primer_name = dbprimers.GetNameFromID(con, cur, primerid)
+    if err:
+        return err, 0, ''
+    return '', primerid, primer_name
