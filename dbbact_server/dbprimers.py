@@ -57,7 +57,8 @@ def GetNameFromID(con, cur, primer_id):
         msg = 'primerid %d not found' % primer_id
         debug(5, msg)
         return msg, ''
-    return '', cur['regionname']
+    res = cur.fetchone()
+    return '', res['regionname']
 
 
 def GetIdFromName(con, cur, name):
