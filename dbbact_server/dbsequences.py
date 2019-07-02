@@ -962,7 +962,7 @@ def get_sequences_primer(con, cur, sequences):
     debug(1, 'get_sequences_primer for %d sequences' % len(sequences))
     primerid = None
     for cseq in sequences:
-        err, seqid = GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=False, no_longer=False, seq_translate_api=None)
+        err, seqid = GetSequenceId(con, cur, sequence=cseq, no_shorter=False, no_longer=False, seq_translate_api=None)
         if len(seqid) != 1:
             continue
         cur.execute('SELECT idprimer FROM SequencesTable WHERE id=%s LIMIT 1', [seqid[0]])
