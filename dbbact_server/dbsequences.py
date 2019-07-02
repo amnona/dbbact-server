@@ -966,7 +966,8 @@ def get_sequences_primer(con, cur, sequences):
         if len(seqid) != 1:
             continue
         cur.execute('SELECT idprimer FROM SequencesTable WHERE id=%s LIMIT 1', [seqid[0]])
-        cpid = cur[0]
+        res = cur.fetchone()
+        cpid = res['idprimer']
         if primerid is None:
             primerid = cpid
         if cpid != primerid:
