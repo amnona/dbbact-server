@@ -938,117 +938,44 @@ def GetSequenceTaxonomy(con, cur, sequence, region=None, userid=0):
     # ctaxinfo = {'taxonomy': taxStr}
     # return '', ctaxinfo
     return '', taxStr
-def update_sequence_primer(con, cur, sequence, primer, commit=True):
-    '''Update the primer region for the sequence.
-    If the sequence already appears in dbBact with a different primer region, merge the two using the other region sequence
+
+
+def get_sequences_primer(con, cur, sequences):
+    '''Get the primer region id and name for the list of sequences (assumes all are from same region)
+    results are based on the region assigned to the matching sequences in dbbact
 
     Parameters
     ----------
     con, cur:
-    sequence: str
-        the exact sequence to update (acgt)
-    primer: int or str
-        the primer region id (int) or name (str - i.e. 'v4') to update
-    commit: bool, optional
-        if True, commit after update
+    sequences: list of str
+        the DNA sequences (acgt)
 
     Returns
     -------
-    error (str) or ''
+    err: str
+        the error encountered or empty string '' if ok
+    primerid: int
+        the primmer id
+    primername: str
+        name of the region (i.e. 'v4' etc.)
     '''
-    debug(1, 'update_sequence_primer for sequence %s new region %s' % (sequence, primer))
-    # setup the primer to be the id
-    if not isinstance(primer, int):
-        primer = dbprimers.GetIdFromName(con, cur, primer)
-    # get the sequence id. Note we use idprimer=None since we don't want to look for the new region
-    err, seqids = GetSequenceId(con, cur, sequence=sequence, idprimer=None, no_shorter=True, no_longer=True, seq_translate_api=None)
-    if err:
-        return err
-    debug(1, 'found %d total matches to the sequence' % len(seqids))
-    if len(seqids) == 0:
-        msg = 'trying to update sequence %s failed since it is not in SequencesTable' % sequence
-        debug(4, msg)
-        return msg
-    # do we also have the same sequence with the correct primer?
-    err, okid = GetSequenceId(con, cur, sequence=sequence, idprimer=primer, no_shorter=True, no_longer=True, seq_translate_api=None)
-    if err:
-        return err
-    # no region matches so choose the first, update it, and move all the others to it
-    if len(okid) == 0:
-        debug('could not find sequence with good region. chose seqid %d and updating it' % seqids[0])
-        okid = seqids[0]
-        cur.execute('UPDATE SequencesTable SET idprimer=%s WHERE id=%s', [primer, okid])
-    else:
-        debug(1, 'found good sequence id %s. transferring annotations to id', okid)
-        if len(okid) > 1:
-            debug(3, 'strange. found %d exact matches including region' % len(okid))
-        okid = okid[0]
-    # now transfer all annotations from the wrong region sequence to the ok (match) sequence and delete the wrong region sequences
-    for cseqid in seqids:
-        debug(1, 'moving seqid %d to ok sequence %d and deleting' % (cseqid, okid))
-        if cseqid == okid:
+    debug(1, 'get_sequences_primer for %d sequences' % len(sequences))
+    primerid = None
+    for cseq in sequences:
+        err, seqid = GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=False, no_longer=False, seq_translate_api=None)
+        if len(seqid) != 1:
             continue
-        cur.execute('UPDATE SequencesAnnotationTable SET seqid=%s WHERE seqid=%s', [okid, cseqid])
-        cur.execute('DELETE FROM SequencesTable WHERE id=%s', [cseqid])
-    if commit:
-        debug(3, 'committing')
-        con.commit()
-    debug(1, 'update finished')
-    return ''
-def update_sequence_primer(con, cur, sequence, primer, commit=True):
-    '''Update the primer region for the sequence.
-    If the sequence already appears in dbBact with a different primer region, merge the two using the other region sequence
-
-    Parameters
-    ----------
-    con, cur:
-    sequence: str
-        the exact sequence to update (acgt)
-    primer: int or str
-        the primer region id (int) or name (str - i.e. 'v4') to update
-    commit: bool, optional
-        if True, commit after update
-
-    Returns
-    -------
-    error (str) or ''
-    '''
-    debug(1, 'update_sequence_primer for sequence %s new region %s' % (sequence, primer))
-    # setup the primer to be the id
-    if not isinstance(primer, int):
-        primer = dbprimers.GetIdFromName(con, cur, primer)
-    # get the sequence id. Note we use idprimer=None since we don't want to look for the new region
-    err, seqids = GetSequenceId(con, cur, sequence=sequence, idprimer=None, no_shorter=True, no_longer=True, seq_translate_api=None)
+        cur.execute('SELECT idprimer FROM SequencesTable WHERE id=%s LIMIT 1', [seqid[0]])
+        cpid = cur['idprimer']
+        if primerid is None:
+            primerid = cpid
+        if cpid != primerid:
+            msg = 'encountered >1 primers (%d, %d) for sequences' % (primerid, cpid)
+            debug(5, msg)
+            return msg, 0, []
+    if primerid is None:
+        return 'no sequences match in dbbact.', 0, ''
+    err, primer_name = dbprimers.GetNameFromID(con, cur, primerid)
     if err:
-        return err
-    debug(1, 'found %d total matches to the sequence' % len(seqids))
-    if len(seqids) == 0:
-        msg = 'trying to update sequence %s failed since it is not in SequencesTable' % sequence
-        debug(4, msg)
-        return msg
-    # do we also have the same sequence with the correct primer?
-    err, okid = GetSequenceId(con, cur, sequence=sequence, idprimer=primer, no_shorter=True, no_longer=True, seq_translate_api=None)
-    if err:
-        return err
-    # no region matches so choose the first, update it, and move all the others to it
-    if len(okid) == 0:
-        debug('could not find sequence with good region. chose seqid %d and updating it' % seqids[0])
-        okid = seqids[0]
-        cur.execute('UPDATE SequencesTable SET idprimer=%s WHERE id=%s', [primer, okid])
-    else:
-        debug(1, 'found good sequence id %s. transferring annotations to id', okid)
-        if len(okid) > 1:
-            debug(3, 'strange. found %d exact matches including region' % len(okid))
-        okid = okid[0]
-    # now transfer all annotations from the wrong region sequence to the ok (match) sequence and delete the wrong region sequences
-    for cseqid in seqids:
-        debug(1, 'moving seqid %d to ok sequence %d and deleting' % (cseqid, okid))
-        if cseqid == okid:
-            continue
-        cur.execute('UPDATE SequencesAnnotationTable SET seqid=%s WHERE seqid=%s', [okid, cseqid])
-        cur.execute('DELETE FROM SequencesTable WHERE id=%s', [cseqid])
-    if commit:
-        debug(3, 'committing')
-        con.commit()
-    debug(1, 'update finished')
-    return ''
+        return err, 0, ''
+    return '', primerid, primer_name

@@ -36,6 +36,30 @@ def get_primers(con, cur):
     return '', primers
 
 
+def GetNameFromID(con, cur, primer_id):
+    '''Get primer region name from id
+
+    Parameters
+    ----------
+    con, cur:
+    primer_id: int
+        the id of the primer region
+
+    Returns
+    -------
+    err: str
+        empty strung ('') if ok, otherwise error encountered
+    name: str
+        name of the primer region
+    '''
+    cur.execute('SELECT RegionName from PrimersTable WHERE id=%s', [primer_id])
+    if cur.rowcount == 0:
+        msg = 'primerid %d not found' % primer_id
+        debug(5, msg)
+        return msg, ''
+    return '', cur['regionname']
+
+
 def GetIdFromName(con, cur, name):
     """
     get id of primer based on regionName

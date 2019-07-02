@@ -1222,3 +1222,39 @@ def add_primer_region():
         return ('Problem adding new region. error=%s' % err, 400)
     res = json.dumps('ok')
     return res
+
+
+@Seq_Flask_Obj.route('/sequences/guess_region', methods=['GET'])
+@auto.doc()
+def guess_region():
+    '''
+    Title: guess_region
+    Description : Suggest the primer region for the list of sequences
+    URL: /sequences/guess_region
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            "sequence": list of str
+                the sequences (ACGT) to get the primer region for
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            "region": str
+                name of the primer region containing all the sequences matching dbbact
+            "regionid": int
+                id of the primer region
+        }
+    '''
+    debug(3, 'guess_region', request)
+    cfunc = add_sequences
+    alldat = request.get_json()
+    sequences = alldat.get('sequences')
+    if sequences is None:
+        return(getdoc(cfunc))
+    err, primerid, primer_name = dbsequences.get_sequences_primer(g.con, g.cur, sequences)
+    if err:
+        return ('Problem guessing sequences region. error=%s' % err, 400)
+    return json.dumps({'region': primer_name, 'regionid': primerid})
