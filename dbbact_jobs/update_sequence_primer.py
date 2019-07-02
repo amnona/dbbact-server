@@ -62,6 +62,7 @@ def update_sequence_primer(con, cur, sequence, primer, commit=True):
 	# do we also have the same sequence with the correct primer?
 	err, okid = GetSequenceId(con, cur, sequence=sequence, idprimer=primer, no_shorter=True, no_longer=True, seq_translate_api=None)
 	if err:
+		debug(4, err)
 		return err
 	# no region matches so choose the first, update it, and move all the others to it
 	if len(okid) == 0:
