@@ -52,7 +52,7 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
             err, cseqid = GetSequenceId(con, cur, sequence=cseq, idprimer=idprimer, no_shorter=True, no_longer=True, seq_translate_api=None)
             # if we get primer mismatch error, it means the sequence is in the database but with different primers
             if err == 'primer mismatch':
-                return 'primer mismatch for sequence %s' % cseq, None
+                return 'primer mismatch: The sequence in dbBact has a different primer than the requested primer (%s)\nfor sequence %s\nPlease contact dbBact support.' % (primer, cseq), None
 
             if len(cseqid) == 0:
                 # not found, so need to add this sequence
@@ -257,12 +257,13 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
 
         # if looking for exact sequence, look up fast using exact match
         if no_shorter and no_longer:
+            debug(8,'noshortnolong')
             cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [sequence])
             if cur.rowcount > 0:
                 res = cur.fetchone()
                 if idprimer is not None:
                     if res['idprimer'] != idprimer:
-                        debug(2, 'Matching sequence %s but non-matching primer %d (query primer was %d)' % (sequence, res['idprimer'], idprimer))
+                        debug(8, 'Matching sequence %s but non-matching primer %d (query primer was %d)' % (sequence, res['idprimer'], idprimer))
                         return 'primer mismatch', []
                 sid = [res['id']]
         else:
