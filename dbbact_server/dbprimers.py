@@ -16,18 +16,21 @@ def get_primers(con, cur):
         'fprimer': str
         'rprimer: str
             name of the forward and reverse primers for the region (i.e. 515f, etc.)
+        'fprimerseq': str
+            the concensus sequence for the forward primer
     '''
     debug(1, 'get_primers')
 
     primers = []
-    cur.execute('SELECT id, regionname, forwardprimer, reverseprimer FROM PrimersTable')
+    cur.execute('SELECT id, regionname, forwardprimer, reverseprimer, fprimerseq FROM PrimersTable')
     res = cur.fetchall()
     for cres in res:
         cprimer = {}
-        cprimer['primerid'] = cres[0]
-        cprimer['name'] = cres[1]
-        cprimer['fprimer'] = cres[2]
-        cprimer['rprimer'] = cres[3]
+        cprimer['primerid'] = cres['id']
+        cprimer['name'] = cres['regionname']
+        cprimer['fprimer'] = cres['forwardprimer']
+        cprimer['rprimer'] = cres['reverseprimer']
+        cprimer['fprimerseq'] = cres['fprimerseq']
         primers.append(cprimer)
     debug(1, 'found %d primers' % len(primers))
     return '', primers

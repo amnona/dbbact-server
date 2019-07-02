@@ -1159,6 +1159,8 @@ def get_primers():
                 'fprimer': str
                 'rprimer: str
                     name of the forward and reverse primers for the region (i.e. 515f, etc.)
+                'fprimerseq': str
+                    the concensus sequence for the forward primer
             }
         }
     '''
