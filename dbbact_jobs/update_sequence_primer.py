@@ -63,7 +63,7 @@ def update_sequence_primer(con, cur, sequence, primer, commit=True):
 	err, okid = GetSequenceId(con, cur, sequence=sequence, idprimer=primer, no_shorter=True, no_longer=True, seq_translate_api=None)
 	if err:
 		if err != 'primer mismatch':
-			debug(4, err)
+			debug(5, err)
 			return err
 	# no region matches so choose the first, update it, and move all the others to it
 	if len(okid) == 0:
