@@ -975,7 +975,9 @@ def get_sequences_primer(con, cur, sequences):
             debug(5, msg)
             return msg, 0, []
     if primerid is None:
-        return 'no sequences match in dbbact.', 0, ''
+        # 0 is the 'na' primer
+        primerid = 0
+        # return 'no sequences match in dbbact.', 0, ''
     err, primer_name = dbprimers.GetNameFromID(con, cur, primerid)
     if err:
         return err, 0, ''
