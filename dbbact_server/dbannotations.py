@@ -6,6 +6,7 @@ from . import dbsequences
 from . import dbexperiments
 from . import dbidval
 from . import dbontology
+from . import dbprimers
 from .dbontology import GetParents
 from .utils import debug
 
@@ -57,7 +58,7 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
     err, seqids = dbsequences.AddSequences(con, cur, sequences, primer=primer, commit=False, seq_translate_api=seq_translate_api)
     if err:
         return err, -1
-    err, annotationid = AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method, description, agenttype, private, userid, commit=False, numseqs=len(set(seqids)))
+    err, annotationid = AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method, description, agenttype, private, userid, commit=False, numseqs=len(set(seqids)), primer=primer)
     if err:
         return err, -1
     # link sequences to annotation
@@ -202,7 +203,7 @@ def UpdateAnnotation(con, cur, annotationid, annotationtype=None, annotationdeta
 
 def AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method='',
                   description='', agenttype='', private='n', userid=None,
-                  commit=True, numseqs=0):
+                  commit=True, numseqs=0, primer='na'):
     """
     Add an annotation to the annotation table
 
@@ -222,6 +223,8 @@ def AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method='',
         True (default) to commit, False to wait with the commit
     numseqs : int (optional)
         The number of sequences in this annotation (used to update the seqCount in the ontologyTable)
+    primer: str, optional
+        Name of the primer (i.e. 'v4') corresponding to the sequences in the annotation
 
     output:
     err : str
@@ -262,8 +265,14 @@ def AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method='',
     # lowercase the private
     private = private.lower()
 
-    cur.execute('INSERT INTO AnnotationsTable (idExp,idUser,idAnnotationType,idMethod,description,idAgentType,isPrivate,addedDate,seqCount) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id',
-                [expid, userid, annotationtypeid, methodid, description, agenttypeid, private, cdate, numseqs])
+    primerid = dbprimers.GetIdFromName(con, cur, primer)
+    if primerid < 0:
+        msg = 'Primer %s not found in dbBact. Cannot add annotation' % primer
+        debug(3, msg)
+        return msg, -1
+
+    cur.execute('INSERT INTO AnnotationsTable (idExp,idUser,idAnnotationType,idMethod,description,idAgentType,isPrivate,addedDate,seqCount, primerID) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id',
+                [expid, userid, annotationtypeid, methodid, description, agenttypeid, private, cdate, numseqs, primerid])
     cid = cur.fetchone()[0]
     debug(2, "added annotation id is %d. adding %d annotationdetails" % (cid, len(annotationdetails)))
 
@@ -479,6 +488,10 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
         'date' : str
         'num_sequences' : int
             number of sequences associated with this annotations
+        'primerid': int
+            id of the primer region of the annotation
+        'primer': str
+            name of the primer region of the annotation (i.e. 'v4')
         'details' : list of (str,str) of type (i.e. 'higher in') and value (i.e. 'homo sapiens')
     """
     debug(1, 'get annotation from id %d' % annotationid)
@@ -515,6 +528,10 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
     data['date'] = res['addeddate'].isoformat()
     data['annotationid'] = annotationid
     data['num_sequences'] = res['seqcount']
+    data['primerid'] = res['primerid']
+    err, data['primer'] = dbprimers.GetNameFromID(con, cur, res['primerid'])
+    if err:
+        return err, None
 
     if res['isprivate'] == 'y':
         if userid != data['userid']:
