@@ -4,7 +4,7 @@ import argparse
 import sys
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import subprocess
 
@@ -27,7 +27,7 @@ commands = {'update_seq_taxonomy': './update_seq_taxonomy.py',
 
 def get_time_to_tomorrow(hour, minute=0):
 	x = datetime.today()
-	y = datetime.today() + datetime.timedelta(days=1)
+	y = datetime.today() + timedelta(days=1)
 	y = y.replace(hour=hour, minute=minute, second=0, microsecond=0)
 	delta_t = y - x
 	secs = delta_t.seconds + 1
