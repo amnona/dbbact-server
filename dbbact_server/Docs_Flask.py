@@ -13,6 +13,12 @@ def docs():
     The documentation for all the REST API using flask-autodoc
     '''
     output = '<html>\n<title>dbBact REST API Documentation</title><head>\n</head><body>'
+    output += '<h1>dbBact restAPI</h1>'
+    output += '<h2>Server location</h2>'
+    output += 'The production dbBact restAPI can be accessed at: http://api.dbbact.org<br>'
+    output += '<h2>dbBact API commands</h2>'
+    output += 'Following is the list of API endpoints '
+    output += '(click on an endpoint for details): <br><br>'
     doclist = auto.generate()
     for cdoc in doclist:
         if cdoc is None:
