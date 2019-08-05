@@ -166,6 +166,14 @@ def test_server():
 	res = pget('/sequences/get_annotations', {'sequence': 'A' * 120, 'region': 'pita'})
 	alen(res['annotations'], 0)
 
+	res = ppost('/annotations/add_annotation_flag', {'user': 'test1', 'pwd': 'secret', 'annotationid': 1, 'reason': 'lala'})
+	res = pget('/annotations/get_annotation_flags', {'annotationid': 1})
+	alen(res, 1)
+	res = ppost('/annotations/delete_annotation_flag', {'flagid': 1}, should_work=False)
+	res = ppost('/annotations/delete_annotation_flag', {'flagid': 1, 'user': 'test1', 'pwd': 'secret'})
+	res = pget('/annotations/get_annotation_flags', {'annotationid': 1})
+	alen(res, 0)
+
 	res = pget('stats/stats')
 	print('all tests completed ok')
 	print('database stats: %s' % res)

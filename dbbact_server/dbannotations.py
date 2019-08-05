@@ -493,6 +493,8 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
         'primer': str
             name of the primer region of the annotation (i.e. 'v4')
         'details' : list of (str,str) of type (i.e. 'higher in') and value (i.e. 'homo sapiens')
+        "flags": list of dict {'flagid': int, status:str, userid: int}
+            the flags raised for this annotation by other users (if not empty, maybe should suspect this annotation)
     """
     debug(1, 'get annotation from id %d' % annotationid)
     cur.execute('SELECT AnnotationsTable.*,userstable.username FROM AnnotationsTable,userstable WHERE AnnotationsTable.iduser = userstable.id and AnnotationsTable.id=%s', [annotationid])
@@ -542,6 +544,8 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
     if err:
         return err, None
     data['details'] = details
+    err, flags = get_annotation_flags(con, cur, annotationid)
+    data['flags'] = flags
 
     return '', data
 
@@ -1340,3 +1344,139 @@ def get_annotation_term_pairs(cann, max_terms=20, get_pairs=True, get_singles=Tr
 #         seq_db_id_annotations.append(dict(cseq_annotations))
 
 #     return '', annotations, seq_db_id_seqs, term_info, seq_db_id_annotations
+
+
+def add_annotation_flag(con, cur, annotationid, userid, reason, commit=True):
+    '''add a flag to an annotation (i.e. it is suspected as wrong)
+    add the flag to the AnnotationFlagsTable. The flag status is set to "suggested"
+
+    Parameters
+    ----------
+    con, cur
+    annotationid: int
+        the id of the flagged annotation
+    userid: int
+        id of the user creating the flag
+    reason: str
+        the reason this annotation is flagged
+
+    Returns
+    err: str
+        empty ('') if ok
+    '''
+    try:
+        cur.execute('INSERT INTO AnnotationFlagsTable (annotationID, userID, reason, status) VALUES (%s, %s, %s, %s)', [annotationid, userid, reason, 'suggested'])
+        debug(3, 'Annotation %s flagged by user %s' % (annotationid, userid))
+        if commit:
+            con.commit()
+        return ''
+    except psycopg2.DatabaseError as e:
+        debug(7, "error %s enountered in add_annotation_flag" % e)
+        return e
+
+
+def update_annotation_flag_status(con, cur, flagid, status, response='', commit=True):
+    '''update the annotationflagstable after reviewing a flag
+    NOTE: only admin can update the status/response. the user creating the flag can delete it using delete_annotation_flag()
+
+    Patameters
+    ----------
+    con, cur
+    flagid: int
+        the annotation flag id (assigned on creation)
+    status: str
+        the new status (can be 'suggested'/'accepted'/'rejected')
+    response: str, optional
+        reason for the status change
+
+    Returns
+    -------
+    err: str
+        empty ('') if ok, otherwise the error encountered
+    '''
+    if status not in ('suggested', 'accepted', 'rejected'):
+        err = 'status %s not supported for update_annotation_flag_status' % status
+        debug(7, err)
+        return err
+    try:
+        cur.execute('UPDATE AnnotationFlagsTable SET status=%s, response=%s WHERE id=%s', [status, response, flagid])
+        if commit:
+            con.commit()
+        return ''
+    except psycopg2.DatabaseError as e:
+        debug(7, "error %s enountered in update_annotation_flag_status" % e)
+        return e
+
+
+def get_annotation_flags(con, cur, annotaitonid, status=None):
+    '''Get all flags associated with an annotation
+
+    Parameters
+    ----------
+    con, cur
+    annotationid: int
+        the annotation to get flags for
+    status: str or list of str or None
+        if None, get all flags
+        if str or list of str, get only flags matching the status (i.e. suggested, accepted, rejected)
+
+    Returns
+    -------
+    err: str (empty '' if ok)
+    flags: list of dict {'flagid': int, status:str, userid: int}
+    '''
+    debug(3, 'get_annotation_flags for annotationid %d' % annotaitonid)
+    flags = []
+    if isinstance(status, str):
+        status = [status]
+    try:
+        cur.execute('SELECT status, userid, id, reason FROM AnnotationFlagsTable WHERE annotationID=%s', [annotaitonid])
+        res = cur.fetchall()
+        for cres in res:
+            if status is not None:
+                if res['status'] not in status:
+                    continue
+            cflag = {'status': cres['status'], 'userid': cres['userid'], 'flagid': cres['id'], 'reason': cres['reason']}
+            flags.append(cflag)
+        debug(3, 'found %d flags for annotationid %d' % (len(flags), annotaitonid))
+        return '', flags
+    except psycopg2.DatabaseError as e:
+        debug(7, "error %s enountered in get_annotation_flags" % e)
+        return e, []
+
+
+def delete_annotation_flag(con, cur, flagid, userid, commit=True):
+    '''delete a flag for an annotation.
+    NOTE: only the user that created the annotation flag can delete it.
+
+    Parameters
+    ----------
+    con, cur
+    flagid: int
+        the annotation flag id
+    userid: int
+        the userid (from userstable)
+
+    Returns
+    -------
+    err: str
+        empty ('') if ok, otherwise the error encountered
+    '''
+    try:
+        cur.execute('SELECT userid FROM AnnotationFlagsTable WHERE id=%s', [flagid])
+        if cur.rowcount == 0:
+            err = 'no flags matching id %d found' % flagid
+            debug(2, err)
+            return err
+        res = cur.fetchone()
+        if res['userid'] != userid:
+            err = 'Cannot delete flag since deleting userid (%d) is different from flag creator id (%d)' % (userid, res['userid'])
+            debug(2, err)
+            return err
+        cur.execute('DELETE FROM AnnotationFlagsTable WHERE id=%s', [flagid])
+        if commit:
+            con.commit()
+        return ''
+    except psycopg2.DatabaseError as e:
+        debug(7, "error %s enountered in get_annotation_flags" % e)
+        return e, []
