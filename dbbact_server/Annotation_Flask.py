@@ -426,6 +426,12 @@ def get_annotation():
                 True if the curation is private, False if not
             "num_sequences" : int
                 The number of sequences associated with this annotation
+            "flags": list of dict {'flagid': int, status:str, userid: int}
+                the flags raised for this annotation by other users (if not empty, maybe should suspect this annotation)
+            'primerid': int
+                id of the primer region of the annotation
+            'primer': str
+                name of the primer region of the annotation (i.e. 'v4')
             "details" : list of
                 {
                     "detail" : str
@@ -532,3 +538,127 @@ def get_all_annotations():
         debug(6, err)
         return ('Problem geting all annotations list. error=%s' % err, 400)
     return json.dumps({'annotations': annotations})
+
+
+@login_required
+@auto.doc()
+@Annotation_Flask_Obj.route('/annotations/add_annotation_flag', methods=['POST'])
+def add_annotation_flag():
+    """
+    Title: add_annotation_flag
+    Description : Flag an annotation as suspicious (i.e. wrong sequenes/region/terms/seems incorrect)
+    URL: annotations/add_annotation_flag
+    Method: POST
+    URL Params:
+    Data Params: JSON
+        {
+        annotationid: int
+            The annotationID of the annotation to flag
+        reason: str
+            The reason to flag this annotation (as many details as possible)
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+        }
+    Details :
+        Validation:
+            Must be a registered user (cannot flag as annonimous)
+            Must supply a reason
+            Once an annotation is flagged, the flag status is "suggested". The flag will be reviewed by the dbbact team and then the status
+            changed to "accepted" or "rejected"
+    """
+    debug(3, 'add_annotation_flag', request)
+    cfunc = add_annotation_flag
+    alldat = request.get_json()
+    if alldat is None:
+        return(getdoc(cfunc), 400)
+    # if current_user.user_id == 0:
+    #     return('Cannot add flag as annonymous user. Please register and supply user/password in the request', 400)
+    reason = alldat.get('reason')
+    if reason is None:
+        return(getdoc(cfunc), 400)
+    if reason == '':
+        return('Must supply reason for flagging the annotation', 400)
+    annotationid = alldat.get('annotationid')
+    err = dbannotations.add_annotation_flag(g.con, g.cur, annotationid=annotationid, userid=current_user.user_id, reason=reason)
+    if err:
+        debug(6, err)
+        return ('Problem flagging annotation. error=%s' % err, 400)
+    return 'added flag to annotation'
+
+
+@login_required
+@auto.doc()
+@Annotation_Flask_Obj.route('/annotations/get_annotation_flags', methods=['GET'])
+def get_annotation_flags():
+    """
+    Title: get_annotation_flags
+    Description : Get flags associated with an annotation
+    URL: annotations/get_annotation_flags
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+        annotationid: int
+            The annotationID of the annotation to get the flag
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            flags: list of dict {'flagid': int, status:str, userid: int}
+        }
+    Details :
+        Validation:
+    """
+    debug(3, 'get_annotation_flags', request)
+    cfunc = get_annotation_flags
+    alldat = request.get_json()
+    if alldat is None:
+        return(getdoc(cfunc), 400)
+    annotationid = alldat.get('annotationid')
+    err, flags = dbannotations.get_annotation_flags(g.con, g.cur, annotaitonid=annotationid)
+    if err:
+        debug(6, err)
+        return ('Problem getting annotation flags. error=%s' % err, 400)
+    return json.dumps({'flags': flags})
+
+
+@login_required
+@auto.doc()
+@Annotation_Flask_Obj.route('/annotations/delete_annotation_flag', methods=['POST'])
+def delete_annotation_flag():
+    """
+    Title: delete_annotation_flag
+    Description : Delete an annotation flag (only if flag was created by the same user)
+    URL: annotations/delete_annotation_flag
+    Method: POST
+    URL Params:
+    Data Params: JSON
+        {
+        flagid: int
+            The id of the annotation flag to delete
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            flags: list of dict {'flagid': int, status:str, userid: int}
+        }
+    Details :
+        Validation:
+        Can only delete if the user that created the flag is the user requesting delete
+    """
+    debug(3, 'delete_annotation_flag', request)
+    cfunc = delete_annotation_flag
+    alldat = request.get_json()
+    if alldat is None:
+        return(getdoc(cfunc), 400)
+    flagid = alldat.get('flagid')
+    err = dbannotations.delete_annotation_flag(g.con, g.cur, flagid=flagid, userid=current_user.user_id)
+    if err:
+        debug(6, err)
+        return ('Problem deleting annotation. error=%s' % err, 400)
+    return 'flag %d deleted' % flagid
