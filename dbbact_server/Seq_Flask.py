@@ -145,8 +145,8 @@ def get_sequenceid_list():
                 False (default) to get also longer sequences from DB if matching on query length.
                 True to get only sequences not longer than the query
             "use_sequence_translator": bool (optional)
-                True to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
-                False (default) to get just annotations for dbbact sequences that match exactly the queryy sequences
+                True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
+                False to get just annotations for dbbact sequences that match exactly the query sequences
             "dbname": str, optional
                 If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
         }
@@ -167,10 +167,10 @@ def get_sequenceid_list():
     sequences = alldat.get('sequences')
     no_shorter = alldat.get('no_shorter', False)
     no_longer = alldat.get('no_longer', False)
+    use_sequence_translator = alldat.get('use_sequence_translator', True)
     dbname = alldat.get('dbname', None)
     if sequences is None:
         return(getdoc(cfunc))
-    use_sequence_translator = alldat.get('use_sequence_translator', False)
     if dbname is not None:
         use_sequence_translator = True
     if use_sequence_translator:
