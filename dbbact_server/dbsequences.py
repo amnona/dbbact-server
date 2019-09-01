@@ -257,8 +257,8 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
 
         # if looking for exact sequence, look up fast using exact match
         if no_shorter and no_longer:
-            debug(8,'noshortnolong')
-            cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [sequence])
+            debug(2, 'noshortnolong')
+            cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [cseq])
             if cur.rowcount > 0:
                 res = cur.fetchone()
                 if idprimer is not None:
