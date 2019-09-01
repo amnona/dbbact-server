@@ -51,7 +51,7 @@ def add_seq_counts(con, cur):
 
 
 def main(argv):
-	parser = argparse.ArgumentParser(description='Add annotation/experiment counts to all dbbact sequences. version ' + __version__)
+	parser = argparse.ArgumentParser(description='Add annotation/experiment counts to all dbbact sequences. version ' + __version__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('--port', help='postgres port', default=5432, type=int)
 	parser.add_argument('--host', help='postgres host', default=None)
 	parser.add_argument('--database', help='postgres database', default='dbbact')
