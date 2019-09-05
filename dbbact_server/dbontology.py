@@ -243,38 +243,55 @@ def GetSynonymTerm(con, cur, synonym):
     return '', term
 
 
-def GetTermAnnotations(con, cur, terms, use_synonyms=True):
+def GetTermAnnotations(con, cur, terms, use_synonyms=True, get_children=True):
     '''
     Get details for all annotations which contain the ontology term "term" as a parent of (or exact) annotation detail
 
-    input:
+    Parameters
+    ----------
     con, cur
     terms : str or list of str
         the ontology term to search. if list, retrieve only annotations containing all the terms in the list
     use_synonyms : bool (optional)
         True (default) to look in synonyms table if term is not found. False to look only for exact term
+    get_children: bool, optional
+        True to get annotations of all term children (i.e. get also annotations with feces when you search for excreta)
 
-    output:
+    Returns
+    -------
     annotations : list of dict
         list of annotation details per annotation which contains the term
     '''
-    terms = tolist(terms)
     debug(1, 'GetTermAnnotations for ontology terms %s' % terms)
+    terms = tolist(terms)
     annotation_ids = None
     for cterm in terms:
         cterm = cterm.lower()
-        cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
-        if cur.rowcount == 0:
-            if use_synonyms:
-                err, cterm = GetSynonymTerm(con, cur, cterm)
+        if get_children:
+            print('pija')
+            cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
+            if cur.rowcount == 0:
+                if use_synonyms:
+                    err, cterm = GetSynonymTerm(con, cur, cterm)
+                    if err:
+                        debug(3, 'no annotations or synonyms for term %s' % cterm)
+                        return '', []
+                    debug(1, 'found original ontology term %s' % cterm)
+                    cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
+                else:
+                        debug(3, 'no annotations for term %s' % cterm)
+                        return '', []
+        else:
+            print('ooju')
+            ctermid = dbidval.GetIdFromDescription(con, cur, 'OntologyTable', cterm)
+            if ctermid < 0:
+                if use_synonyms:
+                    err, ctermid = GetSynonymTermId(con, cur, cterm)
                 if err:
-                    debug(3, 'no annotations or synonyms for term %s' % cterm)
-                    return '', []
-                debug(1, 'found original ontology term %s' % cterm)
-                cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
-            else:
-                    debug(3, 'no annotations for term %s' % cterm)
-                    return '', []
+                    debug(3, 'ontology term not found for %s' % cterm)
+                    continue
+                debug(2, 'converted synonym to termid')
+            cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology=%s', [ctermid])
         res = cur.fetchall()
         cannotation_ids = set()
         for cres in res:
@@ -594,4 +611,24 @@ def get_term_children(con, cur, term, ontology_name=None, only_annotated=True):
             terms.add(cres[0])
     debug(5, 'found %d children for term %s' % (len(children_ids), term))
     children = get_terms_from_ids(con, cur, children_ids)
+    if only_annotated:
+        ok_terms = set()
+        for cterm in children.values():
+            # look if term has any annotations
+            cur.execute('SELECT TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', [cterm])
+            if cur.rowcount > 0:
+                if cur.fetchone()[0] > 0:
+                    ok_terms.add(cterm)
+                break
+            # look also for lower in annotations
+            cur.execute('SELECT TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', ['-' + cterm])
+            if cur.rowcount > 0:
+                if cur.fetchone()[0] > 0:
+                    ok_terms.add(cterm)
+        debug(3, 'found %d term children with annotations out of %d children' % (len(ok_terms), len(children)))
+        new_children = {}
+        for cid, cterm in children.items():
+            if cterm in ok_terms:
+                new_children[cid] = cterm
+        children = new_children
     return '', children

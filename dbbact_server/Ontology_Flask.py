@@ -161,8 +161,8 @@ def get_ontology_annotations():
     URL Params:
     Data Params: Parameters
         {
-            term : str
-                the ontology term to get the annotations for
+            term : str or list of str
+                the ontology term/terms to get the annotations for
         }
     Success Response:
         Code : 200
@@ -217,9 +217,13 @@ def get_ontology_annotations():
     debug(3, 'get_ontology_annotations', request)
     cfunc = get_ontology_annotations
     ontology_term = request.args.get('term')
+    get_children = request.args.get('get_children')
+    if get_children is not None:
+        get_children = get_children.lower() == 'true'
+    # get_children=False
     if ontology_term is None:
         return(getdoc(cfunc))
-    err, annotations = dbontology.GetTermAnnotations(g.con, g.cur, ontology_term)
+    err, annotations = dbontology.GetTermAnnotations(g.con, g.cur, ontology_term, get_children=get_children)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
