@@ -432,15 +432,18 @@ def GetListOfSynonym(con, cur):
 def GetIDs(con, cur, ontList):
     """
     Get ids of list of ontologies
-    input:
+
+    Parameters
+    ----------
     con,cur : database connection and cursor
     ontList: list of str
-        the ontolgies
+        the terms to get the ids for
 
-    output:
+    Returns
+    -------
     errmsg : str
         "" if ok, error msg if error encountered
-    seqids : list of int or None
+    termids : list of int or None
         list of the new ids or None if error enountered
     """
     ontids = []
@@ -459,12 +462,35 @@ def GetIDs(con, cur, ontList):
             for cres in res:
                 ontids.append(res[0])
 
-        debug(3, "Number of ontology ids (out of %d)" % (len(ontids)))
+        debug(3, "Number of ontology ids %d (out of %d)" % (len(ontids), len(ontList)))
         return "", ontids
 
     except psycopg2.DatabaseError as e:
         debug(7, 'database error %s' % e)
         return "database error %s" % e, None
+
+
+def get_terms_from_ids(con, cur, ids):
+    '''Get names of terms from ids list
+
+    Parameters
+    ----------
+    con,cur : database connection and cursor
+    ids: list of int
+        the ids to get the names for
+
+    Returns
+    -------
+    dict of {id(int): name(str)}
+    '''
+    names = {}
+    for cid in ids:
+        cur.execute('SELECT description FROM OntologyTable WHERE id=%s LIMIT 1', [cid])
+        if cur.rowcount > 0:
+            names[cid] = cur.fetchone()[0]
+        else:
+            names[cid] = 'NOT FOUND'
+    return names
 
 
 def get_term_pairs_count(con, cur, term_pairs):
@@ -491,3 +517,81 @@ def get_term_pairs_count(con, cur, term_pairs):
         term_count[cterm] = res[0]
     debug(2, 'Found term pairs for %d terms' % len(term_count))
     return term_count
+
+
+def get_ontology_id_from_name(con, cur, ontology_name):
+    '''Get the id of an ontology (i.e. "doid") based on it's name
+
+    Parameters
+    ----------
+    con,cur : database connection and cursor
+    ontology_name: str
+        name of the ontology (i.e. "doid"/"envo" etc.)
+
+    Returns
+    -------
+    err: empty ('') if ok, otherwise the error enoucntered
+    oid: int - the ontology id
+    '''
+    ontology_name = ontology_name.lower()
+    cur.execute('SELECT id FROM OntologyNamesTable WHERE description=%s LIMIT 1', [ontology_name])
+    if cur.rowcount > 0:
+        oid = cur.fetchone()[0]
+    else:
+        msg = 'ontology name %s not found'
+        debug(8, msg)
+        return msg, -1
+    debug(1, 'found ontology id %d for ontology %s' % (oid, ontology_name))
+    return '', oid
+
+
+def get_term_children(con, cur, term, ontology_name=None, only_annotated=True):
+    '''get a list of all terms that are a children of the given term. Optionally, limit to a given ontology.
+
+    Parameters
+    ----------
+    con,cur : database connection and cursor
+    term: str
+        The term to get the children for
+    ontology_name: str or None, optional
+        if not None, limit to children based on a give ontology name (matching OntologyNamesTable. i.e. "envo"/"uberon"/"doid"/"efo"/"gaz"/"scdb" etc.)
+    only_annotated: bool, optional
+        if True, return only child terms that have at least one annotation in their subtree
+
+    Returns
+    -------
+    dict of {termid(int): term(str)}
+    All the children of the given term
+    '''
+    err, termid = GetIDs(con, cur, [term])
+    if err:
+        return err, {}
+    if len(termid) == 0:
+        msg = 'term %s not found' % term
+        debug(4, msg)
+        return msg, {}
+    termid = termid[0]
+    children_ids = set()
+    terms = set(termid)
+    if ontology_name is None:
+        ontology_id = None
+    else:
+        err, ontology_id = get_ontology_id_from_name(con, cur, ontology_name)
+        if err:
+            return err, {}
+    while len(terms) > 0:
+        ctermid = terms.pop()
+        if ctermid in children_ids:
+            debug(8, 'termid %d is in a circle?' % ctermid)
+            continue
+        children_ids.add(ctermid)
+        if ontology_name is None:
+            cur.execute('SELECT ontologyid FROM OntologyTreeStructureTable WHERE ontologyParentID=%s', [ctermid])
+        else:
+            cur.execute('SELECT ontologyid FROM OntologyTreeStructureTable WHERE ontologyParentID=%s AND ontologyNameID=%s', [ctermid, ontology_id])
+        res = cur.fetchall()
+        for cres in res:
+            terms.add(cres[0])
+    debug(5, 'found %d children for term %s' % (len(children_ids), term))
+    children = get_terms_from_ids(con, cur, children_ids)
+    return '', children

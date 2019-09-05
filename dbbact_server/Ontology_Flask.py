@@ -414,3 +414,43 @@ def get_term_pair_count():
     #     debug(6, err)
     #     return ('Problem geting term stats. error=%s' % err, 400)
     return json.dumps({'term_count': term_count})
+
+
+@Ontology_Flask_Obj.route('/ontology/get_term_children', methods=['GET'])
+@auto.doc()
+def get_term_children():
+    """
+    Title: get_term_children
+    Description : Get all ontology children of a given term
+    URL: ontology/get_term_children
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            term: str
+                the term to get the children for
+            ontology_name: str or None, optional
+                limit results only to children in the given ontolgy (i.e. 'doid')
+            only_annotated: bool, optional (default = True)
+                if True, get only children that have at least one annotation in their subtree
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            term_count : dict of {term, float}
+                The total number of experiments each term pair appears in
+        }
+    Details :
+        Validation:
+    """
+    debug(3, 'get_term_children', request)
+    cfunc = get_term_children
+    alldat = request.get_json()
+    term = alldat.get('term')
+    ontology_name = alldat.get('ontology_name')
+    only_annotated = alldat.get('only_annotated')
+    if term is None:
+        return(getdoc(cfunc))
+    err, children = dbontology.get_term_children(g.con, g.cur, term, ontology_name=ontology_name, only_annotated=only_annotated)
+    return json.dumps({'terms': children})
