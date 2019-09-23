@@ -18,6 +18,8 @@ def AddTerm(con, cur, term, parent='na', ontologyname='scdb', synonyms=[], commi
         term = term.lower()
         parent = parent.lower()
         ontologyname = ontologyname.lower()
+        if synonyms is None:
+            synonyms = []
         synonyms = [csyn.lower() for csyn in synonyms]
 
         # add/get the ontology term
@@ -173,8 +175,12 @@ def GetParents(con, cur, term):
         debug(2, 'converted synonym to termid')
     plist = [termid]
     parents = [term]
+    parents_id_set = set()
     while len(plist) > 0:
         cid = plist.pop(0)
+        origid = cid
+        if cid in parents_id_set:
+            continue
         err, cparentids = GetTreeParentsById(con, cur, cid)
         if err:
             continue
@@ -184,6 +190,7 @@ def GetParents(con, cur, term):
             if err:
                 continue
             parents.append(cparent)
+        parents_id_set.add(origid)
     debug(2, 'found %d parents' % len(parents))
     return '', parents
 
@@ -259,16 +266,19 @@ def GetTermAnnotations(con, cur, terms, use_synonyms=True, get_children=True):
 
     Returns
     -------
+    err: str
+        empty str ('') if ok, otherwise error returned
     annotations : list of dict
         list of annotation details per annotation which contains the term
     '''
-    debug(1, 'GetTermAnnotations for ontology terms %s' % terms)
+    debug(1, 'GetTermAnnotations for ontology terms %s, use_synonyms=%s, get_children=%s' % (terms, use_synonyms, get_children))
     terms = tolist(terms)
     annotation_ids = None
+    if len(terms) == 0:
+        return 'No terms in query', []
     for cterm in terms:
         cterm = cterm.lower()
         if get_children:
-            print('pija')
             cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
             if cur.rowcount == 0:
                 if use_synonyms:
@@ -279,17 +289,17 @@ def GetTermAnnotations(con, cur, terms, use_synonyms=True, get_children=True):
                     debug(1, 'found original ontology term %s' % cterm)
                     cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
                 else:
-                        debug(3, 'no annotations for term %s' % cterm)
-                        return '', []
+                    debug(3, 'no annotations for term %s' % cterm)
+                    return '', []
         else:
-            print('ooju')
             ctermid = dbidval.GetIdFromDescription(con, cur, 'OntologyTable', cterm)
             if ctermid < 0:
                 if use_synonyms:
                     err, ctermid = GetSynonymTermId(con, cur, cterm)
                 if err:
-                    debug(3, 'ontology term not found for %s' % cterm)
-                    continue
+                    msg = 'ontology term not found for %s' % cterm
+                    debug(3, msg)
+                    return msg, []
                 debug(2, 'converted synonym to termid')
             cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology=%s', [ctermid])
         res = cur.fetchall()

@@ -341,7 +341,7 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
         return e, -2
 
 
-def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True, numseqs=0):
+def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True, numseqs=0, all_parents_dict=None):
     """
     Add all the parent terms of each annotation detail ontology to the annotationparentstable
 
@@ -354,6 +354,10 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
         ontologyterm is string which should match the ontologytable terms
     commit : bool (optional)
         True (default) to commit, False to not commit to database
+    numseqs: int, optional
+        number of sequences in the annotation (to add to the sequences count for the term)
+    all_parents_dict: None or dict, optional
+        {term(str): parents(list)}. If not None - the parents for each term (to save multiple calls to GetParents()). NOTE: the dict is extended with annotation results
 
     output:
     err : str
@@ -365,13 +369,21 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
         numadded = 0
         parentsdict = {}
         for (cdetailtype, contologyterm) in annotationdetails:
-            err, parents = GetParents(con, cur, contologyterm)
-            if err:
-                debug(6, 'error getting parents for term %s: %s' % (contologyterm, err))
-                continue
+            parents = None
+            # print(all_parents_dict)
+            if all_parents_dict is not None:
+                if contologyterm in all_parents_dict:
+                    parents = all_parents_dict[contologyterm]
+            if parents is None:
+                err, parents = GetParents(con, cur, contologyterm)
+                if err:
+                    debug(6, 'error getting parents for term %s: %s' % (contologyterm, err))
+                    continue
+                if all_parents_dict is not None:
+                    all_parents_dict[contologyterm] = parents
             debug(2, 'term %s parents %s' % (contologyterm, parents))
             if cdetailtype not in parentsdict:
-                parentsdict[cdetailtype] = parents
+                parentsdict[cdetailtype] = parents.copy()
             else:
                 parentsdict[cdetailtype].extend(parents)
 
