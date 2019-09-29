@@ -21,9 +21,14 @@ def ontology_add_term():
         {
             "term" : str
                 the new term to add (description from OntologyTable)
+            'term_id': str
+                the ontology id for the term (i.e. CHEBI:16189)
             "parent" : str (optional)
                 default="na"
                 if supplied, the id of the parent of this term (description from OntologyTable)
+            'parent_id': str or None (optional)
+                if supplied, the term_id of the parent of this term (i.e. CHEBI:16189).
+                it will be used in addition to the 'parent' field (AND)
             "ontologyname" : str (optional)
                 default = "scdb"
                 name of the ontology to which this term belongs (i.e. "doid")
@@ -59,14 +64,16 @@ def ontology_add_term():
     term = alldat.get('term')
     if term is None:
         return('term missing', 400)
+    term_id = alldat.get('term_id', '')
     parent = alldat.get('parent')
+    parent_id = alldat.get('parent_id', '')
     if parent is None:
         parent = 'na'
     ontologyname = alldat.get('ontologyname')
     if ontologyname is None:
         ontologyname = 'scdb'
     synonyms = alldat.get('synonyms')
-    err, termid = dbontology.AddTerm(g.con, g.cur, term, parent, ontologyname, synonyms)
+    err, termid = dbontology.AddTerm(g.con, g.cur, term, parent, ontologyname, synonyms, term_id=term_id, parent_id=parent_id)
     if err:
         debug(2, 'add_ontology_term error %s encountered' % err)
         return(err)
@@ -163,6 +170,8 @@ def get_ontology_annotations():
         {
             term : str or list of str
                 the ontology term/terms to get the annotations for
+            get_children: bool, optional
+                if True, get also annotations for child terms of the term (i.e. if term is 'mammalia' and get_children is True, get also annotations for 'homo sapiens' etc.)
         }
     Success Response:
         Code : 200

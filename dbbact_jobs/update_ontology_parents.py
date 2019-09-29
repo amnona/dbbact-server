@@ -34,11 +34,15 @@ def update_ontology_parents(con, cur, overwrite=True):
 		debug(4, 'deleting old parent counts')
 		# delete the current counts since we are updating all entries (and addparents adds 1 to the counts...)
 		cur.execute('UPDATE OntologyTable SET seqCount=0, annotationCount=0')
+		debug(4, 'deleting annotationparentstable')
+		cur.execute('DELETE FROM AnnotationParentsTable')
 	cur.execute('SELECT id,seqCount from AnnotationsTable')
 	annotations = cur.fetchall()
 	debug(4, 'updating AnnotationParentsTable for %d annotations' % len(annotations))
 	for cres in annotations:
 		cid = cres[0]
+		# if cid != 2305:
+		# 	continue
 		cseqcount = cres[1]
 		if cseqcount == 0:
 			debug(5, 'WARNING: annotation %d has no sequences in AnnotationsTable' % cid)
@@ -52,8 +56,10 @@ def update_ontology_parents(con, cur, overwrite=True):
 		if err:
 			debug(6, 'error: %s' % err)
 			continue
+		debug(3, 'adding annotation %d (%d)' % (cid, added))
 		dbannotations.AddAnnotationParents(con, cur, cid, annotationdetails, commit=False, numseqs=cseqcount, all_parents_dict=all_parents_dict)
 		added += 1
+	debug(4, 'committing')
 	con.commit()
 	debug(4, 'added %d, skipped %d' % (added, skipped))
 

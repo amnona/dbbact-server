@@ -392,7 +392,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
             for cpar in parents:
                 cpar = cpar.lower()
                 cdetailtype = cdetailtype.lower()
-                debug(2, 'adding parent %s' % cpar)
+                debug(1, 'adding parent %s' % cpar)
                 cur.execute('INSERT INTO AnnotationParentsTable (idAnnotation,annotationDetail,ontology) VALUES (%s,%s,%s)', [annotationid, cdetailtype, cpar])
                 numadded += 1
                 # add the number of sequences and one more annotation to all the terms in this annotation
@@ -1437,7 +1437,7 @@ def get_annotation_flags(con, cur, annotaitonid, status=None):
     err: str (empty '' if ok)
     flags: list of dict {'flagid': int, status:str, userid: int}
     '''
-    debug(3, 'get_annotation_flags for annotationid %d' % annotaitonid)
+    debug(1, 'get_annotation_flags for annotationid %d' % annotaitonid)
     flags = []
     if isinstance(status, str):
         status = [status]
@@ -1450,7 +1450,7 @@ def get_annotation_flags(con, cur, annotaitonid, status=None):
                     continue
             cflag = {'status': cres['status'], 'userid': cres['userid'], 'flagid': cres['id'], 'reason': cres['reason']}
             flags.append(cflag)
-        debug(3, 'found %d flags for annotationid %d' % (len(flags), annotaitonid))
+        debug(2, 'found %d flags for annotationid %d' % (len(flags), annotaitonid))
         return '', flags
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in get_annotation_flags" % e)
