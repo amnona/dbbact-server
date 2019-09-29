@@ -4,40 +4,142 @@ from . import dbidval
 from . import dbannotations
 
 
-def AddTerm(con, cur, term, parent='na', ontologyname='scdb', synonyms=[], commit=True):
+def add_ontology_term(con, cur, term, term_id='', commit=True):
+    '''add a term to the OntologyTable (if does not exist) and return it's id
+    NOTE: if the term in the database only appears without a term_id, and a term_id is supplied, update the term_id
+
+    Parameters
+    ----------
+    con, cur
+    term: str
+        the term to add (i.e. 'feces')
+    term_id: str, optional
+        the ontology id for the term (unique identifier, i.e. 'UBERON:0001988')
+    commit: bool, optional
+        True to commit the changes to the database
+
+    Returns
+    -------
+    err: str
+        empty '' if ok, otherwise error encountered
+    termid: int
+        the dbbact term id
+    '''
+    try:
+        # no term_id, find or create a new entry with term_id=''
+        if term_id == '':
+            err, termid = dbidval.AddItem(con, cur, table='OntologyTable', description=term, commit=False)
+            if err:
+                return err, None
+        else:
+            # term_id supplied
+            cur.execute('SELECT id FROM OntologyTable WHERE description=%s AND term_id=%s', [term, term_id])
+            # if already in the table, return it
+            if cur.rowcount > 0:
+                termid = cur.fetchone()[0]
+            else:
+                cur.execute('SELECT id FROM OntologyTable WHERE description=%s AND term_id=%s', [term, ''])
+                # if already in the table but with no term_id, just update the term_id
+                if cur.rowcount > 0:
+                    termid = cur.fetchone()[0]
+                    cur.execute('UPDATE OntologyTable SET term_id=%s WHERE id=%s', [term_id, termid])
+                else:
+                    # not in the table - create a new entry
+                    cur.execute('INSERT INTO OntologyTable (description, term_id) VALUES (%s, %s) RETURNING id', [term, term_id])
+                    termid = cur.fetchone()[0]
+        return '', termid
+    except psycopg2.DatabaseError as e:
+        msg = "error %s in add_ontology_term" % e
+        debug(8, msg)
+        return msg, -2
+
+
+def get_term_ids(con, cur, term):
+    '''Get a list of dbbact term ids matching the term
+    NOTE: can be more than one result since same term can appear in several ontologies
+
+    Parameters
+    ----------
+    con, cur
+    term: str
+        the term to get the ids for
+
+    Returns
+    -------
+    error (str):
+        empty string ('') if ok, otherwise the error encountered
+    ids (list of int)
+        the dbbact term ids matching the term
+    '''
+    cur.execute('SELECT id FROM OntologyTable WHERE description=%s', [term])
+    if cur.rowcount == 0:
+        debug(2, 'Term %s not found in OntologyTable' % term)
+        return '', []
+    ids = []
+    res = cur.fetchall()
+    for cres in res:
+        ids.append(cres['id'])
+    debug(2, 'found %d matches for term %s' % (len(ids), term))
+    return '', ids
+
+
+def AddTerm(con, cur, term, parent='na', ontologyname='dbbact', synonyms=[], term_id='', parent_id='', commit=True):
     """
     Add a term to the ontology table. Also add parent and synonyms if supplied
 
-    input:
+    Parameters
+    ----------
+    con, cur
+    term: str
+        the term to add (i.e. 'feces')
+    parent: str, optional
+        the name of the parent term (i.e. 'excreta')
+        if 'na', means no parent for this term (for example when new term not from existing ontology)
+    ontologyname: str, optional
+        name of the ontology to which this term/parent link belongs (i.e. 'envo')
+    synonyms: list of str, optional
+        synonyms for this term (i.e. 'poop')
+    term_id: str, optional
+        the ontology id for the term (unique identifier, i.e. 'UBERON:0001988')
+    parent_id: str, optional
+        the term_id for the parent. if not empty, will be used in AND with the parent field for exact identification
+    commit: bool, optional
+        True to commit the changes to the database
 
-    output:
-
+    Returns
+    -------
     """
     try:
         # convert everything to lower case before interacting with the database
         term = term.lower()
         parent = parent.lower()
+        term_id = term_id.lower()
+        parent_id = parent_id.lower()
         ontologyname = ontologyname.lower()
         if synonyms is None:
             synonyms = []
         synonyms = [csyn.lower() for csyn in synonyms]
 
         # add/get the ontology term
-        err, termid = dbidval.AddItem(con, cur, table='OntologyTable', description=term, commit=False)
+        err, termid = add_ontology_term(con, cur, term, term_id, commit=False)
         if err:
             return err, None
+
         # add/get the ontology parent term
-        err, parentid = dbidval.AddItem(con, cur, table='OntologyTable', description=parent, commit=False)
+        err, parentid = add_ontology_term(con, cur, parent, parent_id, commit=False)
         if err:
             return err, None
+
         # add/get the ontology name
         err, ontologynameid = dbidval.AddItem(con, cur, table='OntologyNamesTable', description=ontologyname, commit=False)
         if err:
             return err, None
+
         # add the tree info
         err, treeid = AddTreeTerm(con, cur, termid, parentid, ontologynameid, commit=False)
         if err:
             return err, None
+
         # add the synonyms
         if synonyms:
             for csyn in synonyms:
@@ -166,14 +268,21 @@ def GetParents(con, cur, term):
     parents : list of str
         the parents of term
     """
-    termid = dbidval.GetIdFromDescription(con, cur, 'OntologyTable', term)
-    if termid < 0:
+    # termid = dbidval.GetIdFromDescription(con, cur, 'OntologyTable', term)
+    err, termids = get_term_ids(con, cur, term)
+    if err:
+        debug(3, err)
+        return err, []
+    # if termid < 0:
+    if len(termids) == 0:
         err, termid = GetSynonymTermId(con, cur, term)
         if err:
             debug(3, 'ontology term not found for %s' % term)
             return 'ontolgy term %s not found' % term, []
         debug(2, 'converted synonym to termid')
-    plist = [termid]
+        termids = [termid]
+    # plist = [termid]
+    plist = termids
     parents = [term]
     parents_id_set = set()
     while len(plist) > 0:
@@ -292,16 +401,21 @@ def GetTermAnnotations(con, cur, terms, use_synonyms=True, get_children=True):
                     debug(3, 'no annotations for term %s' % cterm)
                     return '', []
         else:
-            ctermid = dbidval.GetIdFromDescription(con, cur, 'OntologyTable', cterm)
-            if ctermid < 0:
+            err, ctermids = get_term_ids(con, cur, cterm)
+            if err:
+                debug(2, err)
+                return err
+            if len(ctermids) == 0:
                 if use_synonyms:
                     err, ctermid = GetSynonymTermId(con, cur, cterm)
-                if err:
-                    msg = 'ontology term not found for %s' % cterm
-                    debug(3, msg)
-                    return msg, []
-                debug(2, 'converted synonym to termid')
-            cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology=%s', [ctermid])
+                    ctermids = [ctermid]
+                    if err:
+                        msg = 'ontology term not found for %s' % cterm
+                        debug(3, msg)
+                        return msg, []
+                    debug(2, 'converted synonym %s to termid %s' % (cterm, ctermids))
+            cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology IN %s', [tuple(ctermids)])
+
         res = cur.fetchall()
         cannotation_ids = set()
         for cres in res:
@@ -319,6 +433,11 @@ def GetTermAnnotations(con, cur, terms, use_synonyms=True, get_children=True):
         annotations.append(cdetails)
     debug(3, 'found %d annotations' % len(annotations))
     return '', annotations
+
+
+def get_term_onto_id_annotations(con, cur, terms, get_children=True):
+    '''Get annotations for onotology ids (i.e. GAZ:00002476'''
+    pass
 
 
 def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
