@@ -341,7 +341,7 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
         return e, -2
 
 
-def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True, numseqs=0):
+def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True, numseqs=0, all_parents_dict=None):
     """
     Add all the parent terms of each annotation detail ontology to the annotationparentstable
 
@@ -354,6 +354,10 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
         ontologyterm is string which should match the ontologytable terms
     commit : bool (optional)
         True (default) to commit, False to not commit to database
+    numseqs: int, optional
+        number of sequences in the annotation (to add to the sequences count for the term)
+    all_parents_dict: None or dict, optional
+        {term(str): parents(list)}. If not None - the parents for each term (to save multiple calls to GetParents()). NOTE: the dict is extended with annotation results
 
     output:
     err : str
@@ -365,13 +369,20 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
         numadded = 0
         parentsdict = {}
         for (cdetailtype, contologyterm) in annotationdetails:
-            err, parents = GetParents(con, cur, contologyterm)
-            if err:
-                debug(6, 'error getting parents for term %s: %s' % (contologyterm, err))
-                continue
+            parents = None
+            if all_parents_dict is not None:
+                if contologyterm in all_parents_dict:
+                    parents = all_parents_dict[contologyterm]
+            if parents is None:
+                err, parents = GetParents(con, cur, contologyterm)
+                if err:
+                    debug(6, 'error getting parents for term %s: %s' % (contologyterm, err))
+                    continue
+                if all_parents_dict is not None:
+                    all_parents_dict[contologyterm] = parents
             debug(2, 'term %s parents %s' % (contologyterm, parents))
             if cdetailtype not in parentsdict:
-                parentsdict[cdetailtype] = parents
+                parentsdict[cdetailtype] = parents.copy()
             else:
                 parentsdict[cdetailtype].extend(parents)
 
@@ -380,7 +391,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
             for cpar in parents:
                 cpar = cpar.lower()
                 cdetailtype = cdetailtype.lower()
-                debug(2, 'adding parent %s' % cpar)
+                debug(1, 'adding parent %s' % cpar)
                 cur.execute('INSERT INTO AnnotationParentsTable (idAnnotation,annotationDetail,ontology) VALUES (%s,%s,%s)', [annotationid, cdetailtype, cpar])
                 numadded += 1
                 # add the number of sequences and one more annotation to all the terms in this annotation
@@ -456,6 +467,41 @@ def GetAnnotationDetails(con, cur, annotationid):
         if err:
             return err, []
         details.append([detailtype, ontology])
+    debug(1, 'found %d annotation details' % len(details))
+    return '', details
+
+
+def get_annotation_details_termids(con, cur, annotationid):
+    """
+    Get the annotation details list for annotationid, with the ontology id for each term (i.e. 'envo:000001')
+
+    input:
+    con,cur
+    annotationid : int
+        the annotationid for which to show the list of ontology terms
+
+    output:
+    err: str
+        error encountered or '' if ok
+    details : list of (str, str) (detail type (i.e. 'higher in'), ontology id (i.e. 'envo:000001'). if ontology id is empty, returns the term (i.e. 'feces') instead)
+    """
+    details = []
+    debug(1, 'get annotationdetails from id %d' % annotationid)
+    cur.execute('SELECT * FROM AnnotationListTable WHERE idAnnotation=%s', [annotationid])
+    allres = cur.fetchall()
+    for res in allres:
+        iddetailtype = res['idannotationdetail']
+        idontology = res['idontology']
+        err, detailtype = dbidval.GetDescriptionFromId(con, cur, 'AnnotationDetailsTypesTable', iddetailtype)
+        if err:
+            return err, []
+        err, term, ontology_id = dbontology.get_names_from_ids(con, cur, [idontology])
+        debug(1, 'ontologyid %d term %s ontologyid %s' % (idontology, term, ontology_id))
+        if err:
+            return err, []
+        if ontology_id[0] == '':
+            ontology_id[0] = term[0]
+        details.append([detailtype, ontology_id[0]])
     debug(1, 'found %d annotation details' % len(details))
     return '', details
 
@@ -1425,7 +1471,7 @@ def get_annotation_flags(con, cur, annotaitonid, status=None):
     err: str (empty '' if ok)
     flags: list of dict {'flagid': int, status:str, userid: int}
     '''
-    debug(3, 'get_annotation_flags for annotationid %d' % annotaitonid)
+    debug(1, 'get_annotation_flags for annotationid %d' % annotaitonid)
     flags = []
     if isinstance(status, str):
         status = [status]
@@ -1438,7 +1484,7 @@ def get_annotation_flags(con, cur, annotaitonid, status=None):
                     continue
             cflag = {'status': cres['status'], 'userid': cres['userid'], 'flagid': cres['id'], 'reason': cres['reason']}
             flags.append(cflag)
-        debug(3, 'found %d flags for annotationid %d' % (len(flags), annotaitonid))
+        debug(2, 'found %d flags for annotationid %d' % (len(flags), annotaitonid))
         return '', flags
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in get_annotation_flags" % e)

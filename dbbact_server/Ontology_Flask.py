@@ -21,9 +21,14 @@ def ontology_add_term():
         {
             "term" : str
                 the new term to add (description from OntologyTable)
+            'term_id': str
+                the ontology id for the term (i.e. CHEBI:16189)
             "parent" : str (optional)
                 default="na"
                 if supplied, the id of the parent of this term (description from OntologyTable)
+            'parent_id': str or None (optional)
+                if supplied, the term_id of the parent of this term (i.e. CHEBI:16189).
+                it will be used in addition to the 'parent' field (AND)
             "ontologyname" : str (optional)
                 default = "scdb"
                 name of the ontology to which this term belongs (i.e. "doid")
@@ -59,14 +64,16 @@ def ontology_add_term():
     term = alldat.get('term')
     if term is None:
         return('term missing', 400)
+    term_id = alldat.get('term_id', '')
     parent = alldat.get('parent')
+    parent_id = alldat.get('parent_id', '')
     if parent is None:
         parent = 'na'
     ontologyname = alldat.get('ontologyname')
     if ontologyname is None:
         ontologyname = 'scdb'
     synonyms = alldat.get('synonyms')
-    err, termid = dbontology.AddTerm(g.con, g.cur, term, parent, ontologyname, synonyms)
+    err, termid = dbontology.AddTerm(g.con, g.cur, term, parent, ontologyname, synonyms, term_id=term_id, parent_id=parent_id)
     if err:
         debug(2, 'add_ontology_term error %s encountered' % err)
         return(err)
@@ -161,8 +168,10 @@ def get_ontology_annotations():
     URL Params:
     Data Params: Parameters
         {
-            term : str
-                the ontology term to get the annotations for
+            term : str or list of str
+                the ontology term/terms to get the annotations for
+            get_children: bool, optional
+                if True, get also annotations for child terms of the term (i.e. if term is 'mammalia' and get_children is True, get also annotations for 'homo sapiens' etc.)
         }
     Success Response:
         Code : 200
@@ -217,9 +226,13 @@ def get_ontology_annotations():
     debug(3, 'get_ontology_annotations', request)
     cfunc = get_ontology_annotations
     ontology_term = request.args.get('term')
+    get_children = request.args.get('get_children')
+    if get_children is not None:
+        get_children = get_children.lower() == 'true'
+    # get_children=False
     if ontology_term is None:
         return(getdoc(cfunc))
-    err, annotations = dbontology.GetTermAnnotations(g.con, g.cur, ontology_term)
+    err, annotations = dbontology.GetTermAnnotations(g.con, g.cur, ontology_term, get_children=get_children)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
@@ -414,3 +427,43 @@ def get_term_pair_count():
     #     debug(6, err)
     #     return ('Problem geting term stats. error=%s' % err, 400)
     return json.dumps({'term_count': term_count})
+
+
+@Ontology_Flask_Obj.route('/ontology/get_term_children', methods=['GET'])
+@auto.doc()
+def get_term_children():
+    """
+    Title: get_term_children
+    Description : Get all ontology children of a given term
+    URL: ontology/get_term_children
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            term: str
+                the term to get the children for
+            ontology_name: str or None, optional
+                limit results only to children in the given ontolgy (i.e. 'doid')
+            only_annotated: bool, optional (default = True)
+                if True, get only children that have at least one annotation in their subtree
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            term_count : dict of {term, float}
+                The total number of experiments each term pair appears in
+        }
+    Details :
+        Validation:
+    """
+    debug(3, 'get_term_children', request)
+    cfunc = get_term_children
+    alldat = request.get_json()
+    term = alldat.get('term')
+    ontology_name = alldat.get('ontology_name')
+    only_annotated = alldat.get('only_annotated')
+    if term is None:
+        return(getdoc(cfunc))
+    err, children = dbontology.get_term_children(g.con, g.cur, term, ontology_name=ontology_name, only_annotated=only_annotated)
+    return json.dumps({'terms': children})

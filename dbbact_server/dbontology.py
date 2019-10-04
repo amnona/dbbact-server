@@ -4,38 +4,190 @@ from . import dbidval
 from . import dbannotations
 
 
-def AddTerm(con, cur, term, parent='na', ontologyname='scdb', synonyms=[], commit=True):
+def add_ontology_term(con, cur, term, term_id='', commit=True):
+    '''add a term to the OntologyTable (if does not exist) and return it's id
+    NOTE: if the term in the database only appears without a term_id, and a term_id is supplied, update the term_id
+
+    Parameters
+    ----------
+    con, cur
+    term: str
+        the term to add (i.e. 'feces')
+    term_id: str, optional
+        the ontology id for the term (unique identifier, i.e. 'UBERON:0001988')
+    commit: bool, optional
+        True to commit the changes to the database
+
+    Returns
+    -------
+    err: str
+        empty '' if ok, otherwise error encountered
+    termid: int
+        the dbbact term id
+    '''
+    try:
+        # no term_id, find or create a new entry with term_id=''
+        if term_id == '':
+            err, termid = dbidval.AddItem(con, cur, table='OntologyTable', description=term, commit=False)
+            if err:
+                return err, None
+        else:
+            # term_id supplied
+            cur.execute('SELECT id FROM OntologyTable WHERE description=%s AND term_id=%s', [term, term_id])
+            # if already in the table, return it
+            if cur.rowcount > 0:
+                termid = cur.fetchone()[0]
+            else:
+                cur.execute('SELECT id FROM OntologyTable WHERE description=%s AND term_id=%s', [term, ''])
+                # if already in the table but with no term_id, just update the term_id
+                if cur.rowcount > 0:
+                    termid = cur.fetchone()[0]
+                    cur.execute('UPDATE OntologyTable SET term_id=%s WHERE id=%s', [term_id, termid])
+                else:
+                    # not in the table - create a new entry
+                    cur.execute('INSERT INTO OntologyTable (description, term_id) VALUES (%s, %s) RETURNING id', [term, term_id])
+                    termid = cur.fetchone()[0]
+        return '', termid
+    except psycopg2.DatabaseError as e:
+        msg = "error %s in add_ontology_term" % e
+        debug(8, msg)
+        return msg, -2
+
+
+def get_term_ids(con, cur, term, allow_ontology_id=True):
+    '''Get a list of dbbact term ids matching the term
+    NOTE: can handle terms (i.e. 'feces') or ontology ids (i.e. 'envo:000001')
+    NOTE: can be more than one result since same term can appear in several ontologies
+
+    Parameters
+    ----------
+    con, cur
+    term: str
+        the term to get the ids for
+    allow_ontology_id: bool, optional
+        if True, term can also be an ontology id (i.e. 'envo:000001')
+
+    Returns
+    -------
+    error (str):
+        empty string ('') if ok, otherwise the error encountered
+    ids (list of int)
+        the dbbact term ids matching the term. NOTE: if term not found, will not error and instead return empty list.
+    '''
+    cur.execute('SELECT id FROM OntologyTable WHERE description=%s', [term])
+    if cur.rowcount == 0:
+        if allow_ontology_id:
+            cur.execute('SELECT id FROM OntologyTable WHERE term_id=%s', [term])
+            if cur.rowcount == 0:
+                msg = 'Term %s not found in OntologyTable (also when searching ontology ids)' % term
+                debug(2, msg)
+                return '', []
+        else:
+            msg = 'Term %s not found in OntologyTable' % term
+            debug(2, msg)
+            return '', []
+    ids = []
+    res = cur.fetchall()
+    for cres in res:
+        ids.append(cres['id'])
+    debug(2, 'found %d matches for term %s' % (len(ids), term))
+    return '', ids
+
+
+def get_names_from_ids(con, cur, term_ids):
+    '''Get term names from the dbbact ids (OntologyTable)
+
+    Parameters
+    ----------
+    con, cur
+    term_ids: list of int
+        the dbbact ids of the terms to get the names for
+
+    Returns
+    -------
+    err: str.
+        Empty ('') if ok otherwise the error encountered
+    terms: list of str.
+        The matching terms (i.e. 'feces' etc)
+    ontology_ids: list of str
+        the matching ontology ids (i.e. 'envo:00001' etc.)
+    '''
+    terms = []
+    ontology_ids = []
+    try:
+        for cid in term_ids:
+            cur.execute('SELECT description, term_id FROM OntologyTable WHERE id=%s LIMIT 1', [cid])
+            if cur.rowcount == 0:
+                msg = 'termid %d not in OntologyTable' % cid
+                debug(5, msg)
+                return msg, [], []
+            res = cur.fetchone()
+            terms.append(res['description'])
+            ontology_ids.append(res['term_id'])
+        return '', terms, ontology_ids
+    except psycopg2.DatabaseError as e:
+        msg = "error %s enountered in ontology.AddTerm" % e
+        debug(7, msg)
+        return msg, [], []
+
+
+def AddTerm(con, cur, term, parent='na', ontologyname='dbbact', synonyms=[], term_id='', parent_id='', commit=True):
     """
     Add a term to the ontology table. Also add parent and synonyms if supplied
 
-    input:
+    Parameters
+    ----------
+    con, cur
+    term: str
+        the term to add (i.e. 'feces')
+    parent: str, optional
+        the name of the parent term (i.e. 'excreta')
+        if 'na', means no parent for this term (for example when new term not from existing ontology)
+    ontologyname: str, optional
+        name of the ontology to which this term/parent link belongs (i.e. 'envo')
+    synonyms: list of str, optional
+        synonyms for this term (i.e. 'poop')
+    term_id: str, optional
+        the ontology id for the term (unique identifier, i.e. 'UBERON:0001988')
+    parent_id: str, optional
+        the term_id for the parent. if not empty, will be used in AND with the parent field for exact identification
+    commit: bool, optional
+        True to commit the changes to the database
 
-    output:
-
+    Returns
+    -------
     """
     try:
         # convert everything to lower case before interacting with the database
         term = term.lower()
         parent = parent.lower()
+        term_id = term_id.lower()
+        parent_id = parent_id.lower()
         ontologyname = ontologyname.lower()
+        if synonyms is None:
+            synonyms = []
         synonyms = [csyn.lower() for csyn in synonyms]
 
         # add/get the ontology term
-        err, termid = dbidval.AddItem(con, cur, table='OntologyTable', description=term, commit=False)
+        err, termid = add_ontology_term(con, cur, term, term_id, commit=False)
         if err:
             return err, None
+
         # add/get the ontology parent term
-        err, parentid = dbidval.AddItem(con, cur, table='OntologyTable', description=parent, commit=False)
+        err, parentid = add_ontology_term(con, cur, parent, parent_id, commit=False)
         if err:
             return err, None
+
         # add/get the ontology name
         err, ontologynameid = dbidval.AddItem(con, cur, table='OntologyNamesTable', description=ontologyname, commit=False)
         if err:
             return err, None
+
         # add the tree info
         err, treeid = AddTreeTerm(con, cur, termid, parentid, ontologynameid, commit=False)
         if err:
             return err, None
+
         # add the synonyms
         if synonyms:
             for csyn in synonyms:
@@ -149,7 +301,7 @@ def GetTreeParentsById(con, cur, termid):
         return "error %s enountered in ontology.GetTreeParentById" % e, '', []
 
 
-def GetParents(con, cur, term):
+def GetParents_old(con, cur, term):
     """
     Get all the parents of the term in the ontology tree
 
@@ -164,17 +316,28 @@ def GetParents(con, cur, term):
     parents : list of str
         the parents of term
     """
-    termid = dbidval.GetIdFromDescription(con, cur, 'OntologyTable', term)
-    if termid < 0:
+    # termid = dbidval.GetIdFromDescription(con, cur, 'OntologyTable', term)
+    err, termids = get_term_ids(con, cur, term)
+    if err:
+        debug(3, err)
+        return err, []
+    # if termid < 0:
+    if len(termids) == 0:
         err, termid = GetSynonymTermId(con, cur, term)
         if err:
             debug(3, 'ontology term not found for %s' % term)
             return 'ontolgy term %s not found' % term, []
         debug(2, 'converted synonym to termid')
-    plist = [termid]
+        termids = [termid]
+    # plist = [termid]
+    plist = termids
     parents = [term]
+    parents_id_set = set()
     while len(plist) > 0:
         cid = plist.pop(0)
+        origid = cid
+        if cid in parents_id_set:
+            continue
         err, cparentids = GetTreeParentsById(con, cur, cid)
         if err:
             continue
@@ -184,8 +347,76 @@ def GetParents(con, cur, term):
             if err:
                 continue
             parents.append(cparent)
+        parents_id_set.add(origid)
     debug(2, 'found %d parents' % len(parents))
     return '', parents
+
+
+def get_parents_ids(con, cur, term_ids):
+    """
+    Get dbbact ids of all the parents of a given term_id in the ontology tree
+
+    input:
+    con,cur
+    term_ids : list of int
+        The dbbact ids (in OntologyTable) for the term for which to look for parents
+
+    output:
+    err : str
+        Error message or empty string if ok
+    parents : list of int
+        the ids of the parents of term (in OntologyTable)
+    """
+    # termid = dbidval.GetIdFromDescription(con, cur, 'OntologyTable', term)
+
+    plist = term_ids.copy()
+    parents_ids = set(plist)
+    processed_set = set()
+    while len(plist) > 0:
+        cid = plist.pop(0)
+        if cid in processed_set:
+            continue
+        err, cparentids = GetTreeParentsById(con, cur, cid)
+        if err:
+            continue
+        plist.extend(cparentids)
+        parents_ids = parents_ids.union(cparentids)
+        processed_set.add(cid)
+    debug(2, 'found %d parents' % len(parents_ids))
+    return '', parents_ids
+
+
+def GetParents(con, cur, term, force_unique=False):
+    """
+    Get all the parents of the term in the ontology tree
+
+    input:
+    con,cur
+    term : str
+        The term ('feces' or 'efo:00001' etc.) for which to look for parents
+    force_unique: bool, optional
+        True to fail if more than one id matches the term
+        False (default) to return parents for all the terms
+
+    output:
+    err : str
+        Error message or empty string if ok
+    parents : list of str
+        the parents of term
+    """
+    err, term_ids = get_term_ids(con, cur, term, allow_ontology_id=True)
+    if err:
+        return err, []
+    if len(term_ids) > 1:
+        if force_unique:
+            msg = 'more than one id (%d) found for term %s. Please supply ontology id instead (i.e. "envo:00001")' % (len(term_ids), term)
+            debug(4, msg)
+            return msg, []
+    err, parents = get_parents_ids(con, cur, term_ids)
+    if err:
+        return err, []
+    err, terms, term_ids = get_names_from_ids(con, cur, parents)
+    return '', terms
 
 
 def GetSynonymTermId(con, cur, synonym):
@@ -243,38 +474,63 @@ def GetSynonymTerm(con, cur, synonym):
     return '', term
 
 
-def GetTermAnnotations(con, cur, terms, use_synonyms=True):
+def GetTermAnnotations(con, cur, terms, use_synonyms=True, get_children=True):
     '''
     Get details for all annotations which contain the ontology term "term" as a parent of (or exact) annotation detail
 
-    input:
+    Parameters
+    ----------
     con, cur
     terms : str or list of str
         the ontology term to search. if list, retrieve only annotations containing all the terms in the list
     use_synonyms : bool (optional)
         True (default) to look in synonyms table if term is not found. False to look only for exact term
+    get_children: bool, optional
+        True to get annotations of all term children (i.e. get also annotations with feces when you search for excreta)
 
-    output:
+    Returns
+    -------
+    err: str
+        empty str ('') if ok, otherwise error returned
     annotations : list of dict
         list of annotation details per annotation which contains the term
     '''
+    debug(1, 'GetTermAnnotations for ontology terms %s, use_synonyms=%s, get_children=%s' % (terms, use_synonyms, get_children))
     terms = tolist(terms)
-    debug(1, 'GetTermAnnotations for ontology terms %s' % terms)
     annotation_ids = None
+    if len(terms) == 0:
+        return 'No terms in query', []
     for cterm in terms:
         cterm = cterm.lower()
-        cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
-        if cur.rowcount == 0:
-            if use_synonyms:
-                err, cterm = GetSynonymTerm(con, cur, cterm)
-                if err:
-                    debug(3, 'no annotations or synonyms for term %s' % cterm)
-                    return '', []
-                debug(1, 'found original ontology term %s' % cterm)
-                cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
-            else:
+        if get_children:
+            cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
+            if cur.rowcount == 0:
+                if use_synonyms:
+                    err, cterm = GetSynonymTerm(con, cur, cterm)
+                    if err:
+                        debug(3, 'no annotations or synonyms for term %s' % cterm)
+                        return '', []
+                    debug(1, 'found original ontology term %s' % cterm)
+                    cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
+                else:
                     debug(3, 'no annotations for term %s' % cterm)
                     return '', []
+        else:
+            err, ctermids = get_term_ids(con, cur, cterm)
+            if err:
+                debug(2, err)
+                return err
+            if len(ctermids) == 0:
+                if use_synonyms:
+                    err, ctermid = GetSynonymTermId(con, cur, cterm)
+                    ctermids = [ctermid]
+                    if err:
+                        msg = 'ontology term not found for %s' % cterm
+                        debug(3, msg)
+                        return msg, []
+                    debug(2, 'converted synonym %s to termid %s' % (cterm, ctermids))
+            cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology IN %s', [tuple(ctermids)])
+
         res = cur.fetchall()
         cannotation_ids = set()
         for cres in res:
@@ -292,6 +548,11 @@ def GetTermAnnotations(con, cur, terms, use_synonyms=True):
         annotations.append(cdetails)
     debug(3, 'found %d annotations' % len(annotations))
     return '', annotations
+
+
+def get_term_onto_id_annotations(con, cur, terms, get_children=True):
+    '''Get annotations for onotology ids (i.e. GAZ:00002476'''
+    pass
 
 
 def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
@@ -432,15 +693,18 @@ def GetListOfSynonym(con, cur):
 def GetIDs(con, cur, ontList):
     """
     Get ids of list of ontologies
-    input:
+
+    Parameters
+    ----------
     con,cur : database connection and cursor
     ontList: list of str
-        the ontolgies
+        the terms to get the ids for
 
-    output:
+    Returns
+    -------
     errmsg : str
         "" if ok, error msg if error encountered
-    seqids : list of int or None
+    termids : list of int or None
         list of the new ids or None if error enountered
     """
     ontids = []
@@ -459,12 +723,35 @@ def GetIDs(con, cur, ontList):
             for cres in res:
                 ontids.append(res[0])
 
-        debug(3, "Number of ontology ids (out of %d)" % (len(ontids)))
+        debug(3, "Number of ontology ids %d (out of %d)" % (len(ontids), len(ontList)))
         return "", ontids
 
     except psycopg2.DatabaseError as e:
         debug(7, 'database error %s' % e)
         return "database error %s" % e, None
+
+
+def get_terms_from_ids(con, cur, ids):
+    '''Get names of terms from ids list
+
+    Parameters
+    ----------
+    con,cur : database connection and cursor
+    ids: list of int
+        the ids to get the names for
+
+    Returns
+    -------
+    dict of {id(int): name(str)}
+    '''
+    names = {}
+    for cid in ids:
+        cur.execute('SELECT description FROM OntologyTable WHERE id=%s LIMIT 1', [cid])
+        if cur.rowcount > 0:
+            names[cid] = cur.fetchone()[0]
+        else:
+            names[cid] = 'NOT FOUND'
+    return names
 
 
 def get_term_pairs_count(con, cur, term_pairs):
@@ -491,3 +778,101 @@ def get_term_pairs_count(con, cur, term_pairs):
         term_count[cterm] = res[0]
     debug(2, 'Found term pairs for %d terms' % len(term_count))
     return term_count
+
+
+def get_ontology_id_from_name(con, cur, ontology_name):
+    '''Get the id of an ontology (i.e. "doid") based on it's name
+
+    Parameters
+    ----------
+    con,cur : database connection and cursor
+    ontology_name: str
+        name of the ontology (i.e. "doid"/"envo" etc.)
+
+    Returns
+    -------
+    err: empty ('') if ok, otherwise the error enoucntered
+    oid: int - the ontology id
+    '''
+    ontology_name = ontology_name.lower()
+    cur.execute('SELECT id FROM OntologyNamesTable WHERE description=%s LIMIT 1', [ontology_name])
+    if cur.rowcount > 0:
+        oid = cur.fetchone()[0]
+    else:
+        msg = 'ontology name %s not found'
+        debug(8, msg)
+        return msg, -1
+    debug(1, 'found ontology id %d for ontology %s' % (oid, ontology_name))
+    return '', oid
+
+
+def get_term_children(con, cur, term, ontology_name=None, only_annotated=True):
+    '''get a list of all terms that are a children of the given term. Optionally, limit to a given ontology.
+
+    Parameters
+    ----------
+    con,cur : database connection and cursor
+    term: str
+        The term to get the children for
+    ontology_name: str or None, optional
+        if not None, limit to children based on a give ontology name (matching OntologyNamesTable. i.e. "envo"/"uberon"/"doid"/"efo"/"gaz"/"scdb" etc.)
+    only_annotated: bool, optional
+        if True, return only child terms that have at least one annotation in their subtree
+
+    Returns
+    -------
+    dict of {termid(int): term(str)}
+    All the children of the given term
+    '''
+    err, termid = GetIDs(con, cur, [term])
+    if err:
+        return err, {}
+    if len(termid) == 0:
+        msg = 'term %s not found' % term
+        debug(4, msg)
+        return msg, {}
+    termid = termid[0]
+    children_ids = set()
+    terms = set(termid)
+    if ontology_name is None:
+        ontology_id = None
+    else:
+        err, ontology_id = get_ontology_id_from_name(con, cur, ontology_name)
+        if err:
+            return err, {}
+    while len(terms) > 0:
+        ctermid = terms.pop()
+        if ctermid in children_ids:
+            debug(8, 'termid %d is in a circle?' % ctermid)
+            continue
+        children_ids.add(ctermid)
+        if ontology_name is None:
+            cur.execute('SELECT ontologyid FROM OntologyTreeStructureTable WHERE ontologyParentID=%s', [ctermid])
+        else:
+            cur.execute('SELECT ontologyid FROM OntologyTreeStructureTable WHERE ontologyParentID=%s AND ontologyNameID=%s', [ctermid, ontology_id])
+        res = cur.fetchall()
+        for cres in res:
+            terms.add(cres[0])
+    debug(5, 'found %d children for term %s' % (len(children_ids), term))
+    children = get_terms_from_ids(con, cur, children_ids)
+    if only_annotated:
+        ok_terms = set()
+        for cterm in children.values():
+            # look if term has any annotations
+            cur.execute('SELECT TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', [cterm])
+            if cur.rowcount > 0:
+                if cur.fetchone()[0] > 0:
+                    ok_terms.add(cterm)
+                break
+            # look also for lower in annotations
+            cur.execute('SELECT TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', ['-' + cterm])
+            if cur.rowcount > 0:
+                if cur.fetchone()[0] > 0:
+                    ok_terms.add(cterm)
+        debug(3, 'found %d term children with annotations out of %d children' % (len(ok_terms), len(children)))
+        new_children = {}
+        for cid, cterm in children.items():
+            if cterm in ok_terms:
+                new_children[cid] = cterm
+        children = new_children
+    return '', children
