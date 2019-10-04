@@ -369,6 +369,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
         numadded = 0
         parentsdict = {}
         for (cdetailtype, contologyterm) in annotationdetails:
+            contologyterm = contologyterm.lower()
             parents = None
             if all_parents_dict is not None:
                 if contologyterm in all_parents_dict:
