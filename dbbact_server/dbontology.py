@@ -54,8 +54,9 @@ def add_ontology_term(con, cur, term, term_id='', commit=True):
         return msg, -2
 
 
-def get_term_ids(con, cur, term):
+def get_term_ids(con, cur, term, allow_ontology_id=True):
     '''Get a list of dbbact term ids matching the term
+    NOTE: can handle terms (i.e. 'feces') or ontology ids (i.e. 'envo:000001')
     NOTE: can be more than one result since same term can appear in several ontologies
 
     Parameters
@@ -63,24 +64,71 @@ def get_term_ids(con, cur, term):
     con, cur
     term: str
         the term to get the ids for
+    allow_ontology_id: bool, optional
+        if True, term can also be an ontology id (i.e. 'envo:000001')
 
     Returns
     -------
     error (str):
         empty string ('') if ok, otherwise the error encountered
     ids (list of int)
-        the dbbact term ids matching the term
+        the dbbact term ids matching the term. NOTE: if term not found, will not error and instead return empty list.
     '''
     cur.execute('SELECT id FROM OntologyTable WHERE description=%s', [term])
     if cur.rowcount == 0:
-        debug(2, 'Term %s not found in OntologyTable' % term)
-        return '', []
+        if allow_ontology_id:
+            cur.execute('SELECT id FROM OntologyTable WHERE term_id=%s', [term])
+            if cur.rowcount == 0:
+                msg = 'Term %s not found in OntologyTable (also when searching ontology ids)' % term
+                debug(2, msg)
+                return '', []
+        else:
+            msg = 'Term %s not found in OntologyTable' % term
+            debug(2, msg)
+            return '', []
     ids = []
     res = cur.fetchall()
     for cres in res:
         ids.append(cres['id'])
     debug(2, 'found %d matches for term %s' % (len(ids), term))
     return '', ids
+
+
+def get_names_from_ids(con, cur, term_ids):
+    '''Get term names from the dbbact ids (OntologyTable)
+
+    Parameters
+    ----------
+    con, cur
+    term_ids: list of int
+        the dbbact ids of the terms to get the names for
+
+    Returns
+    -------
+    err: str.
+        Empty ('') if ok otherwise the error encountered
+    terms: list of str.
+        The matching terms (i.e. 'feces' etc)
+    ontology_ids: list of str
+        the matching ontology ids (i.e. 'envo:00001' etc.)
+    '''
+    terms = []
+    ontology_ids = []
+    try:
+        for cid in term_ids:
+            cur.execute('SELECT description, term_id FROM OntologyTable WHERE id=%s LIMIT 1', [cid])
+            if cur.rowcount == 0:
+                msg = 'termid %d not in OntologyTable' % cid
+                debug(5, msg)
+                return msg, [], []
+            res = cur.fetchone()
+            terms.append(res['description'])
+            ontology_ids.append(res['term_id'])
+        return '', terms, ontology_ids
+    except psycopg2.DatabaseError as e:
+        msg = "error %s enountered in ontology.AddTerm" % e
+        debug(7, msg)
+        return msg, [], []
 
 
 def AddTerm(con, cur, term, parent='na', ontologyname='dbbact', synonyms=[], term_id='', parent_id='', commit=True):
@@ -253,7 +301,7 @@ def GetTreeParentsById(con, cur, termid):
         return "error %s enountered in ontology.GetTreeParentById" % e, '', []
 
 
-def GetParents(con, cur, term):
+def GetParents_old(con, cur, term):
     """
     Get all the parents of the term in the ontology tree
 
@@ -302,6 +350,73 @@ def GetParents(con, cur, term):
         parents_id_set.add(origid)
     debug(2, 'found %d parents' % len(parents))
     return '', parents
+
+
+def get_parents_ids(con, cur, term_ids):
+    """
+    Get dbbact ids of all the parents of a given term_id in the ontology tree
+
+    input:
+    con,cur
+    term_ids : list of int
+        The dbbact ids (in OntologyTable) for the term for which to look for parents
+
+    output:
+    err : str
+        Error message or empty string if ok
+    parents : list of int
+        the ids of the parents of term (in OntologyTable)
+    """
+    # termid = dbidval.GetIdFromDescription(con, cur, 'OntologyTable', term)
+
+    plist = term_ids.copy()
+    parents_ids = set(plist)
+    processed_set = set()
+    while len(plist) > 0:
+        cid = plist.pop(0)
+        if cid in processed_set:
+            continue
+        err, cparentids = GetTreeParentsById(con, cur, cid)
+        if err:
+            continue
+        plist.extend(cparentids)
+        parents_ids = parents_ids.union(cparentids)
+        processed_set.add(cid)
+    debug(2, 'found %d parents' % len(parents_ids))
+    return '', parents_ids
+
+
+def GetParents(con, cur, term, force_unique=False):
+    """
+    Get all the parents of the term in the ontology tree
+
+    input:
+    con,cur
+    term : str
+        The term ('feces' or 'efo:00001' etc.) for which to look for parents
+    force_unique: bool, optional
+        True to fail if more than one id matches the term
+        False (default) to return parents for all the terms
+
+    output:
+    err : str
+        Error message or empty string if ok
+    parents : list of str
+        the parents of term
+    """
+    err, term_ids = get_term_ids(con, cur, term, allow_ontology_id=True)
+    if err:
+        return err, []
+    if len(term_ids) > 1:
+        if force_unique:
+            msg = 'more than one id (%d) found for term %s. Please supply ontology id instead (i.e. "envo:00001")' % (len(term_ids), term)
+            debug(4, msg)
+            return msg, []
+    err, parents = get_parents_ids(con, cur, term_ids)
+    if err:
+        return err, []
+    err, terms, term_ids = get_names_from_ids(con, cur, parents)
+    return '', terms
 
 
 def GetSynonymTermId(con, cur, synonym):

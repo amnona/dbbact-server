@@ -52,7 +52,7 @@ def update_ontology_parents(con, cur, overwrite=True):
 			if cur.rowcount > 0:
 				skipped += 1
 				continue
-		err, annotationdetails = dbannotations.GetAnnotationDetails(con, cur, cid)
+		err, annotationdetails = dbannotations.get_annotation_details_termids(con, cur, cid)
 		if err:
 			debug(6, 'error: %s' % err)
 			continue
