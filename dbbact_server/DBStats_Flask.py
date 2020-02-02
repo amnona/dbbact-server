@@ -47,7 +47,7 @@ def dbdstats():
     return (errmsg, 400)
 
 
-@DBStats_Flask_Obj.route('stats/get_supported_version', methods=['GET'])
+@DBStats_Flask_Obj.route('/stats/get_supported_version', methods=['GET'])
 def get_supported_version():
     """
     Title: Get supported client versions
