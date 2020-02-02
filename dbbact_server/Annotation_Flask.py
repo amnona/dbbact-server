@@ -412,7 +412,7 @@ def get_annotation():
                 (see Query Experiment)
             "annotationtype" : str
                 annotation type (differential expression/contaminant/etc.)
-                (can be 'highfreq'/'common'/'diffexp'/'isa'/'contamination'/'other')
+                (can be 'dominant'/'common'/'diffexp'/'isa'/'contamination'/'other'/'positive association'/'negative association')
                 (description from CurationTypesTable)
             "method" : str
                 The method used to detect this behavior (i.e. observation/ranksum/clustering/etc")
