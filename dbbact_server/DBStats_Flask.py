@@ -71,16 +71,16 @@ def get_supported_version():
                 The current version for the client
         }
     """
+    # version lists for common clients
+    versions = {'dbbact_calour': {'min_version': 1, 'current_version': 2020.0130}}
+
     debug(1, 'docs/get_supported_version')
     try:
         alldat = request.get_json()
         client = alldat.get('client').lower()
     except Exception as e:
         debug(2, e)
-        return json.dumps({'expId': [], 'errorCode': e, 'errorText': e.message})
-
-    # version lists for common clients
-    versions = {'dbbact_calour': {'min_version': 1, 'current_version': 2020.0130}}
+        return json.dumps(versions)
 
     if client not in versions:
         return json.dumps('Client %s not in client version list' % client)
