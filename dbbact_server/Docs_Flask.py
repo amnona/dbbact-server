@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint
 # from flask.ext.login import current_user
 
 from .autodoc import auto

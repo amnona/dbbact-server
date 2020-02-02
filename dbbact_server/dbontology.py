@@ -74,6 +74,7 @@ def get_term_ids(con, cur, term, allow_ontology_id=True):
     ids (list of int)
         the dbbact term ids matching the term. NOTE: if term not found, will not error and instead return empty list.
     '''
+    term = term.lower()
     cur.execute('SELECT id FROM OntologyTable WHERE description=%s', [term])
     if cur.rowcount == 0:
         if allow_ontology_id:
@@ -502,19 +503,37 @@ def GetTermAnnotations(con, cur, terms, use_synonyms=True, get_children=True):
         return 'No terms in query', []
     for cterm in terms:
         cterm = cterm.lower()
+        # do we need to look for the term also as a parent of annotation terms?
         if get_children:
             cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
+            # if term not found in parents table, check if it is an id (i.e. envo:00000043 for wetland)
             if cur.rowcount == 0:
-                if use_synonyms:
-                    err, cterm = GetSynonymTerm(con, cur, cterm)
-                    if err:
-                        debug(3, 'no annotations or synonyms for term %s' % cterm)
-                        return '', []
-                    debug(1, 'found original ontology term %s' % cterm)
-                    cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
+                err, ctermids = get_term_ids(con, cur, cterm)
+                if err:
+                    debug(2, err)
+                    return err
+                if len(ctermids) > 0:
+                    # found it so it is an id. get also all the children
+                    terms_from_id = set()
+                    for cctermid in ctermids:
+                        cur.execute('SELECT description FROM OntologyTable WHERE id=%s LIMIT 1', [cctermid])
+                        if cur.rowcount == 0:
+                            debug(6, 'description not found for termid %d' % cctermid)
+                            continue
+                        ccterm = cur.fetchone()[0]
+                        terms_from_id.add(ccterm)
+                    cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology IN %s', [tuple(list(terms_from_id))])
                 else:
-                    debug(3, 'no annotations for term %s' % cterm)
-                    return '', []
+                    if use_synonyms:
+                        err, cterm = GetSynonymTerm(con, cur, cterm)
+                        if err:
+                            debug(3, 'no annotations or synonyms for term %s' % cterm)
+                            return '', []
+                        debug(1, 'found original ontology term %s' % cterm)
+                        cur.execute('SELECT idannotation FROM AnnotationParentsTable WHERE ontology=%s', [cterm])
+                    else:
+                        debug(3, 'no annotations for term %s' % cterm)
+                        return '', []
         else:
             err, ctermids = get_term_ids(con, cur, cterm)
             if err:
