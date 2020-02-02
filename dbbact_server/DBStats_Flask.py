@@ -48,6 +48,7 @@ def dbdstats():
 
 
 @DBStats_Flask_Obj.route('/stats/get_supported_version', methods=['GET'])
+@auto.doc()
 def get_supported_version():
     """
     Title: Get supported client versions
