@@ -27,9 +27,9 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
         the expid for the experiment for which we add the annotations
         (can be obtained via experiments.GetExperimentId() )
     annotationtype : str
-        the annotation type (i.e. "isa","differential")
+        the annotation type (i.e. "isa","diffexp"/"contamination"/"common"/"dominant"/"other"/"positive association"/"negative association")
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
     method : str (optional)
         the method used to discover this annotation (i.e. "permutation test", etc.) or '' for not specified
@@ -94,7 +94,7 @@ def UpdateAnnotation(con, cur, annotationid, annotationtype=None, annotationdeta
         free text description of the annotation
         None (default) to not update
     annotationdetails : list of tuples (detailtype,ontologyterm) of str or None (optional)
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
         None (default) to not update
     user : str or None (optional)
@@ -215,7 +215,7 @@ def AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method='',
     annotationtype : str
         the annotation type (i.e. "isa","differential")
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
     user : str or None (optional)
         username of the user creating this annotation or None (default) for anonymous user
@@ -304,7 +304,7 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
     annotationid : int
         the idAnnotation field
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
     commit : bool (optional)
         True (default) to commit, False to not commit to database
@@ -350,7 +350,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
     annotationid : int
         the idAnnotation field
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
     commit : bool (optional)
         True (default) to commit, False to not commit to database
