@@ -1,52 +1,10 @@
-import json
-
-from flask import Blueprint, render_template, request
+from flask import Blueprint
 # from flask.ext.login import current_user
 
-from .utils import debug
 from .autodoc import auto
 
 
 Docs_Flask_Obj = Blueprint('Docs_Flask_Obj', __name__, template_folder='templates')
-
-
-@Docs_Flask_Obj.route('/get_supported_version', methods=['GET'])
-def get_supported_version():
-    """
-    Title: Get supported client versions
-    URL: /docs/get_supported_version
-    Method: GET
-    URL Params:
-    JSON Params:
-        {
-            "client": str
-                Name of the client to check versions for. currently supported:
-                "dbbact_calour": the dbbact interface for Calour (https://github.com/amnona/dbbact-calour)
-        }
-    Success Response:
-        Code : 201
-        Content :
-        {
-            "min_version" : float
-                The minimal version for fully supported client
-            "current_version" : float
-                The current version for the client
-        }
-    """
-    debug(1, 'docs/get_supported_version')
-    try:
-        alldat = request.get_json()
-        client = alldat.get('client').lower()
-    except Exception as e:
-        debug(2, e)
-        return json.dumps({'expId': [], 'errorCode': e, 'errorText': e.message})
-
-    # version lists for common clients
-    versions = {'dbbact_calour': {'min_version': 1, 'current_version': 2020.0130}}
-
-    if client not in versions:
-        return json.dumps('Client %s not in client version list' % client)
-    return json.dumps({'min_version': versions[client]['min_version'], 'current_version': versions[client]['current_version']})
 
 
 @Docs_Flask_Obj.route('/docs', methods=['POST', 'GET'])
