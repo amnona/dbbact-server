@@ -590,9 +590,9 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
     err, details = GetAnnotationDetails(con, cur, annotationid)
     if err:
         return err, None
-    # data['details'] = details
-    # err, flags = get_annotation_flags(con, cur, annotationid)
-    # data['flags'] = flags
+    data['details'] = details
+    err, flags = get_annotation_flags(con, cur, annotationid)
+    data['flags'] = flags
 
     return '', data
 
