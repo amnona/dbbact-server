@@ -53,7 +53,7 @@ def before_request():
     if request.remote_addr != '127.0.0.1':
         debug(6, 'got request for page %s' % request.url, request=request)
     else:
-        debug(1, 'got local request for page %s' % request.url, request=request)
+        debug(2, 'got local request for page %s' % request.url, request=request)
     con, cur = db_access.connect_db(server_type=app.config.get('DBBACT_SERVER_TYPE'),
                                     host=app.config.get('DBBACT_POSTGRES_HOST'),
                                     port=app.config.get('DBBACT_POSTGRES_PORT'),
@@ -69,6 +69,7 @@ def before_request():
 # and when the request is over, disconnect
 @app.teardown_request
 def teardown_request(exception):
+    debug(2, 'teardown request finished')
     g.con.close()
 
 
@@ -81,6 +82,7 @@ def after_request(response):
     header['Access-Control-Allow-Origin'] = '*'
     # this part from: https://stackoverflow.com/questions/25727306/request-header-field-access-control-allow-headers-is-not-allowed-by-access-contr
     header["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept"
+    debug(2, 'after request finished')
     return response
 
 
