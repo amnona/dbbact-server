@@ -559,38 +559,38 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
     data['id'] = annotationid
     data['description'] = res['description']
     data['private'] = res['isprivate']
-    # err, method = dbidval.GetDescriptionFromId(con, cur, 'MethodTypesTable', res['idmethod'])
-    # if err:
-    #     return err, None
-    # data['method'] = method
-    # err, agent = dbidval.GetDescriptionFromId(con, cur, 'AgentTypesTable', res['idagenttype'])
-    # if err:
-    #     return err, None
-    # data['agent'] = agent
-    # err, annotationtype = dbidval.GetDescriptionFromId(con, cur, 'AnnotationTypesTable', res['idannotationtype'])
-    # if err:
-    #     return err, None
-    # data['annotationtype'] = annotationtype
-    # data['expid'] = res['idexp']
-    # data['userid'] = res['iduser']
-    # data['username'] = res['username']
-    # data['date'] = res['addeddate'].isoformat()
-    # data['annotationid'] = annotationid
-    # data['num_sequences'] = res['seqcount']
-    # data['primerid'] = res['primerid']
-    # err, data['primer'] = dbprimers.GetNameFromID(con, cur, res['primerid'])
-    # if err:
-    #     return err, None
+    err, method = dbidval.GetDescriptionFromId(con, cur, 'MethodTypesTable', res['idmethod'])
+    if err:
+        return err, None
+    data['method'] = method
+    err, agent = dbidval.GetDescriptionFromId(con, cur, 'AgentTypesTable', res['idagenttype'])
+    if err:
+        return err, None
+    data['agent'] = agent
+    err, annotationtype = dbidval.GetDescriptionFromId(con, cur, 'AnnotationTypesTable', res['idannotationtype'])
+    if err:
+        return err, None
+    data['annotationtype'] = annotationtype
+    data['expid'] = res['idexp']
+    data['userid'] = res['iduser']
+    data['username'] = res['username']
+    data['date'] = res['addeddate'].isoformat()
+    data['annotationid'] = annotationid
+    data['num_sequences'] = res['seqcount']
+    data['primerid'] = res['primerid']
+    err, data['primer'] = dbprimers.GetNameFromID(con, cur, res['primerid'])
+    if err:
+        return err, None
 
-    # if res['isprivate'] == 'y':
-    #     if userid != data['userid']:
-    #         debug(6, 'Trying to view private annotation id %d from different user (orig user %d, current user %d)' % (annotationid, data['userid'], userid))
-    #         return 'Annotation not found', None
+    if res['isprivate'] == 'y':
+        if userid != data['userid']:
+            debug(6, 'Trying to view private annotation id %d from different user (orig user %d, current user %d)' % (annotationid, data['userid'], userid))
+            return 'Annotation not found', None
 
-    # err, details = GetAnnotationDetails(con, cur, annotationid)
-    # if err:
-    #     return err, None
-    # data['details'] = details
+    err, details = GetAnnotationDetails(con, cur, annotationid)
+    if err:
+        return err, None
+    data['details'] = details
     # err, flags = get_annotation_flags(con, cur, annotationid)
     # data['flags'] = flags
 
