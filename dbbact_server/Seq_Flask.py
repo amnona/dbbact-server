@@ -119,10 +119,13 @@ def get_sequenceid():
     if sequence is None:
         return(getdoc(cfunc))
 
-    err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=sequence, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
+    # err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=sequence, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
+    err, seqid = dbsequences.GetSequencesIds(g.con, g.cur, sequences=[sequence], no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
     if err:
         return(err, 400)
     debug(2, 'found sequences')
+    # we need only a single list - not a list of lists with one item
+    seqid = seqid[0]
     return json.dumps({"seqId": seqid})
 
 
@@ -162,6 +165,7 @@ def get_sequenceid_list():
         Validation:
         Action:
     """
+    debug(3, 'get_sequenceid_list')
     cfunc = get_sequenceid_list
     alldat = request.get_json()
     sequences = alldat.get('sequences')
@@ -178,15 +182,19 @@ def get_sequenceid_list():
     else:
         seq_translate_api = None
 
-    out_list = []
-    for cseq in sequences:
-        err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
-        if err:
-            debug(4, 'Sequence %s not found from get_sequenceid_list' % cseq)
-            seqid = []
-            # return(err, 400)
-        out_list.append(seqid)
-    debug(2, 'found sequences')
+    err, out_list = dbsequences.GetSequencesIds(g.con, g.cur, sequence=sequences, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
+    # out_list = []
+    # for cseq in sequences:
+    #     err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
+    #     if err:
+    #         debug(4, 'Sequence %s not found from get_sequenceid_list' % cseq)
+    #         seqid = []
+    #         # return(err, 400)
+    #     out_list.append(seqid)
+    if err:
+        debug(4, 'get_sequenceid_list failed. error encountered: %s' % err)
+        return err, 400
+    debug(3, 'found ids for %d sequences' % len(out_list))
     return json.dumps({"seqIds": out_list})
 
 
@@ -599,7 +607,7 @@ def get_fast_annotations():
         debug(6, errmsg)
         return(errmsg, 400)
     res = {'annotations': annotations, 'seqannotations': seqannotations, 'term_info': term_info, 'taxonomy': taxonomy}
-    debug(2, 'returning fast annotations. res len is %d' % len(res))
+    debug(3, 'returning fast annotations for %d original sequences. returning %s annotations' % (len(sequences), len(res['annotations'])))
     return json.dumps(res)
 
 

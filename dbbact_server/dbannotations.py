@@ -652,6 +652,10 @@ def GetUserAnnotations(con, cur, foruserid, userid=0):
     '''
     details = []
     debug(1, 'GetUserAnnotations userid %d' % userid)
+
+    # prepapre the queries for faster running times
+    _prepare_queries(con, cur)
+
     cur.execute('SELECT id FROM AnnotationsTable WHERE iduser=%s', [foruserid])
     if cur.rowcount == 0:
         debug(3, 'no annotations for userid %d' % foruserid)
@@ -665,6 +669,51 @@ def GetUserAnnotations(con, cur, foruserid, userid=0):
         details.append(cdetails)
     debug(3, 'found %d annotations' % len(details))
     return '', details
+
+
+def _prepare_queries(con, cur):
+    '''Prepare the postgres queries used frequently in a single request (for speed optimization).
+
+    Note that since postgresql prepare doesn't persist between sessions, need to redefine each new connection
+
+    Parameters
+    ----------
+    con, cur:
+
+    Returns
+    -------
+    err: str
+        empty ('') if ok. otherwise the error encountered
+    '''
+    try:
+        cur.execute('deallocate all')
+        # for GetAnnotationDetails()
+        cur.execute('prepare get_annotation_details(int) AS '
+                    'SELECT annotationlisttable.idontology, annotationlisttable.idAnnotationDetail, ontologytable.description AS ontology, AnnotationDetailsTypesTable.description AS detailtype FROM annotationlisttable '
+                    'LEFT JOIN ontologytable ON annotationlisttable.idontology=ontologytable.id '
+                    'LEFT JOIN AnnotationDetailsTypesTable on annotationlisttable.idAnnotationDetail=AnnotationDetailsTypesTable.id '
+                    'WHERE annotationlisttable.idannotation=$1')
+        # for GetSequenceAnnotations()
+        cur.execute('PREPARE get_annotation(int) AS '
+                    'SELECT AnnotationsTable.*,userstable.username, MethodTypesTable.description as method, AgentTypesTable.description as agent, AnnotationTypesTable.description as annotationtype, PrimersTable.regionname as primer FROM AnnotationsTable '
+                    'JOIN usersTable ON AnnotationsTable.iduser = userstable.id '
+                    'JOIN MethodTypesTable ON AnnotationsTable.idmethod = MethodTypesTable.id '
+                    'JOIN AgentTypesTable ON AnnotationsTable.idagenttype = AgentTypesTable.id '
+                    'JOIN AnnotationTypesTable ON AnnotationsTable.idannotationtype = AnnotationTypesTable.id '
+                    'JOIN PrimersTable ON AnnotationsTable.primerid = PrimersTable.id '
+                    'WHERE AnnotationsTable.id=$1')
+        # for GetSequenceId()
+        cur.execute('PREPARE get_sequence_id_exact(text) AS '
+                    'SELECT id, idprimer FROM SequencesTable WHERE sequence=$1 LIMIT 1')
+        cur.execute('PREPARE get_sequence_id_seed(text) AS '
+                    'SELECT id,sequence FROM SequencesTable WHERE seedsequence=$1')
+        cur.execute('PREPARE get_sequence_primer(int) AS '
+                    'SELECT idPrimer FROM SequencesTable WHERE id=$1 LIMIT 1')
+        return ''
+
+    except psycopg2.DatabaseError as e:
+        debug(7, "error %s enountered in _prepare_queries" % e)
+        return e
 
 
 def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_translate_api=None, dbname=None):
@@ -694,18 +743,7 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_transl
     details = []
     debug(1, 'GetSequenceAnnotations sequence %s' % sequence)
     # prepare the queries that run multiple times (to speed up)
-    cur.execute('deallocate all')
-    cur.execute('prepare get_annotation_details(int) as SELECT annotationlisttable.idontology, annotationlisttable.idAnnotationDetail, ontologytable.description AS ontology, AnnotationDetailsTypesTable.description AS detailtype FROM annotationlisttable '
-                'LEFT JOIN ontologytable ON annotationlisttable.idontology=ontologytable.id '
-                'LEFT JOIN AnnotationDetailsTypesTable on annotationlisttable.idAnnotationDetail=AnnotationDetailsTypesTable.id '
-                'WHERE annotationlisttable.idannotation=$1')
-    cur.execute('PREPARE get_annotation(int) as SELECT AnnotationsTable.*,userstable.username, MethodTypesTable.description as method, AgentTypesTable.description as agent, AnnotationTypesTable.description as annotationtype, PrimersTable.regionname as primer FROM AnnotationsTable '
-                'JOIN usersTable ON AnnotationsTable.iduser = userstable.id '
-                'JOIN MethodTypesTable ON AnnotationsTable.idmethod = MethodTypesTable.id '
-                'JOIN AgentTypesTable ON AnnotationsTable.idagenttype = AgentTypesTable.id '
-                'JOIN AnnotationTypesTable ON AnnotationsTable.idannotationtype = AnnotationTypesTable.id '
-                'JOIN PrimersTable ON AnnotationsTable.primerid = PrimersTable.id '
-                'WHERE AnnotationsTable.id=$1')
+    err = _prepare_queries(con, cur)
 
     err, sid = dbsequences.GetSequenceId(con, cur, sequence, region, seq_translate_api=seq_translate_api, dbname=dbname)
     if len(sid) == 0:
@@ -748,6 +786,9 @@ def GetAnnotationsFromExpId(con, cur, expid, userid=0):
         a list of all the annotations associated with the experiment
     """
     debug(1, 'GetAnnotationsFromExpId expid=%d' % expid)
+    # prepare the queries for fast runtime
+    err = _prepare_queries(con, cur)
+
     # test if experiment exists and not private
     if not dbexperiments.TestExpIdExists(con, cur, expid, userid):
         debug(3, 'experiment %d does not exist' % expid)
@@ -956,9 +997,10 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
 
     # remove duplicate sequences for the delete
     sequences = list(set(sequences))
-    seqids = dbsequences.GetSequencesId(con, cur, sequences)
-    for cseqid in seqids:
-        cur.execute('DELETE FROM SequencesAnnotationTable WHERE annotationid=%s AND seqId=%s', (annotationid, cseqid))
+    # note we get a list of matching seqids for each sequence
+    seqids = dbsequences.GetSequencesIds(con, cur, sequences, no_shorter=True, no_longer=True)
+    for cseqids in seqids:
+        cur.execute('DELETE FROM SequencesAnnotationTable WHERE annotationid=%s AND seqId=%s', (annotationid, cseqids[0]))
     debug(3, 'deleted %d sequences from from sequencesannotationtable annotationid=%d' % (len(sequences), annotationid))
 
     # remove the count of these sequences for the annotation
@@ -1027,6 +1069,10 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
         the dbbact taxonomy string for each supplied sequence (order similar to query sequences)
     """
     debug(2, 'GetFastAnnotations for %d sequences' % len(sequences))
+
+    # prepare the queries for faster running times
+    err = _prepare_queries(con, cur)
+
     annotations = {}
     seqannotations = []
     all_terms = set()
@@ -1135,6 +1181,9 @@ def GetAllAnnotations(con, cur, userid=0):
         list of all annotations (see GetAnnotationsFromID)
     '''
     debug(1, 'GetAllAnnotations for user %d' % userid)
+
+    # prepare the queries for faster running times
+    err = _prepare_queries(con, cur)
 
     annotations = []
     cur.execute('SELECT id from AnnotationsTable')

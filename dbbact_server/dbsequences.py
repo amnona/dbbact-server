@@ -41,6 +41,10 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
         debug(2, 'primer %s not found' % primer)
         return "primer %s not found" % primer, None
     debug(1, 'primerid %s' % idprimer)
+
+    # prepare the queries for fast performance
+    err = dbannotations._prepare_queries(con, cur)
+
     try:
         seqs_to_add_to_translator = {}
         for idx, cseq in enumerate(sequences):
@@ -143,7 +147,7 @@ def SeqFromID(con, cur, seqids):
     return '', sequences
 
 
-def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
+def GetSequencesIds(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
     """
     Get sequence ids for a sequence or list of sequences
 
@@ -161,18 +165,20 @@ def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_t
     output:
     errmsg : str
         "" if ok, error msg if error encountered
-    ids : ilist of int
-        the list of ids for each sequence (-1 for sequences which were not found)
+    ids : list of [list of int]
+        the list of ids for each sequence (empty [] for sequences which were not found)
     """
+    # prepare the queries for faster performance
+    err = dbannotations._prepare_queries(con, cur)
     if isinstance(sequences, str):
         sequences = [sequences]
     ids = []
     for cseq in sequences:
         err, cid = GetSequenceId(con, cur, cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
         if err:
-            # skip - or should we abort and return an error?
-            continue
-        ids.extend(cid)
+            # or should we skip?????
+            return err, []
+        ids.append(cid)
     return "", ids
 
 
@@ -258,7 +264,8 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
         # if looking for exact sequence, look up fast using exact match
         if no_shorter and no_longer:
             debug(2, 'noshortnolong')
-            cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [cseq])
+            # cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [cseq])
+            cur.execute('EXECUTE get_sequence_id_exact(%s)', [cseq])
             if cur.rowcount > 0:
                 res = cur.fetchone()
                 if idprimer is not None:
@@ -269,7 +276,8 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
         else:
             # look for all sequences matching the seed
             cseedseq = cseq[:SEED_SEQ_LEN]
-            cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
+            # cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
+            cur.execute('EXECUTE get_sequence_id_seed(%s)', [cseedseq])
             cseqlen = len(cseq)
             res = cur.fetchall()
             found_seq = False
@@ -290,7 +298,8 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
                     if idprimer is None:
                         sid.append(resid)
                     else:
-                        cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
+                        cur.execute('EXECUTE get_sequence_primer(%s)', [resid])
+                        # cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
                         res = cur.fetchone()
                         if res[0] == idprimer:
                             sid.append(resid)
@@ -306,7 +315,6 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
             debug(2, 'getting dbids from wholeseq ids')
             res = requests.post(seq_translate_api + '/get_dbbact_ids_from_wholeseq_ids', json={'whole_seq_ids': [sequence], 'dbname': dbname})
         if res.ok:
-            print(res.json())
             trans_ids = res.json()['dbbact_ids'][0]
         else:
             debug(5, 'got error from sequence translator: %s' % res.content)
@@ -960,6 +968,10 @@ def get_sequences_primer(con, cur, sequences):
         name of the region (i.e. 'v4' etc.)
     '''
     debug(1, 'get_sequences_primer for %d sequences' % len(sequences))
+
+    # prepare queries for faster running
+    err = dbannotations._prepare_queries(con, cur)
+
     primerid = None
     for cseq in sequences:
         err, seqid = GetSequenceId(con, cur, sequence=cseq, no_shorter=False, no_longer=False, seq_translate_api=None)
