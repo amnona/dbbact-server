@@ -147,7 +147,7 @@ def SeqFromID(con, cur, seqids):
     return '', sequences
 
 
-def GetSequencesIds(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
+def OBSOLETE_GetSequencesIds(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
     """
     Get sequence ids for a sequence or list of sequences
 
@@ -216,6 +216,65 @@ def GetSequenceIdFromGG(con, cur, ggid):
 
     debug(1, 'found %d sequences for ggid %d' % (len(sid), ggid))
     return '', sid
+
+
+def GetSequencesIds(con, cur, sequences, idprimer=None, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
+    """
+    Get sequence ids for a list of sequences
+
+    input:
+    con,cur : database connection and cursor
+    sequences : list of [str (ACGT sequences or SILVA ID) or integers].
+        If integer, interpret as greengenesID. Otherwise, if dbname is None interpret as acgt sequence. Otherwise it is a SILVA ID
+    idprimer : int (optional)
+        if supplied, verify the sequence is from this idPrimer
+    no_shorter : bool (optional)
+        False (default) to enable shorter db sequences matching sequence, True to require at least length of query sequence
+    no_longer : bool (optional)
+        False (default) to enable longer db sequences matching sequence, True to require at least length of database sequence
+    seq_translate_api: str or None, optional
+        str: the address of the sequence translator rest-api (default 0.0.0.0:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
+        None: get only exact matches
+    dbname: str or None, optional
+        if None, assume sequences are acgt sequences
+        if str, assume sequences are database ids and this is the database name (i.e. 'FJ978486' for 'silva', etc.)
+
+    output:
+    errmsg : str
+        "" if ok, error msg if error encountered
+        in case sequence matches but primer does not, error is "primer mismatch"
+    sids : list of [list of int]
+        the ids of the matching sequences (empty tuple if not found)
+        Note: can be more than one as we also look for short subsequences / long supersequences
+    """
+    err = dbannotations._prepare_queries(con, cur)
+
+    sids = []
+    # get the sequence ids without region translation
+    # we do one call to sequence translator to make it faster
+    for cseq in sequences:
+        err, cids = GetSequenceId(con, cur, cseq, idprimer=idprimer, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=None, dbname=dbname)
+        sids.append(list(cids))
+
+    # and now call the sequence translator for all sequences
+    if seq_translate_api is not None:
+        if dbname is None:
+            debug(2, 'translating sequence to other regions')
+            res = requests.post(seq_translate_api + '/get_ids_for_seqs', json={'sequences': sequences})
+        else:
+            debug(2, 'getting dbids from wholeseq ids')
+            res = requests.post(seq_translate_api + '/get_dbbact_ids_from_wholeseq_ids', json={'whole_seq_ids': sequences, 'dbname': dbname})
+        if res.ok:
+            trans_ids = res.json()['dbbact_ids']
+        else:
+            debug(5, 'got error from sequence translator: %s' % res.content)
+            trans_ids = []
+        # and merge the ids
+        for cidx in range(len(sequences)):
+            sids[cidx].extend(trans_ids[cidx])
+    else:
+        debug(2, 'not translating')
+    return '', sids
 
 
 def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
@@ -321,7 +380,7 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
             trans_ids = []
         sid.extend(trans_ids)
     else:
-        debug(3, 'not translating')
+        debug(2, 'not translating')
 
     if len(sid) == 0:
         errmsg = 'sequence %s not found' % sequence

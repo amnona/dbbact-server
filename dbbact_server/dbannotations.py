@@ -702,6 +702,9 @@ def _prepare_queries(con, cur):
                     'JOIN AnnotationTypesTable ON AnnotationsTable.idannotationtype = AnnotationTypesTable.id '
                     'JOIN PrimersTable ON AnnotationsTable.primerid = PrimersTable.id '
                     'WHERE AnnotationsTable.id=$1')
+        # for GetAnnotationFlags() (called from GetAnnotations())
+        cur.execute('PREPARE get_annotation_flags(int) AS '
+                    'SELECT status, userid, id, reason FROM AnnotationFlagsTable WHERE annotationID=$1')
         # for GetSequenceId()
         cur.execute('PREPARE get_sequence_id_exact(text) AS '
                     'SELECT id, idprimer FROM SequencesTable WHERE sequence=$1 LIMIT 1')
@@ -709,6 +712,9 @@ def _prepare_queries(con, cur):
                     'SELECT id,sequence FROM SequencesTable WHERE seedsequence=$1')
         cur.execute('PREPARE get_sequence_primer(int) AS '
                     'SELECT idPrimer FROM SequencesTable WHERE id=$1 LIMIT 1')
+        # for GetFastAnnotations()
+        cur.execute('PREPARE get_sequences_annotations(integer[]) AS '
+                    'SELECT annotationid FROM SequencesAnnotationTable WHERE seqid = ANY($1)')
         return ''
 
     except psycopg2.DatabaseError as e:
@@ -768,7 +774,7 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_transl
     return '', details
 
 
-def GetAnnotationsFromExpId(con, cur, expid, userid=0):
+def GetAnnotationsFromExpId(con, cur, expid, userid=0, prepared=False):
     """
     Get annotations about an experiment
 
@@ -778,6 +784,8 @@ def GetAnnotationsFromExpId(con, cur, expid, userid=0):
         the experimentid to get annotations for
     userid : int
         the user requesting the info (for private studies/annotations)
+    prepared: bool, optional
+        True to indicate the _prepare_queries() has already been called in this connection. use it when doing multiple queries (i.e from GetFastAnnotations() )
 
     output:
     err : str
@@ -787,7 +795,8 @@ def GetAnnotationsFromExpId(con, cur, expid, userid=0):
     """
     debug(1, 'GetAnnotationsFromExpId expid=%d' % expid)
     # prepare the queries for fast runtime
-    err = _prepare_queries(con, cur)
+    if not prepared:
+        err = _prepare_queries(con, cur)
 
     # test if experiment exists and not private
     if not dbexperiments.TestExpIdExists(con, cur, expid, userid):
@@ -1082,14 +1091,18 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
     # in case get_all_exp_annotations=True)
     experiments_added = set()
 
+    err, seqids = dbsequences.GetSequencesIds(con, cur, sequences, region, seq_translate_api=seq_translate_api, dbname=dbname)
+    if err:
+        return err, []
     for cseqpos, cseq in enumerate(sequences):
         cseqannotationids = []
         # get the sequenceid
-        err, sid = dbsequences.GetSequenceId(con, cur, cseq, region, seq_translate_api=seq_translate_api, dbname=dbname)
+        sid = seqids[cseqpos]
         # if not in database - no annotations
         if len(sid) == 0:
             continue
         # get annotations for the sequence
+        # cur.execute('EXECUTE get_sequences_annotations(%s)', ['{' + str(sid)[1:-1] + '}'])
         cur.execute('SELECT annotationid FROM SequencesAnnotationTable WHERE seqid IN %s', [tuple(sid)])
         res = cur.fetchall()
         # go over all annotations
@@ -1107,7 +1120,6 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
             # if we didn't get annotation details, probably they are private - just ignore
             if cdetails is None:
                 continue
-
             annotations_to_process = [cdetails]
             if get_all_exp_annotations:
                 debug(2, 'getting all exp annotations')
@@ -1116,7 +1128,7 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
                     # if we already added this experiment - finished
                     if expid in experiments_added:
                         continue
-                    err, annotations_to_process = GetAnnotationsFromExpId(con, cur, expid, userid=userid)
+                    err, annotations_to_process = GetAnnotationsFromExpId(con, cur, expid, userid=userid, prepared=True)
                     experiments_added.add(expid)
 
             for cdetails in annotations_to_process:
@@ -1546,7 +1558,8 @@ def get_annotation_flags(con, cur, annotaitonid, status=None):
     if isinstance(status, str):
         status = [status]
     try:
-        cur.execute('SELECT status, userid, id, reason FROM AnnotationFlagsTable WHERE annotationID=%s', [annotaitonid])
+        cur.execute('EXECUTE get_annotation_flags(%s)', [annotaitonid])
+        # cur.execute('SELECT status, userid, id, reason FROM AnnotationFlagsTable WHERE annotationID=%s', [annotaitonid])
         res = cur.fetchall()
         for cres in res:
             if status is not None:
