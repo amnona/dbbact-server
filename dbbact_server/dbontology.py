@@ -163,6 +163,9 @@ def AddTerm(con, cur, term, parent='na', ontologyname='dbbact', synonyms=[], ter
         term = term.lower()
         parent = parent.lower()
         term_id = term_id.lower()
+        if parent_id is None:
+            debug(4, 'parent id for term %s is None. Changed to empty' % term)
+            parent_id = ''
         parent_id = parent_id.lower()
         ontologyname = ontologyname.lower()
         if synonyms is None:

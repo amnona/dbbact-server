@@ -41,6 +41,10 @@ def AddSequences(con, cur, sequences, taxonomies=None, ggids=None, primer='V4', 
         debug(2, 'primer %s not found' % primer)
         return "primer %s not found" % primer, None
     debug(1, 'primerid %s' % idprimer)
+
+    # prepare the queries for fast performance
+    err = dbannotations._prepare_queries(con, cur)
+
     try:
         seqs_to_add_to_translator = {}
         for idx, cseq in enumerate(sequences):
@@ -143,7 +147,7 @@ def SeqFromID(con, cur, seqids):
     return '', sequences
 
 
-def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
+def OBSOLETE_GetSequencesIds(con, cur, sequences, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
     """
     Get sequence ids for a sequence or list of sequences
 
@@ -161,18 +165,20 @@ def GetSequencesId(con, cur, sequences, no_shorter=False, no_longer=False, seq_t
     output:
     errmsg : str
         "" if ok, error msg if error encountered
-    ids : ilist of int
-        the list of ids for each sequence (-1 for sequences which were not found)
+    ids : list of [list of int]
+        the list of ids for each sequence (empty [] for sequences which were not found)
     """
+    # prepare the queries for faster performance
+    err = dbannotations._prepare_queries(con, cur)
     if isinstance(sequences, str):
         sequences = [sequences]
     ids = []
     for cseq in sequences:
         err, cid = GetSequenceId(con, cur, cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
         if err:
-            # skip - or should we abort and return an error?
-            continue
-        ids.extend(cid)
+            # or should we skip?????
+            return err, []
+        ids.append(cid)
     return "", ids
 
 
@@ -210,6 +216,65 @@ def GetSequenceIdFromGG(con, cur, ggid):
 
     debug(1, 'found %d sequences for ggid %d' % (len(sid), ggid))
     return '', sid
+
+
+def GetSequencesIds(con, cur, sequences, idprimer=None, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
+    """
+    Get sequence ids for a list of sequences
+
+    input:
+    con,cur : database connection and cursor
+    sequences : list of [str (ACGT sequences or SILVA ID) or integers].
+        If integer, interpret as greengenesID. Otherwise, if dbname is None interpret as acgt sequence. Otherwise it is a SILVA ID
+    idprimer : int (optional)
+        if supplied, verify the sequence is from this idPrimer
+    no_shorter : bool (optional)
+        False (default) to enable shorter db sequences matching sequence, True to require at least length of query sequence
+    no_longer : bool (optional)
+        False (default) to enable longer db sequences matching sequence, True to require at least length of database sequence
+    seq_translate_api: str or None, optional
+        str: the address of the sequence translator rest-api (default 0.0.0.0:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
+        None: get only exact matches
+    dbname: str or None, optional
+        if None, assume sequences are acgt sequences
+        if str, assume sequences are database ids and this is the database name (i.e. 'FJ978486' for 'silva', etc.)
+
+    output:
+    errmsg : str
+        "" if ok, error msg if error encountered
+        in case sequence matches but primer does not, error is "primer mismatch"
+    sids : list of [list of int]
+        the ids of the matching sequences (empty tuple if not found)
+        Note: can be more than one as we also look for short subsequences / long supersequences
+    """
+    err = dbannotations._prepare_queries(con, cur)
+
+    sids = []
+    # get the sequence ids without region translation
+    # we do one call to sequence translator to make it faster
+    for cseq in sequences:
+        err, cids = GetSequenceId(con, cur, cseq, idprimer=idprimer, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=None, dbname=dbname)
+        sids.append(list(cids))
+
+    # and now call the sequence translator for all sequences
+    if seq_translate_api is not None:
+        if dbname is None:
+            debug(2, 'translating sequence to other regions')
+            res = requests.post(seq_translate_api + '/get_ids_for_seqs', json={'sequences': sequences})
+        else:
+            debug(2, 'getting dbids from wholeseq ids')
+            res = requests.post(seq_translate_api + '/get_dbbact_ids_from_wholeseq_ids', json={'whole_seq_ids': sequences, 'dbname': dbname})
+        if res.ok:
+            trans_ids = res.json()['dbbact_ids']
+        else:
+            debug(5, 'got error from sequence translator: %s' % res.content)
+            trans_ids = []
+        # and merge the ids
+        for cidx in range(len(sequences)):
+            sids[cidx].extend(trans_ids[cidx])
+    else:
+        debug(2, 'not translating')
+    return '', sids
 
 
 def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None):
@@ -258,7 +323,8 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
         # if looking for exact sequence, look up fast using exact match
         if no_shorter and no_longer:
             debug(2, 'noshortnolong')
-            cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [cseq])
+            # cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [cseq])
+            cur.execute('EXECUTE get_sequence_id_exact(%s)', [cseq])
             if cur.rowcount > 0:
                 res = cur.fetchone()
                 if idprimer is not None:
@@ -269,7 +335,8 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
         else:
             # look for all sequences matching the seed
             cseedseq = cseq[:SEED_SEQ_LEN]
-            cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
+            # cur.execute('SELECT id,sequence FROM SequencesTable WHERE seedsequence=%s', [cseedseq])
+            cur.execute('EXECUTE get_sequence_id_seed(%s)', [cseedseq])
             cseqlen = len(cseq)
             res = cur.fetchall()
             found_seq = False
@@ -290,7 +357,8 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
                     if idprimer is None:
                         sid.append(resid)
                     else:
-                        cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
+                        cur.execute('EXECUTE get_sequence_primer(%s)', [resid])
+                        # cur.execute('SELECT idPrimer FROM SequencesTable WHERE id=%s LIMIT 1', [resid])
                         res = cur.fetchone()
                         if res[0] == idprimer:
                             sid.append(resid)
@@ -306,14 +374,13 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
             debug(2, 'getting dbids from wholeseq ids')
             res = requests.post(seq_translate_api + '/get_dbbact_ids_from_wholeseq_ids', json={'whole_seq_ids': [sequence], 'dbname': dbname})
         if res.ok:
-            print(res.json())
             trans_ids = res.json()['dbbact_ids'][0]
         else:
             debug(5, 'got error from sequence translator: %s' % res.content)
             trans_ids = []
         sid.extend(trans_ids)
     else:
-        debug(3, 'not translating')
+        debug(2, 'not translating')
 
     if len(sid) == 0:
         errmsg = 'sequence %s not found' % sequence
@@ -960,6 +1027,10 @@ def get_sequences_primer(con, cur, sequences):
         name of the region (i.e. 'v4' etc.)
     '''
     debug(1, 'get_sequences_primer for %d sequences' % len(sequences))
+
+    # prepare queries for faster running
+    err = dbannotations._prepare_queries(con, cur)
+
     primerid = None
     for cseq in sequences:
         err, seqid = GetSequenceId(con, cur, sequence=cseq, no_shorter=False, no_longer=False, seq_translate_api=None)

@@ -52,8 +52,10 @@ class User(UserMixin):
 def before_request():
     if request.remote_addr != '127.0.0.1':
         debug(6, 'got request for page %s' % request.url, request=request)
+        g.local_request = False
     else:
-        debug(1, 'got local request for page %s' % request.url, request=request)
+        debug(2, 'got local request for page %s' % request.url, request=request)
+        g.local_request = True
     con, cur = db_access.connect_db(server_type=app.config.get('DBBACT_SERVER_TYPE'),
                                     host=app.config.get('DBBACT_POSTGRES_HOST'),
                                     port=app.config.get('DBBACT_POSTGRES_PORT'),
@@ -81,6 +83,10 @@ def after_request(response):
     header['Access-Control-Allow-Origin'] = '*'
     # this part from: https://stackoverflow.com/questions/25727306/request-header-field-access-control-allow-headers-is-not-allowed-by-access-contr
     header["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept"
+    if g.local_request:
+        debug(2, 'request processing finished')
+    else:
+        debug(6, 'request processing finished')
     return response
 
 

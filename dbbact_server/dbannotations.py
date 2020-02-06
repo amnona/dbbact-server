@@ -27,9 +27,9 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
         the expid for the experiment for which we add the annotations
         (can be obtained via experiments.GetExperimentId() )
     annotationtype : str
-        the annotation type (i.e. "isa","differential")
+        the annotation type (i.e. "isa","diffexp"/"contamination"/"common"/"dominant"/"other"/"positive association"/"negative association")
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
     method : str (optional)
         the method used to discover this annotation (i.e. "permutation test", etc.) or '' for not specified
@@ -94,7 +94,7 @@ def UpdateAnnotation(con, cur, annotationid, annotationtype=None, annotationdeta
         free text description of the annotation
         None (default) to not update
     annotationdetails : list of tuples (detailtype,ontologyterm) of str or None (optional)
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
         None (default) to not update
     user : str or None (optional)
@@ -215,7 +215,7 @@ def AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method='',
     annotationtype : str
         the annotation type (i.e. "isa","differential")
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
     user : str or None (optional)
         username of the user creating this annotation or None (default) for anonymous user
@@ -304,7 +304,7 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
     annotationid : int
         the idAnnotation field
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
     commit : bool (optional)
         True (default) to commit, False to not commit to database
@@ -350,7 +350,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
     annotationid : int
         the idAnnotation field
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
-        detailtype is ("higher","lower","all")
+        detailtype is ("high","low","all")
         ontologyterm is string which should match the ontologytable terms
     commit : bool (optional)
         True (default) to commit, False to not commit to database
@@ -455,19 +455,21 @@ def GetAnnotationDetails(con, cur, annotationid):
     """
     details = []
     debug(1, 'get annotationdetails from id %d' % annotationid)
-    cur.execute('SELECT * FROM AnnotationListTable WHERE idAnnotation=%s', [annotationid])
+    # cur.execute('SELECT * FROM AnnotationListTable WHERE idAnnotation=%s', [annotationid])
+    cur.execute('EXECUTE get_annotation_details(%s)', [annotationid])
     allres = cur.fetchall()
     for res in allres:
-        iddetailtype = res['idannotationdetail']
-        idontology = res['idontology']
-        err, detailtype = dbidval.GetDescriptionFromId(con, cur, 'AnnotationDetailsTypesTable', iddetailtype)
-        if err:
-            return err, []
-        err, ontology = dbidval.GetDescriptionFromId(con, cur, 'OntologyTable', idontology)
-        debug(1, 'ontologyid %d term %s' % (idontology, ontology))
-        if err:
-            return err, []
-        details.append([detailtype, ontology])
+        # iddetailtype = res['idannotationdetail']
+        # idontology = res['idontology']
+        # err, detailtype = dbidval.GetDescriptionFromId(con, cur, 'AnnotationDetailsTypesTable', iddetailtype)
+        # if err:
+        #     return err, []
+        # err, ontology = dbidval.GetDescriptionFromId(con, cur, 'OntologyTable', idontology)
+        # debug(1, 'ontologyid %d term %s' % (idontology, ontology))
+        # if err:
+        #     return err, []
+        # details.append([detailtype, ontology])
+        details.append([res['detailtype'], res['ontology']])
     debug(1, 'found %d annotation details' % len(details))
     return '', details
 
@@ -544,33 +546,39 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
             the flags raised for this annotation by other users (if not empty, maybe should suspect this annotation)
     """
     debug(1, 'get annotation from id %d' % annotationid)
-    cur.execute('SELECT AnnotationsTable.*,userstable.username FROM AnnotationsTable,userstable WHERE AnnotationsTable.iduser = userstable.id and AnnotationsTable.id=%s', [annotationid])
+    # cur.execute('SELECT AnnotationsTable.*,userstable.username FROM AnnotationsTable,userstable WHERE AnnotationsTable.iduser = userstable.id and AnnotationsTable.id=%s', [annotationid])
+    cur.execute('EXECUTE get_annotation(%s)', [annotationid])
     if cur.rowcount == 0:
         debug(3, 'annotationid %d not found' % annotationid)
         return 'Annotationid %d not found' % annotationid, None
     res = cur.fetchone()
     debug(1, res)
-    if res['isprivate'] == 'y':
-        if res['iduser'] != userid:
-            debug(3, 'cannot view annotation %d (created by user %d), request from used %d' % (annotationid, res['iduser'], userid))
-            return 'Annotationid %d is private. Cannot view' % annotationid, None
 
     data = {}
     data['id'] = annotationid
     data['description'] = res['description']
     data['private'] = res['isprivate']
-    err, method = dbidval.GetDescriptionFromId(con, cur, 'MethodTypesTable', res['idmethod'])
-    if err:
-        return err, None
-    data['method'] = method
-    err, agent = dbidval.GetDescriptionFromId(con, cur, 'AgentTypesTable', res['idagenttype'])
-    if err:
-        return err, None
-    data['agent'] = agent
-    err, annotationtype = dbidval.GetDescriptionFromId(con, cur, 'AnnotationTypesTable', res['idannotationtype'])
-    if err:
-        return err, None
-    data['annotationtype'] = annotationtype
+
+    # err, method = dbidval.GetDescriptionFromId(con, cur, 'MethodTypesTable', res['idmethod'])
+    # if err:
+    #     return err, None
+    # data['method'] = method
+    # err, agent = dbidval.GetDescriptionFromId(con, cur, 'AgentTypesTable', res['idagenttype'])
+    # if err:
+    #     return err, None
+    # data['agent'] = agent
+    # err, annotationtype = dbidval.GetDescriptionFromId(con, cur, 'AnnotationTypesTable', res['idannotationtype'])
+    # if err:
+    #     return err, None
+    # data['annotationtype'] = annotationtype
+    # err, data['primer'] = dbprimers.GetNameFromID(con, cur, res['primerid'])
+    # if err:
+    #     return err, None
+    data['method'] = res['method']
+    data['agent'] = res['agent']
+    data['annotationtype'] = res['annotationtype']
+    data['primer'] = res['primer']
+
     data['expid'] = res['idexp']
     data['userid'] = res['iduser']
     data['username'] = res['username']
@@ -578,15 +586,13 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
     data['annotationid'] = annotationid
     data['num_sequences'] = res['seqcount']
     data['primerid'] = res['primerid']
-    err, data['primer'] = dbprimers.GetNameFromID(con, cur, res['primerid'])
-    if err:
-        return err, None
 
     if res['isprivate'] == 'y':
         if userid != data['userid']:
-            debug(6, 'Trying to view private annotation id %d from different user (orig user %d, current user %d)' % (annotationid, data['userid'], userid))
-            return 'Annotation not found', None
+            debug(3, 'Trying to view private annotation id %d from different user (orig user %d, current user %d)' % (annotationid, data['userid'], userid))
+            return 'Annotationid %d is private. Cannot view' % annotationid, None
 
+    details = []
     err, details = GetAnnotationDetails(con, cur, annotationid)
     if err:
         return err, None
@@ -646,6 +652,10 @@ def GetUserAnnotations(con, cur, foruserid, userid=0):
     '''
     details = []
     debug(1, 'GetUserAnnotations userid %d' % userid)
+
+    # prepapre the queries for faster running times
+    _prepare_queries(con, cur)
+
     cur.execute('SELECT id FROM AnnotationsTable WHERE iduser=%s', [foruserid])
     if cur.rowcount == 0:
         debug(3, 'no annotations for userid %d' % foruserid)
@@ -659,6 +669,57 @@ def GetUserAnnotations(con, cur, foruserid, userid=0):
         details.append(cdetails)
     debug(3, 'found %d annotations' % len(details))
     return '', details
+
+
+def _prepare_queries(con, cur):
+    '''Prepare the postgres queries used frequently in a single request (for speed optimization).
+
+    Note that since postgresql prepare doesn't persist between sessions, need to redefine each new connection
+
+    Parameters
+    ----------
+    con, cur:
+
+    Returns
+    -------
+    err: str
+        empty ('') if ok. otherwise the error encountered
+    '''
+    try:
+        cur.execute('deallocate all')
+        # for GetAnnotationDetails()
+        cur.execute('prepare get_annotation_details(int) AS '
+                    'SELECT annotationlisttable.idontology, annotationlisttable.idAnnotationDetail, ontologytable.description AS ontology, AnnotationDetailsTypesTable.description AS detailtype FROM annotationlisttable '
+                    'LEFT JOIN ontologytable ON annotationlisttable.idontology=ontologytable.id '
+                    'LEFT JOIN AnnotationDetailsTypesTable on annotationlisttable.idAnnotationDetail=AnnotationDetailsTypesTable.id '
+                    'WHERE annotationlisttable.idannotation=$1')
+        # for GetSequenceAnnotations()
+        cur.execute('PREPARE get_annotation(int) AS '
+                    'SELECT AnnotationsTable.*,userstable.username, MethodTypesTable.description as method, AgentTypesTable.description as agent, AnnotationTypesTable.description as annotationtype, PrimersTable.regionname as primer FROM AnnotationsTable '
+                    'JOIN usersTable ON AnnotationsTable.iduser = userstable.id '
+                    'JOIN MethodTypesTable ON AnnotationsTable.idmethod = MethodTypesTable.id '
+                    'JOIN AgentTypesTable ON AnnotationsTable.idagenttype = AgentTypesTable.id '
+                    'JOIN AnnotationTypesTable ON AnnotationsTable.idannotationtype = AnnotationTypesTable.id '
+                    'JOIN PrimersTable ON AnnotationsTable.primerid = PrimersTable.id '
+                    'WHERE AnnotationsTable.id=$1')
+        # for GetAnnotationFlags() (called from GetAnnotations())
+        cur.execute('PREPARE get_annotation_flags(int) AS '
+                    'SELECT status, userid, id, reason FROM AnnotationFlagsTable WHERE annotationID=$1')
+        # for GetSequenceId()
+        cur.execute('PREPARE get_sequence_id_exact(text) AS '
+                    'SELECT id, idprimer FROM SequencesTable WHERE sequence=$1 LIMIT 1')
+        cur.execute('PREPARE get_sequence_id_seed(text) AS '
+                    'SELECT id,sequence FROM SequencesTable WHERE seedsequence=$1')
+        cur.execute('PREPARE get_sequence_primer(int) AS '
+                    'SELECT idPrimer FROM SequencesTable WHERE id=$1 LIMIT 1')
+        # for GetFastAnnotations()
+        cur.execute('PREPARE get_sequences_annotations(integer[]) AS '
+                    'SELECT annotationid FROM SequencesAnnotationTable WHERE seqid = ANY($1)')
+        return ''
+
+    except psycopg2.DatabaseError as e:
+        debug(7, "error %s enountered in _prepare_queries" % e)
+        return e
 
 
 def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_translate_api=None, dbname=None):
@@ -687,6 +748,9 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_transl
     """
     details = []
     debug(1, 'GetSequenceAnnotations sequence %s' % sequence)
+    # prepare the queries that run multiple times (to speed up)
+    err = _prepare_queries(con, cur)
+
     err, sid = dbsequences.GetSequenceId(con, cur, sequence, region, seq_translate_api=seq_translate_api, dbname=dbname)
     if len(sid) == 0:
         debug(2, 'Sequence %s not found for GetSequenceAnnotations.' % sequence)
@@ -710,7 +774,7 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_transl
     return '', details
 
 
-def GetAnnotationsFromExpId(con, cur, expid, userid=0):
+def GetAnnotationsFromExpId(con, cur, expid, userid=0, prepared=False):
     """
     Get annotations about an experiment
 
@@ -720,6 +784,8 @@ def GetAnnotationsFromExpId(con, cur, expid, userid=0):
         the experimentid to get annotations for
     userid : int
         the user requesting the info (for private studies/annotations)
+    prepared: bool, optional
+        True to indicate the _prepare_queries() has already been called in this connection. use it when doing multiple queries (i.e from GetFastAnnotations() )
 
     output:
     err : str
@@ -728,6 +794,10 @@ def GetAnnotationsFromExpId(con, cur, expid, userid=0):
         a list of all the annotations associated with the experiment
     """
     debug(1, 'GetAnnotationsFromExpId expid=%d' % expid)
+    # prepare the queries for fast runtime
+    if not prepared:
+        err = _prepare_queries(con, cur)
+
     # test if experiment exists and not private
     if not dbexperiments.TestExpIdExists(con, cur, expid, userid):
         debug(3, 'experiment %d does not exist' % expid)
@@ -936,9 +1006,10 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
 
     # remove duplicate sequences for the delete
     sequences = list(set(sequences))
-    seqids = dbsequences.GetSequencesId(con, cur, sequences)
-    for cseqid in seqids:
-        cur.execute('DELETE FROM SequencesAnnotationTable WHERE annotationid=%s AND seqId=%s', (annotationid, cseqid))
+    # note we get a list of matching seqids for each sequence
+    seqids = dbsequences.GetSequencesIds(con, cur, sequences, no_shorter=True, no_longer=True)
+    for cseqids in seqids:
+        cur.execute('DELETE FROM SequencesAnnotationTable WHERE annotationid=%s AND seqId=%s', (annotationid, cseqids[0]))
     debug(3, 'deleted %d sequences from from sequencesannotationtable annotationid=%d' % (len(sequences), annotationid))
 
     # remove the count of these sequences for the annotation
@@ -1007,6 +1078,10 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
         the dbbact taxonomy string for each supplied sequence (order similar to query sequences)
     """
     debug(2, 'GetFastAnnotations for %d sequences' % len(sequences))
+
+    # prepare the queries for faster running times
+    err = _prepare_queries(con, cur)
+
     annotations = {}
     seqannotations = []
     all_terms = set()
@@ -1016,14 +1091,18 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
     # in case get_all_exp_annotations=True)
     experiments_added = set()
 
+    err, seqids = dbsequences.GetSequencesIds(con, cur, sequences, region, seq_translate_api=seq_translate_api, dbname=dbname)
+    if err:
+        return err, []
     for cseqpos, cseq in enumerate(sequences):
         cseqannotationids = []
         # get the sequenceid
-        err, sid = dbsequences.GetSequenceId(con, cur, cseq, region, seq_translate_api=seq_translate_api, dbname=dbname)
+        sid = seqids[cseqpos]
         # if not in database - no annotations
         if len(sid) == 0:
             continue
         # get annotations for the sequence
+        # cur.execute('EXECUTE get_sequences_annotations(%s)', ['{' + str(sid)[1:-1] + '}'])
         cur.execute('SELECT annotationid FROM SequencesAnnotationTable WHERE seqid IN %s', [tuple(sid)])
         res = cur.fetchall()
         # go over all annotations
@@ -1041,7 +1120,6 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
             # if we didn't get annotation details, probably they are private - just ignore
             if cdetails is None:
                 continue
-
             annotations_to_process = [cdetails]
             if get_all_exp_annotations:
                 debug(2, 'getting all exp annotations')
@@ -1050,7 +1128,7 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
                     # if we already added this experiment - finished
                     if expid in experiments_added:
                         continue
-                    err, annotations_to_process = GetAnnotationsFromExpId(con, cur, expid, userid=userid)
+                    err, annotations_to_process = GetAnnotationsFromExpId(con, cur, expid, userid=userid, prepared=True)
                     experiments_added.add(expid)
 
             for cdetails in annotations_to_process:
@@ -1115,6 +1193,9 @@ def GetAllAnnotations(con, cur, userid=0):
         list of all annotations (see GetAnnotationsFromID)
     '''
     debug(1, 'GetAllAnnotations for user %d' % userid)
+
+    # prepare the queries for faster running times
+    err = _prepare_queries(con, cur)
 
     annotations = []
     cur.execute('SELECT id from AnnotationsTable')
@@ -1426,7 +1507,7 @@ def update_annotation_flag_status(con, cur, flagid, status, response='', commit=
     '''update the annotationflagstable after reviewing a flag
     NOTE: only admin can update the status/response. the user creating the flag can delete it using delete_annotation_flag()
 
-    Patameters
+    Parameters
     ----------
     con, cur
     flagid: int
@@ -1477,7 +1558,8 @@ def get_annotation_flags(con, cur, annotaitonid, status=None):
     if isinstance(status, str):
         status = [status]
     try:
-        cur.execute('SELECT status, userid, id, reason FROM AnnotationFlagsTable WHERE annotationID=%s', [annotaitonid])
+        cur.execute('EXECUTE get_annotation_flags(%s)', [annotaitonid])
+        # cur.execute('SELECT status, userid, id, reason FROM AnnotationFlagsTable WHERE annotationID=%s', [annotaitonid])
         res = cur.fetchall()
         for cres in res:
             if status is not None:
