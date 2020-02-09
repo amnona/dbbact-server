@@ -458,7 +458,7 @@ def get_annotation():
         if annotationid is None:
             return(getdoc(cfunc))
     annotationid = int(annotationid)
-    err, annotation = dbannotations.GetAnnotationsFromID(g.con, g.cur, annotationid)
+    err, annotation = dbannotations.GetAnnotationsFromID_prep(g.con, g.cur, annotationid)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)

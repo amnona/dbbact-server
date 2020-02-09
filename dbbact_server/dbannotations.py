@@ -509,6 +509,13 @@ def get_annotation_details_termids(con, cur, annotationid):
     return '', details
 
 
+def GetAnnotationsFromID_prep(con, cur, annotationid, userid=0):
+    '''Similar to GetAnnotationsFromID but with the additional prepare query step
+    '''
+    _prepare_queries(con, cur)
+    return GetAnnotationsFromID(con, cur, annotationid, userid)
+
+
 def GetAnnotationsFromID(con, cur, annotationid, userid=0):
     """
     get annotation details from an annotation id.
