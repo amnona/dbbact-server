@@ -500,6 +500,7 @@ def GetTermAnnotations(con, cur, terms, use_synonyms=True, get_children=True):
         list of annotation details per annotation which contains the term
     '''
     debug(1, 'GetTermAnnotations for ontology terms %s, use_synonyms=%s, get_children=%s' % (terms, use_synonyms, get_children))
+    dbannotations._prepare_queries(con, cur)
     terms = tolist(terms)
     annotation_ids = None
     if len(terms) == 0:
