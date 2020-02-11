@@ -208,6 +208,7 @@ def forgot_password():
     debug(2, 'New password sent')
     return json.dumps({"status": 1})
 
+
 @Users_Flask_Obj.route('/users/recover_password', methods=['POST', 'GET'])
 @auto.doc()
 def recover_password():
@@ -235,25 +236,25 @@ def recover_password():
     alldat = request.get_json()
     if alldat is None:
         return(getdoc(cfunc))
-    
+
     user = alldat.get('user')
     recoverycode = alldat.get('recoverycode')
     newpassword = alldat.get('newpassword')
-    
-    #Get the old recovery counter
+
+    # Get the old recovery counter
     count = dbuser.getUserRecoveryAttemptsByName(g.con, g.cur,user)
     if count < 0 :
         return('failed to get recovery counter', 400)
-    
+
     if count >= MAX_RECOVERY_ATTEMPTS:
         return('User is locked', 400)
-    
+
     err, userid = dbuser.getUserIdRecover(g.con, g.cur, user, recoverycode)
     if err:
         count = count + 1
         dbuser.setUserRecoveryAttemptsByName(g.con, g.cur, user, count)
         return(err, 400)
-    
+
     # generate and update new password
     err, retval = dbuser.updateNewPassword(g.con, g.cur, user, newpassword)
     if retval <= 0:
@@ -263,7 +264,6 @@ def recover_password():
     dbuser.setUserLoginAttemptsByName(g.con, g.cur, user, 0)
     dbuser.setUserRecoveryAttemptsByName(g.con, g.cur, user, 0)
 
-    return json.dumps({"status": 1})
 
 @Users_Flask_Obj.route('/users/get_user_annotations', methods=['GET'])
 @auto.doc()

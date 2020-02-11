@@ -504,6 +504,7 @@ def GetTaxonomyAnnotations(con, cur, taxonomy, userid=None):
         list of the sequenceids which have this taxonomy
     '''
     debug(1, 'GetTaxonomyAnnotations for taxonomy %s' % taxonomy)
+    dbannotations._prepare_queries(con, cur)
     # get the annotation ids
     err, annotationids, seqids = GetTaxonomyAnnotationIDs(con, cur, taxonomy, userid)
     if err:
