@@ -664,25 +664,26 @@ def get_ontology_terms_list(con, cur, min_term_id=None, ontologyid=None):
         The list of ontology terms from table OntologyTable
     '''
     # get rid of duplicate terms
-    debug(1, 'GetListOfOntologies')
-    if ontologyid is None:
-        cur.execute('SELECT id, description from ontologyTable')
-    else:
-        cur.execute('SELECT ontologytreestructuretable.ontologyid, ontologytable.description FROM ontologytreestructuretable INNER JOIN ontologytable ON ontologytable.id=ontologytreestructuretable.ontologyid WHERE OntologyNameID=%s', [ontologyid])
-
-    if cur.rowcount == 0:
-        debug(1, 'Ontologies list is empty')
-        return
+    debug(4, 'GetListOfOntologies')
 
     if min_term_id is None:
         min_term_id = 0
 
+    if ontologyid is None:
+        cur.execute('SELECT id, description, term_id from ontologyTable WHERE id>%s', [min_term_id])
+    else:
+        cur.execute('SELECT ontologytreestructuretable.ontologyid, ontologytable.description, ontologytable.term_id FROM ontologytreestructuretable INNER JOIN ontologytable ON ontologytable.id=ontologytreestructuretable.ontologyid WHERE OntologyNameID=%s', [ontologyid])
+
+    debug(3, 'found %d terms' % cur.rowcount)
+
     res = cur.fetchall()
     all_ontologies = {}
+    all_ontology_ids = {}
     for cres in res:
         if cres[0] > min_term_id:
             all_ontologies[cres[1]] = cres[0]
-    return all_ontologies
+            all_ontology_ids[cres[0]] = cres[2]
+    return all_ontologies, all_ontology_ids
 
 
 def GetListOfSynonym(con, cur):

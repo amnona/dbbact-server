@@ -263,13 +263,20 @@ def get_all_terms():
             "ontology" : dict of {term(str): id(int))}
             {
                 "term" : str
-                    the ontology term
+                    the ontology term (i.e. "feces")
                 "id" : int
                     the internal unique dbbact id for the term
             }
+            "ontology_term_ids": dict of {id(int): term_id(str)}
+            {
+                "id" : int
+                    the internal unique dbbact id for the term
+                "term_id": str
+                    the ontology term id (i.e. "ENVO:00004")
+            }
         }
     """
-    debug(3, 'get_all_descriptions', request)
+    debug(1, 'get_all_descriptions', request)
     alldat = request.get_json()
     if alldat is None:
         min_term_id = None
@@ -277,10 +284,8 @@ def get_all_terms():
     else:
         min_term_id = alldat.get('min_term_id')
         ontologyid = alldat.get('ontologyid')
-    print(min_term_id)
-    print(type(min_term_id))
-    jsonRetData = dbontology.get_ontology_terms_list(g.con, g.cur, min_term_id=min_term_id, ontologyid=ontologyid)
-    return json.dumps(jsonRetData, ensure_ascii=False)
+    ontology, ontology_ids = dbontology.get_ontology_terms_list(g.con, g.cur, min_term_id=min_term_id, ontologyid=ontologyid)
+    return json.dumps({'ontology': ontology, 'ontology_term_ids': ontology_ids}, ensure_ascii=False)
 
 
 @Ontology_Flask_Obj.route('/ontology/get_all_synonyms', methods=['GET'])
