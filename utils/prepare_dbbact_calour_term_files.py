@@ -61,9 +61,17 @@ def prepare_dbbact_calour_term_files(con, cur, outdir='./', include_synonyms=Tru
 		num_terms += 1
 		if num_terms % 100000 == 0:
 			print(res)
-		term_names = [res['description']]
 
+		term_names = [res['description']]
 		main_term = res['description']
+
+		ontology_name = 'dbbact'
+		if ':' in res['term_id']:
+			ontology_name = res['term_id'].split(':')[0]
+
+		cterm_id = res['term_id']
+		if cterm_id == '':
+			cterm_id = 'dbbact:%09d' % res['id']
 
 		# also get all the synonyms for the term if needed
 		if include_synonyms:
@@ -73,15 +81,12 @@ def prepare_dbbact_calour_term_files(con, cur, outdir='./', include_synonyms=Tru
 					term_names.append(cres2[0])
 
 		for cterm in term_names:
-			ontology_name = 'NA'
-			if ':' in res['term_id']:
-				ontology_name = res['term_id'].split(':')[0]
 			# if a synonym, put the original term in the parenthesis
 			if cterm != main_term:
-				term_name_id[ontology_name]['%s (%s - %s)' % (cterm, main_term, res['term_id'])] = res['id']
+				term_name_id[ontology_name]['%s (%s - %s)' % (cterm, main_term, cterm_id)] = res['id']
 			# not sysnonym, so no need to add the original term - just the ENVO:XXXXX etc.
 			else:
-				term_name_id[ontology_name]['%s (%s)' % (cterm, res['term_id'])] = res['id']
+				term_name_id[ontology_name]['%s (%s)' % (cterm, cterm_id)] = res['id']
 			term_id_term[ontology_name][res['id']] = res['description']
 
 	# move small ontologies to 'other' ontology

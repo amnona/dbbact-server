@@ -467,7 +467,7 @@ def get_annotation():
 
 @login_required
 @auto.doc()
-@Annotation_Flask_Obj.route('/annotations/get_annotation_ontology_parents', methods=['GET'])
+@Annotation_Flask_Obj.route('/annotations/get_annotation_ontology_parents', methods=['GET', 'POST'])
 def get_annotation_ontology_parents():
     """
     Title: get_annotation_ontology_parents

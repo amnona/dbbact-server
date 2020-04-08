@@ -682,7 +682,10 @@ def get_ontology_terms_list(con, cur, min_term_id=None, ontologyid=None):
     for cres in res:
         if cres[0] > min_term_id:
             all_ontologies[cres[1]] = cres[0]
-            all_ontology_ids[cres[0]] = cres[2]
+            contologyid = cres[2]
+            if contologyid == '':
+                contologyid = 'dbbact:%08d' % cres[0]
+            all_ontology_ids[cres[0]] = contologyid
     return all_ontologies, all_ontology_ids
 
 
