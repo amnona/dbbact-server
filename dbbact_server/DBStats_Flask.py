@@ -72,7 +72,7 @@ def get_supported_version():
         }
     """
     # version lists for common clients
-    versions = {'dbbact_calour': {'min_version': 1, 'current_version': 2020.0130}}
+    versions = {'dbbact_calour': {'min_version': 2020.0212, 'current_version': 2020.0212}}
 
     debug(1, 'docs/get_supported_version')
     try:
