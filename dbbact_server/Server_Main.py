@@ -79,6 +79,21 @@ def teardown_request(exception):
 # used for the html interactive heatmaps that need reposnse from the dbbact api from within a browser
 @app.after_request
 def after_request(response):
+    # check for the API general message if an error occured
+    # the message is located at 'dbbact-api-error-message.txt'
+    # append the message to the end of the error message
+    if response.status_code != 200:
+        api_error_filename = 'dbbact-api-error-message.txt'
+        try:
+            with open(api_error_filename) as fl:
+                alert_text = fl.readlines()
+                if len(alert_text) > 0:
+                    alert_text = '\n'.join(alert_text)
+                    response.data = response.data + alert_text.encode()
+        except:
+            with open(api_error_filename, 'w') as fl:
+                debug(5, 'empty alert file created: %s' % api_error_filename)
+
     header = response.headers
     header['Access-Control-Allow-Origin'] = '*'
     # this part from: https://stackoverflow.com/questions/25727306/request-header-field-access-control-allow-headers-is-not-allowed-by-access-contr
