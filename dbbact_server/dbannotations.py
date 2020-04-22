@@ -271,10 +271,15 @@ def AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method='',
         debug(3, msg)
         return msg, -1
 
-    cur.execute('INSERT INTO AnnotationsTable (idExp,idUser,idAnnotationType,idMethod,description,idAgentType,isPrivate,addedDate,seqCount, primerID) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id',
-                [expid, userid, annotationtypeid, methodid, description, agenttypeid, private, cdate, numseqs, primerid])
-    cid = cur.fetchone()[0]
-    debug(2, "added annotation id is %d. adding %d annotationdetails" % (cid, len(annotationdetails)))
+    try:
+        cur.execute('INSERT INTO AnnotationsTable (idExp,idUser,idAnnotationType,idMethod,description,idAgentType,isPrivate,addedDate,seqCount, primerID) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id',
+                    [expid, userid, annotationtypeid, methodid, description, agenttypeid, private, cdate, numseqs, primerid])
+        cid = cur.fetchone()[0]
+        debug(2, "added annotation id is %d. adding %d annotationdetails" % (cid, len(annotationdetails)))
+    except psycopg2.DatabaseError as e:
+        msg = "database error %s enountered when adding annotation" % e
+        debug(7, msg)
+        return msg, -1
 
     # add the annotation details (which ontology term is higer/lower/all etc.)
     err, numadded = AddAnnotationDetails(con, cur, cid, annotationdetails, commit=False)

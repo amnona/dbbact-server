@@ -89,7 +89,7 @@ def after_request(response):
                 alert_text = fl.readlines()
                 if len(alert_text) > 0:
                     alert_text = '\n'.join(alert_text)
-                    response.data = response.data + alert_text.encode()
+                    response.data = response.data + b'\n' + alert_text.encode()
         except:
             with open(api_error_filename, 'w') as fl:
                 debug(5, 'empty alert file created: %s' % api_error_filename)

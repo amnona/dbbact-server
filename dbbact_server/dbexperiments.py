@@ -41,7 +41,7 @@ def GetExperimentIdByVals(con, cur, arrName, arrValue, userid=None, logic='any')
         for index in range(len(arrName)):
             dtype = arrName[index].lower()
             value = arrValue[index].lower()
-            if index > 0 :
+            if index > 0:
                 if logic == 'all':
                     sqlQuery = sqlQuery + " AND "
                 else:
@@ -105,7 +105,7 @@ def GetExperimentId(con, cur, details, userid=None, logic='any'):
             if expids is None:
                 expids = cids
             else:
-                if logic=='all':
+                if logic == 'all':
                     expids = expids.intersection(cids)
                 else:
                     expids = expids.union(cids)
@@ -142,27 +142,26 @@ def AddExperimentDetails(con, cur, expid, details, user_id, private='n', commit=
         -1 if expid not found
         -2 if error encountered
     """
-# try:
-    cdate = datetime.date.today().isoformat()
-    if expid is None:
-        cur.execute("SELECT nextval('ExperimentsTable_expId_seq')")
-        expid = cur.fetchone()[0]
-    else:
-        # test if expid exists
-        if not TestExpIdExists(con, cur, expid):
-            debug(5, "expid %d does not exist" % expid)
-            return -1
-    print(details)
-    for ctype, cval in details:
-        ctype = ctype.lower()
-        cval = cval.lower()
-        cur.execute('INSERT INTO ExperimentsTable (expId,type,value,date,userid,private) VALUES(%s,%s,%s,%s,%s,%s)', [expid, ctype, cval, cdate, user_id, private])
-    if commit:
-        con.commit()
-    return expid
-# except:
-    debug(7, "AddExperimentDetails failed")
-    return -2
+    try:
+        cdate = datetime.date.today().isoformat()
+        if expid is None:
+            cur.execute("SELECT nextval('ExperimentsTable_expId_seq')")
+            expid = cur.fetchone()[0]
+        else:
+            # test if expid exists
+            if not TestExpIdExists(con, cur, expid):
+                debug(5, "expid %d does not exist" % expid)
+                return -1
+        for ctype, cval in details:
+            ctype = ctype.lower()
+            cval = cval.lower()
+            cur.execute('INSERT INTO ExperimentsTable (expId,type,value,date,userid,private) VALUES(%s,%s,%s,%s,%s,%s)', [expid, ctype, cval, cdate, user_id, private])
+        if commit:
+            con.commit()
+        return expid
+    except:
+        debug(7, "AddExperimentDetails failed")
+        return -2
 
 
 def TestExpIdExists(con, cur, expid, userid=None):
