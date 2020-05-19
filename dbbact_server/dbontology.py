@@ -157,6 +157,10 @@ def AddTerm(con, cur, term, parent='na', ontologyname='dbbact', synonyms=[], ter
 
     Returns
     -------
+    err: str
+        empty ('') if ok, otherwise the error encountered
+    termid: int
+        the term id for the new term
     """
     try:
         # convert everything to lower case before interacting with the database
@@ -277,7 +281,7 @@ def AddSynonym(con, cur, termid, synonym, commit=True):
 
 def GetTreeParentsById(con, cur, termid):
     """
-    get the parent (name and id) by term id
+    get the parent ids for a given term id
 
     input:
     con,cur
@@ -903,3 +907,87 @@ def get_term_children(con, cur, term, ontology_name=None, only_annotated=True):
                 new_children[cid] = cterm
         children = new_children
     return '', children
+
+
+def get_parents_trees(con, cur, term, max_trees=20):
+    '''Get trees for all parents of a given term
+    Get at most max_trees (before subset removal)
+    trees are filtered for subsets, so a tree which is a subset of another tree is not returned
+    NOTE: this is not complete (not all trees are returned). use at your own risk
+
+    Parameters
+    ----------
+    con, cur
+    term: str
+        the ontology term to look for parents
+    max_trees: int, optional
+        the maximal number of trees to look at (otherwise can take a very long time)
+
+    Returns
+    -------
+    err, parent_trees
+    err: str
+        '' if ok, otherwise the error encountered
+    parent_trees: list of [list of [str]]
+        list of list of parents. each list of parents is ordered from the query term to the tree parent
+    '''
+    err, termids = GetIDs(con, cur, [term])
+    if err:
+        return err, []
+    termids = termids[0]
+    all_trees = []
+    open_trees = [[x] for x in termids]
+    total_trees = 0
+    while len(open_trees) > 0:
+        total_trees += 1
+        if total_trees > max_trees:
+            break
+        res_tree = open_trees.pop()
+        res_tree_set = set(res_tree)
+        while True:
+            ctermid = res_tree[-1]
+            err, ids = GetTreeParentsById(con, cur, ctermid)
+            # if reached top of tree
+            if err != '':
+                break
+            # check for loops our tree
+            ids = [x for x in ids if x not in res_tree_set]
+            if len(ids) == 0:
+                break
+            # if we have more than 1 parent, process one and store the others
+            if len(ids) > 1:
+                for newterm in ids[1:]:
+                    ttree = res_tree.copy()
+                    ttree.append(newterm)
+                    open_trees.append(ttree)
+            ctermid = ids[0]
+            res_tree.append(ctermid)
+            res_tree_set.add(ctermid)
+        # finished building this tree, add it to the list of all trees
+        all_trees.append(res_tree)
+
+    # remove all subsets
+    all_ids = set()
+    res_sets = [set(x) for x in all_trees]
+    ok_trees = []
+    for res1 in all_trees:
+        set1 = set(res1)
+        if set1.issubset(all_ids):
+            continue
+        all_ids = all_ids.union(set1)
+        is_ok = True
+        for set2 in res_sets:
+            if set1 == set2:
+                continue
+            if set1.issubset(set2):
+                is_ok = False
+        if is_ok:
+            ok_trees.append(res1)
+
+    # convert ids to names
+    all_tree_names = []
+    for ctree in ok_trees:
+        err, tree_names, alltaxids = get_names_from_ids(con, cur, ctree)
+        if err == '':
+            all_tree_names.append(tree_names)
+    return '', all_tree_names

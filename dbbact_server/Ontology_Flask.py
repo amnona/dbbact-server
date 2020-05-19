@@ -472,3 +472,39 @@ def get_term_children():
         return(getdoc(cfunc))
     err, children = dbontology.get_term_children(g.con, g.cur, term, ontology_name=ontology_name, only_annotated=only_annotated)
     return json.dumps({'terms': children})
+
+
+@Ontology_Flask_Obj.route('/ontology/get_term_parent_tree', methods=['GET'])
+@auto.doc()
+def get_term_parent_tree_flask():
+    """
+    Title: get_term_parent_tree
+    Description : Get tree(s) pf all the parents of the term
+    URL: ontology/get_term_parent_tree
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            term: str
+                the term to get the parents for
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            term_trees : list of [list of str]
+                list of trees of parents of the term
+        }
+    Details :
+        Validation:
+    """
+    debug(3, 'get_term_parent_tree_flask', request)
+    cfunc = get_term_parent_tree_flask
+    alldat = request.get_json()
+    if alldat is None:
+        return(getdoc(cfunc))
+    term = alldat.get('term')
+    if term is None:
+        return(getdoc(cfunc))
+    err, term_trees = dbontology.get_parents_trees(g.con, g.cur, term)
+    return json.dumps({'term_trees': term_trees})

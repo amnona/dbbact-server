@@ -33,6 +33,11 @@ def update_ontology_parents(con, cur, overwrite=True):
 	if overwrite:
 		debug(4, 'deleting old parent counts')
 		# delete the current counts since we are updating all entries (and addparents adds 1 to the counts...)
+		# another way to do it (faster in postgres 11)?
+		# alter table ontologytable drop column seqcount;
+		# alter table ontologytable drop column annotationcount;
+		# alter table ontologytable ADD COLUMN seqCount integer DEFAULT 0;
+		# alter table ontologytable ADD COLUMN annotationCount integer DEFAULT 0;
 		cur.execute('UPDATE OntologyTable SET seqCount=0, annotationCount=0')
 		debug(4, 'deleting annotationparentstable')
 		cur.execute('DELETE FROM AnnotationParentsTable')
