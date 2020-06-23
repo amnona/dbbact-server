@@ -474,14 +474,14 @@ def get_term_children():
     return json.dumps({'terms': children})
 
 
-@Ontology_Flask_Obj.route('/ontology/get_term_parent_tree', methods=['GET'])
+@Ontology_Flask_Obj.route('/ontology/get_term_parent_tree', methods=['GET', 'POST'])
 @auto.doc()
 def get_term_parent_tree_flask():
     """
     Title: get_term_parent_tree
     Description : Get tree(s) pf all the parents of the term
     URL: ontology/get_term_parent_tree
-    Method: GET
+    Method: GET, POST
     URL Params:
     Data Params: JSON
         {
