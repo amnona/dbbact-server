@@ -1007,7 +1007,7 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
         the error string or '' if no error encountered
     '''
     debug(1, 'DeleteSequenceFromAnnotation for %d sequences, annotationid %d, userid %d' % (len(sequences), annotationid, userid))
-    origuser = GetAnnotationUser(con, cur, annotationid)
+    err, origuser = GetAnnotationUser(con, cur, annotationid)
     if origuser != 0:
         if userid == 0:
             debug(6, 'cannot delete non-anonymous annotation with default userid=0')
