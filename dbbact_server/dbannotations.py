@@ -1019,7 +1019,7 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
     # remove duplicate sequences for the delete
     sequences = list(set(sequences))
     # note we get a list of matching seqids for each sequence
-    seqids = dbsequences.GetSequencesIds(con, cur, sequences, no_shorter=True, no_longer=True)
+    err, seqids = dbsequences.GetSequencesIds(con, cur, sequences, no_shorter=True, no_longer=True)
     for cseqids in seqids:
         cur.execute('DELETE FROM SequencesAnnotationTable WHERE annotationid=%s AND seqId=%s', (annotationid, cseqids[0]))
     debug(3, 'deleted %d sequences from from sequencesannotationtable annotationid=%d' % (len(sequences), annotationid))
