@@ -1013,7 +1013,7 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
             debug(6, 'cannot delete non-anonymous annotation with default userid=0')
             return('Cannot delete non-anonymous annotation with default user. Please log in first')
         if origuser != userid:
-            debug(6, 'cannot delete. annotation %d was created by user %d but delete request was from user %d' % (annotationid, origuser, userid))
+            debug(6, 'cannot delete. annotation %s was created by user %s but delete request was from user %s' % (annotationid, origuser, userid))
             return 'Cannot delete. Annotation was created by a different user'
 
     # remove duplicate sequences for the delete
