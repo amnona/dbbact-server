@@ -52,7 +52,7 @@ def dbdstats():
 def get_supported_version():
     """
     Title: Get supported client versions
-    URL: /docs/get_supported_version
+    URL: /stats/get_supported_version
     Method: GET
     URL Params:
     JSON Params:
