@@ -8,6 +8,8 @@ The dbBact API is available at: api.dbbact.org
 
 API documentation is available at: [api.dbbact.org/docs](http://api.dbbact.org/docs)
 
+Example notebooks for using the dbBact REST-API are available at: [github.com/amnona/dbbact-examples](https://github.com/amnona/dbbact-examples)
+
 dbBact is used by the [Calour microbiome analysis tool](https://github.com/biocore/calour)
 
 ## Installation:
