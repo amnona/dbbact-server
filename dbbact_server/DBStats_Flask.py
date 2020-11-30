@@ -65,14 +65,14 @@ def get_supported_version():
         Code : 201
         Content :
         {
-            "min_version" : float
+            "min_version" : str
                 The minimal version for fully supported client
-            "current_version" : float
+            "current_version" : str
                 The current version for the client
         }
     """
     # version lists for common clients
-    versions = {'dbbact_calour': {'min_version': 2020.0212, 'current_version': 2020.0212}}
+    versions = {'dbbact_calour': {'min_version': '1.0.0', 'current_version': '1.0.1'}}
 
     debug(1, 'docs/get_supported_version')
     try:
