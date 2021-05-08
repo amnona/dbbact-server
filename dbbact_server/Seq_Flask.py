@@ -182,7 +182,7 @@ def get_sequenceid_list():
     else:
         seq_translate_api = None
 
-    err, out_list = dbsequences.GetSequencesIds(g.con, g.cur, sequence=sequences, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
+    err, out_list = dbsequences.GetSequencesIds(g.con, g.cur, sequences=sequences, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
     # out_list = []
     # for cseq in sequences:
     #     err, seqid = dbsequences.GetSequenceId(g.con, g.cur, sequence=cseq, no_shorter=no_shorter, no_longer=no_longer, seq_translate_api=seq_translate_api, dbname=dbname)
