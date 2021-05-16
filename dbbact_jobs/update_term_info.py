@@ -59,10 +59,34 @@ def update_term_info(con, cur):
 			continue
 		res = cur2.fetchone()
 		cterm = res[0]
+		tot_exps_pos = len(term_pos_exps[ctermid])
+		tot_anno_pos = len(term_pos_anno[ctermid])
+		tot_exps_neg = len(term_neg_exps[ctermid])
+		tot_anno_neg = len(term_neg_anno[ctermid])
 		if ctermid in term_pos_exps:
-			cur2.execute('INSERT INTO TermInfoTable (term, TotalExperiments, TotalAnnotations,TermType) VALUES (%s, %s, %s, %s)', [cterm, len(term_pos_exps[ctermid]), len(term_pos_anno[ctermid]), 'single'])
+			# test if we already have the term in the terminfotable
+			# if the term was already added (so same term name with 2 different term_ids (from 2 ontologies) in different annotations)
+			# we want to agglomerate the count
+			cur2.execute('SELECT TotalExperiments, TotalAnnotations FROM TermInfoTable WHERE term=%s LIMIT 1', [cterm])
+			if cur2.rowcount > 0:
+				res = cur2.fetchone()
+				debug(2, 'already found %s' % cterm)
+				tot_exps_pos += res[0]
+				tot_anno_pos += res[1]
+				cur2.execute('DELETE FROM TermInfoTable WHERE term=%s', [cterm])
+			cur2.execute('INSERT INTO TermInfoTable (term, TotalExperiments, TotalAnnotations,TermType) VALUES (%s, %s, %s, %s)', [cterm, tot_exps_pos, tot_anno_pos, 'single'])
 		if ctermid in term_neg_exps:
-			cur2.execute('INSERT INTO TermInfoTable (term, TotalExperiments, TotalAnnotations,TermType) VALUES (%s, %s, %s, %s)', ['-' + cterm, len(term_neg_exps[ctermid]), len(term_neg_anno[ctermid]), 'single'])
+			# test if we already have the term in the terminfotable
+			# if the term was already added (so same term name with 2 different term_ids (from 2 ontologies) in different annotations)
+			# we want to agglomerate the count
+			cur2.execute('SELECT TotalExperiments, TotalAnnotations FROM TermInfoTable WHERE term=%s LIMIT 1', ['-' + cterm])
+			if cur2.rowcount > 0:
+				res = cur2.fetchone()
+				debug(2, 'already found -%s' % cterm)
+				tot_exps_neg += res[0]
+				tot_anno_neg += res[1]
+				cur2.execute('DELETE FROM TermInfoTable WHERE term=%s', ['-' + cterm])
+			cur2.execute('INSERT INTO TermInfoTable (term, TotalExperiments, TotalAnnotations,TermType) VALUES (%s, %s, %s, %s)', ['-' + cterm, tot_exps_neg, tot_anno_neg, 'single'])
 
 	debug(2, 'committing')
 	con.commit()
