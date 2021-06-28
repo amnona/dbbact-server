@@ -323,6 +323,9 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
         # if looking for exact sequence, look up fast using exact match
         if no_shorter and no_longer:
             debug(2, 'noshortnolong')
+            err = dbannotations._prepare_queries(con, cur)
+            if err:
+                return err, []
             # cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [cseq])
             cur.execute('EXECUTE get_sequence_id_exact(%s)', [cseq])
             if cur.rowcount > 0:
