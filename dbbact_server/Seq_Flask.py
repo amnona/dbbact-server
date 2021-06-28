@@ -1306,18 +1306,7 @@ def get_whole_seq_taxonomy_f():
     if sequence is None:
         return('sequence parameter missing', 400)
 
-    # first try exact sequence
-    err, seqids = dbsequences.GetSequenceId(g.con, g.cur, sequence, idprimer=None, no_shorter=True, no_longer=True, seq_translate_api=None, dbname=None)
-    if err:
-        return('Problem getting sequence ids. error=%s' % err)
-
-    # if we didn't get an exact match, let's try shorter/longer
-    if len(seqids) == 0:
-        err, seqids = dbsequences.GetSequenceId(g.con, g.cur, sequence, idprimer=None, no_shorter=False, no_longer=False, seq_translate_api=None, dbname=None)
-        if err:
-            return('Problem getting sequence ids. error=%s' % err)
-
-    err, species, names, fullnames, ids = dbsequences.get_whole_seq_taxonomy(g.con, g.cur, seqids, seq_translate_api=g.seq_translate_api)
+    err, species, names, fullnames, ids = dbsequences.get_whole_seq_taxonomy(g.con, g.cur, sequence, seq_translate_api=g.seq_translate_api)
     if err:
         return('problem getting whole seq taxonomies. error=%s' % err, 400)
 

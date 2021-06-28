@@ -1059,7 +1059,7 @@ def get_sequences_primer(con, cur, sequences):
     return '', primerid, primer_name
 
 
-def get_whole_seq_taxonomy(con, cur, seqids, seq_translate_api):
+def get_whole_seq_taxonomy(con, cur, sequence, seq_translate_api):
     '''Get the whole sequence database taxonomies matching a given sequence
     uses the sequence_translator_api interface
 
@@ -1079,7 +1079,7 @@ def get_whole_seq_taxonomy(con, cur, seqids, seq_translate_api):
         fullnames - the full taxonomy string (i.e.   'fj506124.1.1377 bacteria;firmicutes;clostridia;clostridiales;lachnospiraceae;lachnoclostridium;uncultured bacterium',)
         ids - the silva ids (i.e. fj506124)
     '''
-    res = requests.post(seq_translate_api + '/get_whole_seq_taxonomy', json={'seqids': seqids})
+    res = requests.post(seq_translate_api + '/get_whole_seq_taxonomy', json={'sequence': sequence})
     if not res.ok:
         msg = 'failed to get whole seq taxonomies for sequence. error: %s' % res.content
         debug(7, msg)
