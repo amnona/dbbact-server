@@ -323,6 +323,9 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
         # if looking for exact sequence, look up fast using exact match
         if no_shorter and no_longer:
             debug(2, 'noshortnolong')
+            err = dbannotations._prepare_queries(con, cur)
+            if err:
+                return err, []
             # cur.execute('SELECT id, idprimer FROM SequencesTable WHERE sequence=%s LIMIT 1', [cseq])
             cur.execute('EXECUTE get_sequence_id_exact(%s)', [cseq])
             if cur.rowcount > 0:
@@ -1054,3 +1057,62 @@ def get_sequences_primer(con, cur, sequences):
     if err:
         return err, 0, ''
     return '', primerid, primer_name
+
+
+def get_whole_seq_taxonomy(con, cur, sequence, seq_translate_api):
+    '''Get the whole sequence database taxonomies matching a given sequence
+    uses the sequence_translator_api interface
+
+    Parameters
+    ----------
+    con, cur
+    sequence: str ('ACGT')
+        the sequence to match
+    seq_translate_api:
+        the sequence_translator interface
+
+    Returns
+    -------
+    species, names, fullnames, ids: list of str
+        species - the species name (if available) or '' (i.e. [clostridium] clostridioforme 90a3)
+        names - the highest resolution taxonomy name (i.e. bacteria;firmicutes;clostridia;clostridiales;lachnospiraceae;lachnoclostridium;uncultured bacterium)
+        fullnames - the full taxonomy string (i.e.   'fj506124.1.1377 bacteria;firmicutes;clostridia;clostridiales;lachnospiraceae;lachnoclostridium;uncultured bacterium',)
+        ids - the silva ids (i.e. fj506124)
+    '''
+    res = requests.post(seq_translate_api + '/get_whole_seq_taxonomy', json={'sequence': sequence})
+    if not res.ok:
+        msg = 'failed to get whole seq taxonomies for sequence. error: %s' % res.content
+        debug(7, msg)
+        return msg, [], [], [], []
+    res = res.json()
+    ids = res['ids']
+    species = res['species']
+    names = res['names']
+    fullnames = res['fullnames']
+    return '', species, names, fullnames, ids
+
+
+def get_species_seqs(con, cur, species, seq_translate_api):
+    ''' Get the sequences matching a given species name, using exact SILVA matches
+
+    Parameters
+    ----------
+    con, cur
+    species: str
+        the species name to search for (i.e. 'akkermansia muciniphila')
+    seq_translate_api:
+
+    Returns
+    -------
+    ids: list of int
+        dbBac sequence ids of matching sequences
+    seqs: list of str
+        the matching sequences
+    '''
+    res = requests.post(seq_translate_api + '/get_species_seqs', json={'species': species})
+    if not res.ok:
+        msg = 'failed to get matching sequence translator sequences. error: %s' % res.content
+        return msg, [], []
+
+    ids = res.json()['ids']
+    return '', ids, ids

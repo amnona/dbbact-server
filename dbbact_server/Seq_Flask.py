@@ -904,15 +904,15 @@ def get_sequence_info():
         Code : 200
         Content :
         {
-    sequences : list of dict (one per sequence). contains:
-        'seq' : str (ACGT)
-            the sequence
-        'taxonomy' : str
-            the taxonomy of the sequence or '' if unknown
-        'total_annotations': int
-            the number of annotations which this sequence is associated with
-        'total_experiments': int
-            the total number of experiments which this sequence is associated with
+            sequences : list of dict (one per sequence). contains:
+                'seq' : str (ACGT)
+                    the sequence
+                'taxonomy' : str
+                    the taxonomy of the sequence or '' if unknown
+                'total_annotations': int
+                    the number of annotations which this sequence is associated with
+                'total_experiments': int
+                    the total number of experiments which this sequence is associated with
         }
     Validation:
     """
@@ -1266,3 +1266,88 @@ def guess_region():
     if err:
         return ('Problem guessing sequences region. error=%s' % err, 400)
     return json.dumps({'region': primer_name, 'regionid': primerid})
+
+
+@Seq_Flask_Obj.route('/sequences/get_whole_seq_taxonomy', methods=['GET'])
+@auto.doc()
+def get_whole_seq_taxonomy_f():
+    """
+    Title: Query sequence:
+    Description : Get the taxonomies based on exact matching the whole sequence database (silva)
+    URL: /sequences/get_whole_seq_taxonomy
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            sequence : str
+                the DNA sequence string to query the database (can be any length)
+            region : int (optional)
+                the region id (default=1 which is V4 515F 806R)
+    Success Response:
+        Code : 200
+        Content :
+        {
+            "species" : list of str
+                all matching species names (empty '' if no species for given wholeseq database match, i.e. '[clostridium] clostridioforme 90a3')
+            "names": list of str
+                higher resoultion taxonomic name for each match (i.e. 'bacteria;firmicutes;clostridia;clostridiales;lachnospiraceae;lachnoclostridium;[clostridium] clostridioforme 90a3')
+            "fullnames": list of str
+                full database names for each match (i.e. 'agyq01000038.547.2066 bacteria;firmicutes;clostridia;clostridiales;lachnospiraceae;lachnoclostridium;[clostridium] clostridioforme 90a3')
+            "ids": list of str
+                the whole sequence database id of each match (i.e. 'agyq01000038')
+        }
+    """
+    debug(3, 'get_whole_seq_taxonomy', request)
+    cfunc = get_whole_seq_taxonomy_f
+    alldat = request.get_json()
+    if alldat is None:
+        return(getdoc(cfunc))
+    sequence = alldat.get('sequence')
+    if sequence is None:
+        return('sequence parameter missing', 400)
+
+    err, species, names, fullnames, ids = dbsequences.get_whole_seq_taxonomy(g.con, g.cur, sequence, seq_translate_api=g.seq_translate_api)
+    if err:
+        return('problem getting whole seq taxonomies. error=%s' % err, 400)
+
+    return json.dumps({'species': species, 'names': names, 'fullnames': fullnames, 'ids': ids})
+
+
+@Seq_Flask_Obj.route('/sequences/get_species_seqs', methods=['GET'])
+@auto.doc()
+def get_species_seqs_f():
+    """
+    Title: Get species sequences
+    Description : Get the sequences matching a given species name, using exact SILVA matches
+    URL: /sequences/get_species_seqs
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            species : str
+                The species to query SILVA taxonomy
+    Success Response:
+        Code : 200
+        Content :
+        {
+            "ids" : list of int
+                dbBact sequence ids matching the species
+            "seqs": list of str
+                the actual sequences matching the species
+        }
+    """
+    debug(3, 'get_species_seqs', request)
+    cfunc = get_species_seqs_f
+    alldat = request.get_json()
+    if alldat is None:
+        return(getdoc(cfunc))
+    species = alldat.get('species')
+    if species is None:
+        return('species parameter missing', 400)
+
+    err, ids, seqs = dbsequences.get_species_seqs(g.con, g.cur, species, seq_translate_api=g.seq_translate_api)
+    debug(3, 'found %d ids for speices %s' % (len(ids), species))
+    if err:
+        return('problem getting species sequences. error=%s' % err, 400)
+
+    return json.dumps({'ids': ids, 'seqs': seqs})
