@@ -1026,7 +1026,7 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
 
     # remove the count of these sequences for the annotation
     numseqs = len(sequences)
-    cur.execute('UPDATE AnnotationsTable SET seqCount = seqCount-%s', [numseqs])
+    cur.execute('UPDATE AnnotationsTable SET seqCount = seqCount-%s WHERE id=%s', [numseqs, annotationid])
     debug(3, 'removed %d from the annotationstable seq count' % numseqs)
 
     # update the ontology term sequence counts
