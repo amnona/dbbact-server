@@ -1109,10 +1109,12 @@ def get_species_seqs(con, cur, species, seq_translate_api):
     seqs: list of str
         the matching sequences
     '''
+    debug(2, 'get_species_seqs for %s' % species)
     res = requests.post(seq_translate_api + '/get_species_seqs', json={'species': species})
     if not res.ok:
         msg = 'failed to get matching sequence translator sequences. error: %s' % res.content
         return msg, [], []
 
     ids = res.json()['ids']
+    debug(2, 'found %d seqs' % len(ids))
     return '', ids, ids

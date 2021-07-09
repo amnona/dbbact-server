@@ -1134,7 +1134,7 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
                 continue
             annotations_to_process = [cdetails]
             if get_all_exp_annotations:
-                debug(2, 'getting all exp annotations')
+                debug(1, 'getting all exp annotations')
                 if 'expid' in cdetails:
                     expid = cdetails['expid']
                     # if we already added this experiment - finished
@@ -1579,7 +1579,7 @@ def get_annotation_flags(con, cur, annotaitonid, status=None):
                     continue
             cflag = {'status': cres['status'], 'userid': cres['userid'], 'flagid': cres['id'], 'reason': cres['reason']}
             flags.append(cflag)
-        debug(2, 'found %d flags for annotationid %d' % (len(flags), annotaitonid))
+        debug(1, 'found %d flags for annotationid %d' % (len(flags), annotaitonid))
         return '', flags
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in get_annotation_flags" % e)
