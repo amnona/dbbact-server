@@ -169,6 +169,12 @@ def AddTerm(con, cur, term, parent='na', ontologyname='dbbact', synonyms=[], ter
         the term id for the new term
     """
     try:
+        # check if we're trying to add a term from an ontology (i.e. the term is the term_id)
+        ts = term.split(':')
+        if len(ts) > 1:
+            msg = 'AddTerm failed. Cannot add a term that contains ":". Maybe it is the wrong ID?'
+            debug(6, msg)
+            return msg, -1
         # convert everything to lower case before interacting with the database
         term = term.lower()
         parent = parent.lower()
