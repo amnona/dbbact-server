@@ -75,18 +75,24 @@ def get_term_ids(con, cur, term, allow_ontology_id=True):
         the dbbact term ids matching the term. NOTE: if term not found, will not error and instead return empty list.
     '''
     term = term.lower()
-    cur.execute('SELECT id FROM OntologyTable WHERE description=%s', [term])
-    if cur.rowcount == 0:
-        if allow_ontology_id:
+    term_found = False
+
+    # try first the term_id field (i.e. gaz:0004)
+    if allow_ontology_id:
             cur.execute('SELECT id FROM OntologyTable WHERE term_id=%s', [term])
-            if cur.rowcount == 0:
-                msg = 'Term %s not found in OntologyTable (also when searching ontology ids)' % term
-                debug(2, msg)
-                return '', []
-        else:
-            msg = 'Term %s not found in OntologyTable' % term
-            debug(2, msg)
-            return '', []
+            if cur.rowcount > 0:
+                term_found = True
+    # if not found, try next the term description field (i.e. feces/homo sapiens)
+    if not term_found:
+        cur.execute('SELECT id FROM OntologyTable WHERE description=%s', [term])
+        if cur.rowcount > 0:
+            term_found = True
+
+    if not term_found:
+        msg = 'Term %s not found in OntologyTable' % term
+        debug(2, msg)
+        return '', []
+
     ids = []
     res = cur.fetchall()
     for cres in res:
