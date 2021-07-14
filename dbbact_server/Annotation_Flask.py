@@ -51,8 +51,7 @@ def add_annotations():
                         the type of detail (i.e. ALL/HIGH/LOW)
                         (description from AnnotationDetailsTypeTable)
                     "term" : str
-                        the ontology term for this detail (i.e. feces/ibd/homo sapiens)
-                        (description from OntologyTable)
+                        the ontology term_id (i.e. gaz:0004/dbbact:43/envo:0043 etc.) or the ontology term description this detail (i.e. feces/ibd/homo sapiens)
                 }
         }
     Success Response:
@@ -74,7 +73,7 @@ def add_annotations():
             if agentType does not exist, add it to AgentTypesTable
             iterate over all AnnotationList:
                 if detail does not exist, add it to AnnotationsDetailsTypeTable
-                if term does not exist, add it to OntologyNamesTable
+                if term does not exist, add it to OntologyTable
             Create a new Annotation in AnnotationsTable
             Add all sequence/Annotation pairs to SequenceAnnotationTable
             Add all annotation details to AnnotationsTable (automatically adding userId and addedDate)

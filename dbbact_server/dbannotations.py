@@ -30,7 +30,7 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
         the annotation type (i.e. "isa","diffexp"/"contamination"/"common"/"dominant"/"other"/"positive association"/"negative association")
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term_id or description (description support will be removed in later versions)
     method : str (optional)
         the method used to discover this annotation (i.e. "permutation test", etc.) or '' for not specified
     description : str (optional)
@@ -95,7 +95,7 @@ def UpdateAnnotation(con, cur, annotationid, annotationtype=None, annotationdeta
         None (default) to not update
     annotationdetails : list of tuples (detailtype,ontologyterm) of str or None (optional)
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term_id or description (description support will be removed in later versions)
         None (default) to not update
     user : str or None (optional)
         username of the user wanting to update this annotation or None (default) for anonymous user.
@@ -310,7 +310,7 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
         the idAnnotation field
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term_id or description (description support will be removed in later versions)
     commit : bool (optional)
         True (default) to commit, False to not commit to database
 
@@ -327,8 +327,18 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
             if cdetailtypeid < 0:
                 debug(3, "detailtype %s not found" % cdetailtype)
                 return "detailtype %s not found" % cdetailtype, -1
-            contologytermid = dbidval.GetIdFromDescription(con, cur, "OntologyTable", contologyterm)
-            if contologytermid < 0:
+
+            # get the ontology term id - either term_id field or the description field
+            err, contologytermid = dbontology.get_term_ids(con, cur, contologyterm, allow_ontology_id=True)
+            if err:
+                return err, -1
+            if len(contologytermid) > 0:
+                if len(contologytermid) > 1:
+                    debug(3, 'ontology term %s has %d matches' % (contologyterm, len(contologytermid)))
+                contologytermid = contologytermid[0]
+            else:
+                # contologytermid = dbidval.GetIdFromDescription(con, cur, "OntologyTable", contologyterm)
+                # if contologytermid < 0:
                 debug(3, "ontology term %s not found" % contologyterm)
                 err, contologytermid = dbontology.AddTerm(con, cur, contologyterm, commit=False)
                 if err:
@@ -350,13 +360,14 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
     """
     Add all the parent terms of each annotation detail ontology to the annotationparentstable
 
-    input:
+    Parameters
+    ----------
     con,cur
     annotationid : int
         the idAnnotation field
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term_id or description (description support will be removed in later versions)
     commit : bool (optional)
         True (default) to commit, False to not commit to database
     numseqs: int, optional
@@ -364,7 +375,8 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
     all_parents_dict: None or dict, optional
         {term(str): parents(list)}. If not None - the parents for each term (to save multiple calls to GetParents()). NOTE: the dict is extended with annotation results
 
-    output:
+    Returns
+    -------
     err : str
         error encountered or '' if ok
     numadded : int
@@ -379,6 +391,8 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
             if all_parents_dict is not None:
                 if contologyterm in all_parents_dict:
                     parents = all_parents_dict[contologyterm]
+
+            # if we don't yet have the parents, get from table
             if parents is None:
                 err, parents = GetParents(con, cur, contologyterm)
                 if err:
@@ -386,6 +400,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
                     continue
                 if all_parents_dict is not None:
                     all_parents_dict[contologyterm] = parents
+
             debug(2, 'term %s parents %s' % (contologyterm, parents))
             if cdetailtype not in parentsdict:
                 parentsdict[cdetailtype] = parents.copy()
