@@ -423,6 +423,7 @@ def updateNewTempcode(con, cur, user, tempcode):
         cur.execute("update UsersPrivateTable set tempcodehash = crypt(%s, gen_salt('bf')) where username=%s", [tempcode, user])
         debug(3, 'update password completed')
         con.commit()
+        debug(3, 'committed')
         return "", 1
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in addUser" % e)
