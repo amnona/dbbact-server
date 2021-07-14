@@ -99,7 +99,7 @@ def prepare_dbbact_calour_term_files(con, cur, outdir='./', include_synonyms=Tru
 			del term_name_id[contology]
 			del term_id_term[contology]
 			small_ontologies.append(contology)
-	print('moved %d small ontologies into other ontology:\n%s' % (len(small_ontologies), small_ontologies))
+	print('moved %d small ontologies into "other" ontology:\n%s' % (len(small_ontologies), small_ontologies))
 
 	# and save
 	for contology in term_id_term.keys():
