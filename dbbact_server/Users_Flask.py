@@ -205,7 +205,7 @@ def forgot_password():
     recipient = email
     subject = "Password reset"
     body = "Your password recovery code is: " + newpassword
-    debug(3, 'Sent mail to %s' % email)
+    debug(3, 'Sending mail to %s' % email)
     send_email(guser, gpassword, recipient, subject, body)
     debug(3, 'New password sent')
     return json.dumps({"status": 1})
