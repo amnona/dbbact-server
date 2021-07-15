@@ -109,17 +109,18 @@ def send_email(user, pwd, recipient, subject, body):
     # Prepare actual message
     message = """From: %s\nTo: %s\nSubject: %s\n\n%s
     """ % (FROM, ", ".join(TO), SUBJECT, TEXT)
+
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
-        # server.ehlo()
-        # server.starttls()
+        server.ehlo()
+        server.starttls()
         server.login(gmail_user, gmail_pwd)
         server.sendmail(FROM, TO, message)
         server.close()
         debug(3, 'Mail sent using gmail')
         return ('successfully sent the mail')
-    except:
-        debug(5, 'Send mail failed')
+    except Exception as err:
+        debug(5, 'Send mail failed. Error: %s' % err)
         return ('failed to send mail')
 
 
