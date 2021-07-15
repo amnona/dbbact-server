@@ -111,8 +111,8 @@ def send_email(user, pwd, recipient, subject, body):
     """ % (FROM, ", ".join(TO), SUBJECT, TEXT)
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.ehlo()
-        server.starttls()
+        # server.ehlo()
+        # server.starttls()
         server.login(gmail_user, gmail_pwd)
         server.sendmail(FROM, TO, message)
         server.close()
