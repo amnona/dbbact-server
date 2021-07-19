@@ -216,7 +216,7 @@ def AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method='',
         the annotation type (i.e. "isa","differential")
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term description (i.e. 'feces') or term_id(i.e. 'GAZ:000004')
     user : str or None (optional)
         username of the user creating this annotation or None (default) for anonymous user
     commit : bool (optional)
@@ -322,7 +322,9 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
     """
     try:
         numadded = 0
-        for (cdetailtype, contologyterm) in annotationdetails:
+        for cdet in annotationdetails:
+            cdetailtype = cdet[0]
+            contologyterm = cdet[1]
             cdetailtypeid = dbidval.GetIdFromDescription(con, cur, "AnnotationDetailsTypesTable", cdetailtype)
             if cdetailtypeid < 0:
                 debug(3, "detailtype %s not found" % cdetailtype)
@@ -471,7 +473,7 @@ def GetAnnotationDetails(con, cur, annotationid):
     output:
     err: str
         error encountered or '' if ok
-    details : list of (str,str) (detail type (i.e. 'higher in'), ontology term (i.e. 'homo sapiens'))
+    details : list of (str,str, str) (detail type (i.e. 'higher in'), ontology term (i.e. 'homo sapiens'), ontology term_id (i.e. 'GAZ:0004'))
     """
     details = []
     debug(1, 'get annotationdetails from id %d' % annotationid)
@@ -489,14 +491,14 @@ def GetAnnotationDetails(con, cur, annotationid):
         # if err:
         #     return err, []
         # details.append([detailtype, ontology])
-        details.append([res['detailtype'], res['ontology']])
+        details.append([res['detailtype'], res['ontology'], res['term_id']])
     debug(1, 'found %d annotation details' % len(details))
     return '', details
 
 
 def get_annotation_details_termids(con, cur, annotationid):
     """
-    Get the annotation details list for annotationid, with the ontology id for each term (i.e. 'envo:000001')
+    Get the annotation details list for annotationid, with the ontology term_id for each term (i.e. 'envo:000001')
 
     input:
     con,cur
@@ -716,7 +718,7 @@ def _prepare_queries(con, cur):
         cur.execute('deallocate all')
         # for GetAnnotationDetails()
         cur.execute('prepare get_annotation_details(int) AS '
-                    'SELECT annotationlisttable.idontology, annotationlisttable.idAnnotationDetail, ontologytable.description AS ontology, AnnotationDetailsTypesTable.description AS detailtype FROM annotationlisttable '
+                    'SELECT annotationlisttable.idontology, annotationlisttable.idAnnotationDetail, ontologytable.description AS ontology, ontologytable.term_id AS term_id, AnnotationDetailsTypesTable.description AS detailtype FROM annotationlisttable '
                     'LEFT JOIN ontologytable ON annotationlisttable.idontology=ontologytable.id '
                     'LEFT JOIN AnnotationDetailsTypesTable on annotationlisttable.idAnnotationDetail=AnnotationDetailsTypesTable.id '
                     'WHERE annotationlisttable.idannotation=$1')
@@ -1171,12 +1173,16 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
                     else:
                         # otherwise, just keep the annotation terms
                         parents = defaultdict(list)
-                        for cdetailtype, cterm in cdetails['details']:
-                                parents[cdetailtype].append(cterm)
+                        for cdet in cdetails['details']:
+                            cdetailtype = cdet[0]
+                            cterm = cdet[1]
+                            parents[cdetailtype].append(cterm)
                     cdetails['parents'] = parents
                     # add to the set of all terms to get the info for
                     # note we add a "-" for terms that have a "low" annotation type
-                    for ctype, cterms in parents.items():
+                    for cdet in parents.items():
+                        ctype = cdet[0]
+                        cterms = cdet[1]
                         for cterm in cterms:
                             if ctype == 'low':
                                 cterm = '-' + cterm

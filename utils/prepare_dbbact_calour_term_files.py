@@ -14,7 +14,7 @@ from collections import defaultdict
 from dbbact_server import db_access
 from dbbact_server.utils import debug, SetDebugLevel
 
-__version__ = "0.9"
+__version__ = "0.95"
 
 
 def prepare_dbbact_calour_term_files(con, cur, outdir='./', include_synonyms=True):
@@ -46,10 +46,12 @@ def prepare_dbbact_calour_term_files(con, cur, outdir='./', include_synonyms=Tru
 		include_synonyms: bool, optional
 			True to add also all entries from synonyms table
 	'''
+	debug(3, 'Counting all terms in dbBact')
 	cur2 = con.cursor()
 	cur2.execute('PREPARE find_syn(int) AS SELECT synonym FROM OntologySynonymTable WHERE idontology=$1')
 	cur.execute('SELECT id, description, term_id FROM OntologyTable')
-	debug(4, 'found %d terms' % cur.rowcount)
+	num_terms_found = cur.rowcount
+	debug(4, 'found %d terms' % num_terms_found)
 
 	term_name_id = defaultdict(dict)
 	term_id_term = defaultdict(dict)
@@ -60,7 +62,7 @@ def prepare_dbbact_calour_term_files(con, cur, outdir='./', include_synonyms=Tru
 			break
 		num_terms += 1
 		if num_terms % 100000 == 0:
-			print(res)
+			debug(3, '%s (scanned %d/%d)' % (res, num_terms, num_terms_found))
 
 		term_names = [res['description']]
 		main_term = res['description']
@@ -71,7 +73,7 @@ def prepare_dbbact_calour_term_files(con, cur, outdir='./', include_synonyms=Tru
 
 		cterm_id = res['term_id']
 		if cterm_id == '':
-			cterm_id = 'dbbact:%09d' % res['id']
+			cterm_id = 'dbbact:%d' % res['id']
 
 		# also get all the synonyms for the term if needed
 		if include_synonyms:

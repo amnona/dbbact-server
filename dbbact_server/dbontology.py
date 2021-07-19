@@ -15,6 +15,7 @@ def add_ontology_term(con, cur, term, term_id='', commit=True):
         the term to add (i.e. 'feces')
     term_id: str, optional
         the ontology id for the term (unique identifier, i.e. 'UBERON:0001988')
+        if empty (i.e. ''), add new term_id in the form of 'dbbact:XXXX' where XXX is the new term id in dbbact
     commit: bool, optional
         True to commit the changes to the database
 
@@ -31,6 +32,8 @@ def add_ontology_term(con, cur, term, term_id='', commit=True):
             err, termid = dbidval.AddItem(con, cur, table='OntologyTable', description=term, commit=False)
             if err:
                 return err, None
+            term_id = 'dbbact:%d' % termid
+            cur.execute('UPDATE OntologyTable SET term_id=%s WHERE id=%s', [term_id, termid])
         else:
             # term_id supplied
             cur.execute('SELECT id FROM OntologyTable WHERE description=%s AND term_id=%s', [term, term_id])
@@ -146,7 +149,7 @@ def AddTerm(con, cur, term, parent='na', ontologyname='dbbact', synonyms=[], ter
     ----------
     con, cur
     term: str
-        the term to add (i.e. 'feces')
+        the term description to add (i.e. 'feces')
     parent: str, optional
         the name of the parent term (i.e. 'excreta')
         if 'na', means no parent for this term (for example when new term not from existing ontology)
@@ -650,7 +653,9 @@ def get_annotations_term_counts(con, cur, annotations):
     debug(1, 'get_annotations_term_counts for %d annotations' % len(annotations))
     terms = []
     for cannotation in annotations:
-        for ctype, cterm in cannotation['details']:
+        for cdet in cannotation['details']:
+            ctype = cdet[0]
+            cterm = cdet[1]
             if ctype == 'low':
                 cterm = '-' + cterm
             terms.append(cterm)
@@ -700,7 +705,7 @@ def get_ontology_terms_list(con, cur, min_term_id=None, ontologyid=None):
             all_ontologies[cres[1]] = cres[0]
             contologyid = cres[2]
             if contologyid == '':
-                contologyid = 'dbbact:%08d' % cres[0]
+                contologyid = 'dbbact:%d' % cres[0]
             all_ontology_ids[cres[0]] = contologyid
     return all_ontologies, all_ontology_ids
 
