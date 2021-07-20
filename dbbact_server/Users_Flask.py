@@ -209,7 +209,7 @@ def forgot_password():
     body = "Your password recovery code is: " + newpassword
     debug(3, 'Sending mail to %s' % email)
     try:
-        send_email(guser, gpassword, recipient, subject, body)
+        # send_email(guser, gpassword, recipient, subject, body)
         debug(3, 'New password sent')
     except Exception as err:
         debug(6, "send email failed. error %s" % err)
