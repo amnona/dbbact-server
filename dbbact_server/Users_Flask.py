@@ -195,6 +195,7 @@ def forgot_password():
     email = err
     # generate and update new password
     newpassword = random_str()
+    print(newpassword)
     debug(3, 'calling updateNewTempcode')
     err, retval = dbuser.updateNewTempcode(g.con, g.cur, user, newpassword)
     if retval <= 0:
@@ -245,7 +246,7 @@ def recover_password():
 
     # Get the old recovery counter
     count = dbuser.getUserRecoveryAttemptsByName(g.con, g.cur,user)
-    if count < 0 :
+    if count < 0:
         return('failed to get recovery counter', 400)
 
     if count >= MAX_RECOVERY_ATTEMPTS:
