@@ -196,6 +196,7 @@ def forgot_password():
     # generate and update new password
     newpassword = random_str()
     print(newpassword)
+    debug(6, newpassword)
     debug(3, 'calling updateNewTempcode')
     err, retval = dbuser.updateNewTempcode(g.con, g.cur, user, newpassword)
     if retval <= 0:
