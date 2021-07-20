@@ -30,7 +30,7 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
         the annotation type (i.e. "isa","diffexp"/"contamination"/"common"/"dominant"/"other"/"positive association"/"negative association")
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term_id or description (description support will be removed in later versions)
     method : str (optional)
         the method used to discover this annotation (i.e. "permutation test", etc.) or '' for not specified
     description : str (optional)
@@ -95,7 +95,7 @@ def UpdateAnnotation(con, cur, annotationid, annotationtype=None, annotationdeta
         None (default) to not update
     annotationdetails : list of tuples (detailtype,ontologyterm) of str or None (optional)
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term_id or description (description support will be removed in later versions)
         None (default) to not update
     user : str or None (optional)
         username of the user wanting to update this annotation or None (default) for anonymous user.
@@ -216,7 +216,7 @@ def AddAnnotation(con, cur, expid, annotationtype, annotationdetails, method='',
         the annotation type (i.e. "isa","differential")
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term description (i.e. 'feces') or term_id(i.e. 'GAZ:000004')
     user : str or None (optional)
         username of the user creating this annotation or None (default) for anonymous user
     commit : bool (optional)
@@ -310,7 +310,7 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
         the idAnnotation field
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term_id or description (description support will be removed in later versions)
     commit : bool (optional)
         True (default) to commit, False to not commit to database
 
@@ -322,13 +322,25 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
     """
     try:
         numadded = 0
-        for (cdetailtype, contologyterm) in annotationdetails:
+        for cdet in annotationdetails:
+            cdetailtype = cdet[0]
+            contologyterm = cdet[1]
             cdetailtypeid = dbidval.GetIdFromDescription(con, cur, "AnnotationDetailsTypesTable", cdetailtype)
             if cdetailtypeid < 0:
                 debug(3, "detailtype %s not found" % cdetailtype)
                 return "detailtype %s not found" % cdetailtype, -1
-            contologytermid = dbidval.GetIdFromDescription(con, cur, "OntologyTable", contologyterm)
-            if contologytermid < 0:
+
+            # get the ontology term id - either term_id field or the description field
+            err, contologytermid = dbontology.get_term_ids(con, cur, contologyterm, allow_ontology_id=True)
+            if err:
+                return err, -1
+            if len(contologytermid) > 0:
+                if len(contologytermid) > 1:
+                    debug(3, 'ontology term %s has %d matches' % (contologyterm, len(contologytermid)))
+                contologytermid = contologytermid[0]
+            else:
+                # contologytermid = dbidval.GetIdFromDescription(con, cur, "OntologyTable", contologyterm)
+                # if contologytermid < 0:
                 debug(3, "ontology term %s not found" % contologyterm)
                 err, contologytermid = dbontology.AddTerm(con, cur, contologyterm, commit=False)
                 if err:
@@ -350,13 +362,14 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
     """
     Add all the parent terms of each annotation detail ontology to the annotationparentstable
 
-    input:
+    Parameters
+    ----------
     con,cur
     annotationid : int
         the idAnnotation field
     annotationdetails : list of tuples (detailtype,ontologyterm) of str
         detailtype is ("high","low","all")
-        ontologyterm is string which should match the ontologytable terms
+        ontologyterm is string which should match the ontologytable term_id or description (description support will be removed in later versions)
     commit : bool (optional)
         True (default) to commit, False to not commit to database
     numseqs: int, optional
@@ -364,7 +377,8 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
     all_parents_dict: None or dict, optional
         {term(str): parents(list)}. If not None - the parents for each term (to save multiple calls to GetParents()). NOTE: the dict is extended with annotation results
 
-    output:
+    Returns
+    -------
     err : str
         error encountered or '' if ok
     numadded : int
@@ -379,6 +393,8 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
             if all_parents_dict is not None:
                 if contologyterm in all_parents_dict:
                     parents = all_parents_dict[contologyterm]
+
+            # if we don't yet have the parents, get from table
             if parents is None:
                 err, parents = GetParents(con, cur, contologyterm)
                 if err:
@@ -386,6 +402,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
                     continue
                 if all_parents_dict is not None:
                     all_parents_dict[contologyterm] = parents
+
             debug(2, 'term %s parents %s' % (contologyterm, parents))
             if cdetailtype not in parentsdict:
                 parentsdict[cdetailtype] = parents.copy()
@@ -456,7 +473,7 @@ def GetAnnotationDetails(con, cur, annotationid):
     output:
     err: str
         error encountered or '' if ok
-    details : list of (str,str) (detail type (i.e. 'higher in'), ontology term (i.e. 'homo sapiens'))
+    details : list of (str,str, str) (detail type (i.e. 'higher in'), ontology term (i.e. 'homo sapiens'), ontology term_id (i.e. 'GAZ:0004'))
     """
     details = []
     debug(1, 'get annotationdetails from id %d' % annotationid)
@@ -474,14 +491,14 @@ def GetAnnotationDetails(con, cur, annotationid):
         # if err:
         #     return err, []
         # details.append([detailtype, ontology])
-        details.append([res['detailtype'], res['ontology']])
+        details.append([res['detailtype'], res['ontology'], res['term_id']])
     debug(1, 'found %d annotation details' % len(details))
     return '', details
 
 
 def get_annotation_details_termids(con, cur, annotationid):
     """
-    Get the annotation details list for annotationid, with the ontology id for each term (i.e. 'envo:000001')
+    Get the annotation details list for annotationid, with the ontology term_id for each term (i.e. 'envo:000001')
 
     input:
     con,cur
@@ -701,7 +718,7 @@ def _prepare_queries(con, cur):
         cur.execute('deallocate all')
         # for GetAnnotationDetails()
         cur.execute('prepare get_annotation_details(int) AS '
-                    'SELECT annotationlisttable.idontology, annotationlisttable.idAnnotationDetail, ontologytable.description AS ontology, AnnotationDetailsTypesTable.description AS detailtype FROM annotationlisttable '
+                    'SELECT annotationlisttable.idontology, annotationlisttable.idAnnotationDetail, ontologytable.description AS ontology, ontologytable.term_id AS term_id, AnnotationDetailsTypesTable.description AS detailtype FROM annotationlisttable '
                     'LEFT JOIN ontologytable ON annotationlisttable.idontology=ontologytable.id '
                     'LEFT JOIN AnnotationDetailsTypesTable on annotationlisttable.idAnnotationDetail=AnnotationDetailsTypesTable.id '
                     'WHERE annotationlisttable.idannotation=$1')
@@ -1156,12 +1173,16 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
                     else:
                         # otherwise, just keep the annotation terms
                         parents = defaultdict(list)
-                        for cdetailtype, cterm in cdetails['details']:
-                                parents[cdetailtype].append(cterm)
+                        for cdet in cdetails['details']:
+                            cdetailtype = cdet[0]
+                            cterm = cdet[1]
+                            parents[cdetailtype].append(cterm)
                     cdetails['parents'] = parents
                     # add to the set of all terms to get the info for
                     # note we add a "-" for terms that have a "low" annotation type
-                    for ctype, cterms in parents.items():
+                    for cdet in parents.items():
+                        ctype = cdet[0]
+                        cterms = cdet[1]
                         for cterm in cterms:
                             if ctype == 'low':
                                 cterm = '-' + cterm

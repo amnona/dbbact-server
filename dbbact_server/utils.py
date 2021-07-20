@@ -92,11 +92,13 @@ def send_email(user, pwd, recipient, subject, body):
     import os
 
     if 'OPENU_FLAG' in os.environ:
-        debug(1, 'Sending mail using openu server')
+        debug(3, 'Sending mail using openu server')
         openu_str = "echo '%s' | mail -s '%s' -r %s %s" % (body, subject, ' dbbact@openu.ac.il', recipient)
         os.system(openu_str)
+        debug(3, 'Mail sent using openu server')
         return
 
+    debug(3, 'Sending mail using gmail')
     gmail_user = user
     gmail_pwd = pwd
     FROM = user
@@ -107,6 +109,7 @@ def send_email(user, pwd, recipient, subject, body):
     # Prepare actual message
     message = """From: %s\nTo: %s\nSubject: %s\n\n%s
     """ % (FROM, ", ".join(TO), SUBJECT, TEXT)
+
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.ehlo()
@@ -114,8 +117,10 @@ def send_email(user, pwd, recipient, subject, body):
         server.login(gmail_user, gmail_pwd)
         server.sendmail(FROM, TO, message)
         server.close()
+        debug(3, 'Mail sent using gmail')
         return ('successfully sent the mail')
-    except:
+    except Exception as err:
+        debug(5, 'Send mail failed. Error: %s' % err)
         return ('failed to send mail')
 
 

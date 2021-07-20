@@ -406,6 +406,7 @@ def updateNewTempcode(con, cur, user, tempcode):
         -3 user doesnt exist
         -4 exception
     """
+    debug(3, 'updateNewTempcode')
     if user == "":
         return ("user can't be empty", -1)
     if tempcode == "":
@@ -420,7 +421,9 @@ def updateNewTempcode(con, cur, user, tempcode):
     try:
         debug(3, "update UsersPrivateTable set tempcodehash = crypt(%s, gen_salt('bf')) where username=%s" % (tempcode, user))
         cur.execute("update UsersPrivateTable set tempcodehash = crypt(%s, gen_salt('bf')) where username=%s", [tempcode, user])
+        debug(3, 'update password completed')
         con.commit()
+        debug(3, 'committed')
         return "", 1
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in addUser" % e)

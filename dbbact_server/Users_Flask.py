@@ -182,6 +182,7 @@ def forgot_password():
         Validation:
         Action:
     """
+    debug(3, 'forgot_password')
     cfunc = forgot_password
     alldat = request.get_json()
     if alldat is None:
@@ -194,6 +195,8 @@ def forgot_password():
     email = err
     # generate and update new password
     newpassword = random_str()
+    print(newpassword)
+    debug(3, 'calling updateNewTempcode')
     err, retval = dbuser.updateNewTempcode(g.con, g.cur, user, newpassword)
     if retval <= 0:
         return(err, 400)
@@ -203,9 +206,9 @@ def forgot_password():
     recipient = email
     subject = "Password reset"
     body = "Your password recovery code is: " + newpassword
-    debug(2, 'Sent mail to %s' % email)
+    debug(3, 'Sending mail to %s' % email)
     send_email(guser, gpassword, recipient, subject, body)
-    debug(2, 'New password sent')
+    debug(3, 'New password sent')
     return json.dumps({"status": 1})
 
 
@@ -243,7 +246,7 @@ def recover_password():
 
     # Get the old recovery counter
     count = dbuser.getUserRecoveryAttemptsByName(g.con, g.cur,user)
-    if count < 0 :
+    if count < 0:
         return('failed to get recovery counter', 400)
 
     if count >= MAX_RECOVERY_ATTEMPTS:
