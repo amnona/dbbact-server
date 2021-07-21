@@ -170,7 +170,7 @@ def forgot_password():
     Data Params: JSON
         {
             'user' : str
-                user name
+                dbBact user name or email address
         }
     Success Response:
         Code : 201
@@ -189,27 +189,32 @@ def forgot_password():
         return(getdoc(cfunc))
 
     user = alldat.get('user')
-    err, retval = dbuser.getMail(g.con, g.cur, user)
+    err, retval = dbuser.getMail(g.con, g.cur, user, also_mail=True)
     if retval <= 0:
         return(err, 400)
     email = err
+
+    # conver user to username (and not email)
+    err, username = dbuser.user_name_from_email(g.con, g.cur, email)
+    if err != '':
+        return(err, 400)
+
     # generate and update new password
     newpassword = random_str()
-    print(newpassword)
-    debug(6, newpassword)
+    debug(6, 'reset password for email %s. token is %s' % (email, newpassword))
     debug(3, 'calling updateNewTempcode')
-    err, retval = dbuser.updateNewTempcode(g.con, g.cur, user, newpassword)
+    err, retval = dbuser.updateNewTempcode(g.con, g.cur, username, newpassword)
     if retval <= 0:
         return(err, 400)
 
     guser = "bactdb@gmail.com"
     gpassword = "databaseforbacteria"
     recipient = email
-    subject = "Password reset"
+    subject = "Password reset for dbBact user %s" % username
     body = "Your password recovery code is: " + newpassword
     debug(3, 'Sending mail to %s' % email)
     try:
-        # send_email(guser, gpassword, recipient, subject, body)
+        send_email(guser, gpassword, recipient, subject, body)
         debug(3, 'New password sent')
     except Exception as err:
         debug(6, "send email failed. error %s" % err)
@@ -227,7 +232,7 @@ def recover_password():
     Data Params: JSON
         {
             'user' : str
-                user name
+                dbBact user name or email address
         }
     Success Response:
         Code : 201
@@ -248,28 +253,39 @@ def recover_password():
     recoverycode = alldat.get('recoverycode')
     newpassword = alldat.get('newpassword')
 
+    res, retval = dbuser.getMail(g.con, g.cur, user, also_mail=True)
+    if retval <= 0:
+        return(res, 400)
+    email = res
+
+    # conver user to username (and not email)
+    err, username = dbuser.user_name_from_email(g.con, g.cur, email)
+    if err != '':
+        return(err, 400)
+
     # Get the old recovery counter
-    count = dbuser.getUserRecoveryAttemptsByName(g.con, g.cur,user)
+    count = dbuser.getUserRecoveryAttemptsByName(g.con, g.cur, username)
     if count < 0:
         return('failed to get recovery counter', 400)
 
     if count >= MAX_RECOVERY_ATTEMPTS:
         return('User is locked', 400)
 
-    err, userid = dbuser.getUserIdRecover(g.con, g.cur, user, recoverycode)
+    err, userid = dbuser.getUserIdRecover(g.con, g.cur, username, recoverycode)
     if err:
         count = count + 1
-        dbuser.setUserRecoveryAttemptsByName(g.con, g.cur, user, count)
+        dbuser.setUserRecoveryAttemptsByName(g.con, g.cur, username, count)
         return(err, 400)
 
     # generate and update new password
-    err, retval = dbuser.updateNewPassword(g.con, g.cur, user, newpassword)
+    err, retval = dbuser.updateNewPassword(g.con, g.cur, username, newpassword)
     if retval <= 0:
         return(err, 400)
 
     # reset the login attempts
-    dbuser.setUserLoginAttemptsByName(g.con, g.cur, user, 0)
-    dbuser.setUserRecoveryAttemptsByName(g.con, g.cur, user, 0)
+    dbuser.setUserLoginAttemptsByName(g.con, g.cur, username, 0)
+    dbuser.setUserRecoveryAttemptsByName(g.con, g.cur, username, 0)
+    return "Password reset"
 
 
 @Users_Flask_Obj.route('/users/get_user_annotations', methods=['GET'])
