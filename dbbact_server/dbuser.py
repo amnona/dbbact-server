@@ -4,6 +4,40 @@ from .utils import debug
 maxfailedattempt = 3
 
 
+def user_name_from_email(con, cur, email):
+    '''Get the user name from the email address
+
+    Parameters
+    ----------
+    con, cur
+    email: str
+        the email address to look for
+
+    Returns
+    -------
+    err: str
+        the error encountered of '' if ok
+    username: str
+        the username matching the email
+    '''
+    try:
+        email = email.lower()
+        debug(2, 'Username from email %s' % email)
+        cur.execute('SELECT username FROM UsersPrivateTable WHERE email=%s', [email])
+        if cur.rowcount == 0:
+            msg = 'email %s not found in dbBact' % email
+            debug(2, msg)
+            return msg, None
+        res = cur.fetchone()
+        username = res['username']
+        debug(2, 'found username %s for email %s' % (username, email))
+        return '', username
+    except Exception as err:
+        msg = 'failed getting username from email %s. Error: %s' % (email, err)
+        debug(3, msg)
+        return msg, None
+
+
 def getUserId(con, cur, user, password):
     """
     Get the user id after authentication
@@ -109,13 +143,15 @@ def getUserIdRecover(con, cur, user, recoverycode):
     return "", userId
 
 
-def isUserExist(con, cur, user):
+def isUserExist(con, cur, user, also_mail=False):
     """
     Check if user name is already in use
 
     input:
     con,cur : database connection and cursor
     user : user name
+    also_mail: bool, optional
+        if True, also check if the email exists (return 1 if username or email exists)
 
     output:
     errmsg : str
@@ -128,11 +164,14 @@ def isUserExist(con, cur, user):
     try:
         debug(1, 'SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=%s' % user)
         cur.execute('SELECT id,attemptscounter FROM UsersPrivateTable WHERE username=%s', [user])
-        if cur.rowcount == 0:
-            debug(3, 'user %s was not found in UsersPrivateTable' % [user])
-            return "", 0
-        else:
+        if cur.rowcount > 0:
             return "", 1
+        if also_mail:
+            cur.execute('SELECT id,attemptscounter FROM UsersPrivateTable WHERE email=%s', [user])
+            if cur.rowcount > 0:
+                return "", 1
+        debug(3, 'user %s was not found in UsersPrivateTable' % [user])
+        return "", 0
 
     except psycopg2.DatabaseError as e:
         debug(7, "error %s enountered in GetUserId" % e)
@@ -272,11 +311,14 @@ def getUserRecoveryAttemptsByName(con, cur, name):
     """
     Get user login attempt
 
-    input:
+    Parameters
+    ----------
     con,cur : database connection and cursor
-    user : user id
+    name : str
+        the dbBact user name
 
-    output:
+    Returns
+    -------
     number of attempts : int
         return the number of failed attempts for a given user
     """
@@ -430,13 +472,15 @@ def updateNewTempcode(con, cur, user, tempcode):
         return ("error %s enountered in addUser" % e, -4)
 
 
-def getMail(con, cur, user):
+def getMail(con, cur, user, also_mail=False):
     """
     Get mail
 
     input:
     con,cur : database connection and cursor
-    user : user name
+    user : user name or email
+    also_mail: bool, optional
+        if True, also accept user email (and just return it)
 
     output:
     errmsg : str
@@ -455,8 +499,9 @@ def getMail(con, cur, user):
     """
     if user == "":
         return ("user can't be empty", -1)
-    # If the user already exist, return error
-    err, val = isUserExist(con, cur, user)
+    # If the user doesn't exist, return error
+    # note, we also check if the supplied field was an email address
+    err, val = isUserExist(con, cur, user, also_mail=also_mail)
     if val == 0:
         return ("user %s doesnt exist" % user, -2)
     # default values
@@ -469,7 +514,14 @@ def getMail(con, cur, user):
                 return (email, 1)
             else:
                 return ("user %s - email is empty" % user, -3)
+        # username not found, so maybe it is an email?
         else:
+            debug(2, 'Username %s not found. Maybe it is an email?' % user)
+            cur.execute('SELECT email FROM UsersPrivateTable WHERE email=%s', [user])
+            if cur.rowcount > 0:
+                # yup, it's an email. return it
+                return (user, 1)
+            debug(2, 'Username %s not found as email. Does not exist' % user)
             return ("user %s doesnt exist" % user, -2)
 
     except psycopg2.DatabaseError as e:
