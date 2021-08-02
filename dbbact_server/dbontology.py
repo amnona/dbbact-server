@@ -141,7 +141,7 @@ def get_names_from_ids(con, cur, term_ids):
         return msg, [], []
 
 
-def AddTerm(con, cur, term, parent='na', ontologyname='dbbact', synonyms=[], term_id='', parent_id='', commit=True):
+def AddTerm(con, cur, term, parent='dbbact:1811274', ontologyname='dbbact', synonyms=[], term_id='', parent_id='', commit=True):
     """
     Add a term to the ontology table. Also add parent and synonyms if supplied
 
@@ -152,7 +152,7 @@ def AddTerm(con, cur, term, parent='na', ontologyname='dbbact', synonyms=[], ter
         the term description to add (i.e. 'feces')
     parent: str, optional
         the name of the parent term (i.e. 'excreta')
-        if 'na', means no parent for this term (for example when new term not from existing ontology)
+        if 'dbbact:1811274', means no parent for this term (for example when new term not from existing ontology) (it is 'dbbact root')
     ontologyname: str, optional
         name of the ontology to which this term/parent link belongs (i.e. 'envo')
     synonyms: list of str, optional
