@@ -93,7 +93,7 @@ def send_email(user, pwd, recipient, subject, body):
 
     if 'OPENU_FLAG' in os.environ:
         debug(3, 'Sending mail using openu server')
-        openu_str = "echo '%s' | mail -s '%s' -r %s %s" % (body, subject, ' dbbact@openu.ac.il', recipient)
+        openu_str = "echo '%s' | mail -s '%s' -r %s %s" % (body, subject, ' dbbact@dbbact.org', recipient)
         os.system(openu_str)
         debug(3, 'Mail sent using openu server')
         return
