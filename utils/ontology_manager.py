@@ -205,7 +205,7 @@ def add_parent(ctx, term, parent, add_if_not_exist):
 	if ontology_database_id != 8:
 		raise ValueError('dbbact id is not 8! it is %d' % ontology_database_id)
 
-	# check if it had dbbact root as parent - remove it
+	# check if it had "dbbact root" (id 1811274) as parent - remove it
 	cur.execute('DELETE FROM ontologytreestructuretable WHERE ontologynameid=8 AND ontologyparentid=1811274 AND ontologyid=%s', [term_id])
 
 	# add to the OntologyTreeStructureTable
