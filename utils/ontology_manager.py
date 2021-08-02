@@ -135,12 +135,26 @@ def get_term_info(ctx, term, partial, no_parent):
 			cur.execute('SELECT * FROM ontologytable WHERE description=%s', [term])
 	res = cur.fetchall()
 	for cres in res:
-		if no_parent:
-			cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyid=%s', [cres['id']])
-			if cur.rowcount > 0:
-				print(cres['id'])
+		cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyid=%s', [cres['id']])
+		skip_it = False
+		if cur.rowcount > 0:
+			all_parents = []
+			parents = cur.fetchall()
+			for cparent in parents:
+				cur.execute('SELECT * FROM OntologyTable WHERE id=%s LIMIT 1', [cparent['ontologyparentid']])
+				cinfo = cur.fetchone()
+				all_parents.append('%s (%s)' % (cinfo['description'], cinfo['term_id']))
+				if cinfo['term_id'] == 'dbbact:1811274':
+					continue
+				skip_it = True
+		if skip_it:
+			if no_parent:
 				continue
-		print('----------------')
+		print('===================')
+		print('PARENTS:')
+		for cparent in all_parents:
+			print(cparent)
+		print('\n*******************')
 		print('TERM: %s (TERM_ID: %s )' % (cres['description'], cres['term_id']))
 		print(list(cres.items()))
 		annotation_ids = []
@@ -159,9 +173,10 @@ def get_term_info(ctx, term, partial, no_parent):
 				if cexp['type'] != 'name':
 					continue
 				exp_names.add('%s (expid: %s)' % (cexp['value'], cexp['expid']))
+		print('----------------')
+		print('Experiments:')
 		for cname in exp_names:
 			print(cname)
-		print()
 
 
 @om_cmd.command()
