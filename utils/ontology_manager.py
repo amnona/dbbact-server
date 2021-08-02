@@ -150,13 +150,13 @@ def get_term_info(ctx, term, partial, no_parent):
 		if skip_it:
 			if no_parent:
 				continue
+		print('\n*******************')
+		print('TERM: %s (TERM_ID: %s )' % (cres['description'], cres['term_id']))
+		print(list(cres.items()))
 		print('===================')
 		print('PARENTS:')
 		for cparent in all_parents:
 			print(cparent)
-		print('\n*******************')
-		print('TERM: %s (TERM_ID: %s )' % (cres['description'], cres['term_id']))
-		print(list(cres.items()))
 		annotation_ids = []
 		exp_names = set()
 		cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology = %s', [cres['id']])
