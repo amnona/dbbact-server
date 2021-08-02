@@ -137,8 +137,8 @@ def get_term_info(ctx, term, partial, no_parent):
 	for cres in res:
 		cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyid=%s', [cres['id']])
 		skip_it = False
+		all_parents = []
 		if cur.rowcount > 0:
-			all_parents = []
 			parents = cur.fetchall()
 			for cparent in parents:
 				cur.execute('SELECT * FROM OntologyTable WHERE id=%s LIMIT 1', [cparent['ontologyparentid']])
@@ -204,6 +204,9 @@ def add_parent(ctx, term, parent, add_if_not_exist):
 	debug(2, 'dbBact database id=%s' % ontology_database_id)
 	if ontology_database_id != 8:
 		raise ValueError('dbbact id is not 8! it is %d' % ontology_database_id)
+
+	# check if it had dbbact root as parent - remove it
+	cur.execute('DELETE FROM ontologytreestructuretable WHERE ontologynameid=8 AND ontologyparentid=1811274 AND ontologyid=%s', [term_id])
 
 	# add to the OntologyTreeStructureTable
 	cur.execute('INSERT INTO ontologytreestructuretable (ontologyid, ontologyparentid, ontologynameid) VALUES (%s, %s, %s)', [term_id, parent_term_id, ontology_database_id])
