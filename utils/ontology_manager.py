@@ -86,14 +86,16 @@ def _add_dbbact_term(con, cur, term, create_if_not_exist=True, only_dbbact=True)
 @click.option('--password', type=str, show_default=True, default='magNiv', help='dbbact postgres database password')
 @click.option('--debug-level', type=int, show_default=True, default=2, help='debug level (1 for debug ... 9 for critical)')
 @click.option('--log-file', type=str, show_default=True, default='log-ontology-manager.txt', help='the log file name (for storing history)')
+@click.option('--dry-run', type=bool, default=False, show_default=True, help='If set, do not commit to database')
 @click.pass_context
-def om_cmd(ctx, database, port, host, user, password, debug_level, log_file):
+def om_cmd(ctx, database, port, host, user, password, debug_level, log_file, dry_run):
 	con, cur = db_access.connect_db(database=database, user=user, password=password, port=port, host=host)
 	ctx.obj = {}
 	ctx.obj['con'] = con
 	ctx.obj['cur'] = cur
 	ctx.obj['debug_level'] = debug_level
 	ctx.obj['log_file'] = log_file
+	ctx.obj['commit'] = not dry_run
 	SetDebugLevel(debug_level)
 
 
@@ -118,7 +120,7 @@ def add_term(ctx, term):
 @click.option('--partial', '-p', is_flag=True, default=False, help='search for term as substring')
 @click.option('--no-parent', is_flag=True, default=False, help='only list terms that have no parent')
 @click.pass_context
-def get_term_info(ctx, term, partial, no_parent):
+def term_info(ctx, term, partial, no_parent):
 	'''Get information about a dbBact term
 	'''
 	con = ctx.obj['con']
@@ -183,13 +185,15 @@ def get_term_info(ctx, term, partial, no_parent):
 @click.option('--term', '-t', required=True, type=str, help='the term to link to the parent')
 @click.option('--parent', '-p', required=True, type=str, help='the parent term')
 @click.option('--add-if-not-exist', default=False, is_flag=True, help='Add the parent term to dBact ontology if does not exist')
+@click.option('--old-parent', type=click.Choice(['replace', 'insert', 'ignore', 'fail'], case_sensitive=False), help='if old parent exists, "replace" or "insert" between or "ignore" or "fail"', default='fail', show_default=True)
 @click.pass_context
-def add_parent(ctx, term, parent, add_if_not_exist):
+def add_parent(ctx, term, parent, add_if_not_exist, old_parent):
 	'''Link a dbBact ontology term to a dbBact parent term.
 	If the parent term does not exist, dbBact creates it
 	'''
 	con = ctx.obj['con']
 	cur = ctx.obj['cur']
+	commit = ctx.obj['commit']
 	log_file = ctx.obj['log_file']
 	term = term.lower()
 	parent = parent.lower()
@@ -208,11 +212,38 @@ def add_parent(ctx, term, parent, add_if_not_exist):
 	# check if it had "dbbact root" (id 1811274) as parent - remove it
 	cur.execute('DELETE FROM ontologytreestructuretable WHERE ontologynameid=8 AND ontologyparentid=1811274 AND ontologyid=%s', [term_id])
 
+	cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyid=%s', [term_id])
+	if cur.rowcount > 0:
+		debug(3, 'old parents (%d) found for term' % cur.rowcount)
+		if old_parent == 'replace':
+			if cur.rowcount > 1:
+				raise ValueError('More than 1 parent for term (%d). Cannot replace.' % cur.rowcount)
+			# remove the old parent
+			res = cur.fetchone()
+			cur.execute('DELETE FROM ontologytreestructuretable WHERE uniqueid=%s', [res['uniqueid']])
+		elif old_parent == 'insert':
+			if cur.rowcount > 1:
+				raise ValueError('More than 1 parent for term (%d). Cannot insert.' % cur.rowcount)
+			# add our parent term in the middle
+			res = cur.fetchone()
+			cur.execute('SELECT term_id FROM ontologytable WHERE id=%s', [res['ontologyparentid']])
+			idres = cur.fetchone()
+			ctx.invoke(add_parent, term=parent, parent=idres['term_id'], add_if_not_exist=False, old_parent='fail')
+			# and remove the old parent connection
+			cur.execute('DELETE FROM ontologytreestructuretable WHERE uniqueid=%s', [res['uniqueid']])
+		elif old_parent == 'ignore':
+			debug('term already has parents (%d). Ignoring and adding new parent' % cur.rowcount)
+		elif old_parent == 'fail':
+			raise ValueError('Parents (%d) already exists for term. To override use the old-parent option' % cur.rowcount)
+
 	# add to the OntologyTreeStructureTable
 	cur.execute('INSERT INTO ontologytreestructuretable (ontologyid, ontologyparentid, ontologynameid) VALUES (%s, %s, %s)', [term_id, parent_term_id, ontology_database_id])
 	debug(3, 'Inserted into ontologytreestructuretable')
-	_write_log(log_file, 'add_parent for term: %s (id: %s) parent: %s (id: %s)' % (term, term_id, parent, parent_term_id))
-	con.commit()
+	if commit:
+		_write_log(log_file, 'add_parent for term: %s (id: %s) parent: %s (id: %s)' % (term, term_id, parent, parent_term_id))
+		con.commit()
+	else:
+		debug(5, 'dry run - not commiting')
 	debug(3, 'done')
 
 
