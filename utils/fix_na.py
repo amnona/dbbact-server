@@ -27,6 +27,13 @@ def fix_na(con, cur, commit=False):
 	commit: bool, optional
 		True to commit changes, False to just perform dry run
 	'''
+	# find the id of the dbbact ontology
+	cur.execute('SELECT * FROM ontologynamestable WHERE description=%s', ['dbbact'])
+	res = cur.fetchone()
+	ontologynameid = res['id']
+	if ontologynameid != 8:
+		raise ValueError('strange dbbact ontologynameid: %s (instead of 8)' % ontologynameid)
+
 	# find the dbbact root term id "dbbact root" (id 1811274)
 	cur.execute('SELECT * from OntologyTable WHERE description=%s', ['dbbact root'])
 	res = cur.fetchone()
@@ -47,7 +54,7 @@ def fix_na(con, cur, commit=False):
 				continue
 			ttres = cur.fetchone()
 			if ttres['description'] == 'na':
-				cur.execute('UPDATE OntologyTreeStructureTable SET ontologyparentid=%s WHERE uniqueid=%s', [root_id, ctres['uniqueid']])
+				cur.execute('UPDATE OntologyTreeStructureTable SET ontologyparentid=%s, ontologynameid=%s WHERE uniqueid=%s', [root_id, ontologynameid, ctres['uniqueid']])
 				num_na_parents += 1
 	debug(4, 'updating %d dbbact terms roots' % num_na_parents)
 	if commit:
