@@ -120,6 +120,52 @@ def ontology_get_parents():
     return(json.dumps({'parents': parents}))
 
 
+@Ontology_Flask_Obj.route('/ontology/get_family_graph', methods=['GET'])
+@auto.doc()
+def ontology_get_family_graph():
+    """
+    Title: Get all parents and children for a given ontology term
+    URL: /ontology/get_family_graph
+    Description : Get a list of all the parents and children for a given ontology term
+    Method: GET
+    URL Params:
+        {
+            "terms" : list of str
+                the ontology terms to get the parents and children for
+            "relation": str, optional
+                "both" to get parents and children
+                "parent" to get only parents
+                "child" to get only children
+        }
+    Data Params:
+    Success Response:
+        Code : 201
+        Content :
+        {
+            "family" : json
+                the parents/children of the term in a networkx json format (node_link_data)
+        }
+    Details:
+        Validation:
+        NA
+        Action:
+        Get all the parents and children of the ontology term
+        If it is a synonym for a term, get the original term first.
+        Note that if the term is in more than one ontology, will return all parents/children
+    """
+    debug(3, 'ontology_get_parents', request)
+    terms = request.json.get('terms')
+    print(terms)
+    if terms is None:
+        # # TODO: retrun error
+        return('missing argument term', 400)
+    relation = request.json.get('relation', 'both')
+    err, res = dbontology.get_family_graph(g.con, g.cur, terms, relation)
+    if err:
+        return(err, 400)
+    return(json.dumps({'family': res}))
+
+
 @Ontology_Flask_Obj.route('/ontology/get_synonym', methods=['GET'])
 @auto.doc()
 def ontology_get_synonym():
