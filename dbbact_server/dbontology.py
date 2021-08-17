@@ -324,6 +324,36 @@ def GetTreeParentsById(con, cur, termid):
         return "error %s enountered in ontology.GetTreeParentById" % e, '', []
 
 
+def GetTreeChildrenById(con, cur, termid):
+    """
+    get the children ids for a given term id
+
+    input:
+    con,cur
+    termid : int
+        the term to get the children for
+
+    output:
+    err : str
+        Error message or empty string if ok
+    childids : list of int
+        list of ids of all the immediate children of the term
+    """
+    try:
+        cur.execute('SELECT ontologyId FROM OntologyTreeStructureTable WHERE ontologyParentId=%s', [termid])
+        if cur.rowcount == 0:
+            debug(3, 'termid %d not found in ontologytree' % termid)
+            return 'termid %d not found in ontologytree' % termid, []
+        childids = []
+        for cres in cur:
+            childids.append(cres[0])
+        debug(2, 'found %d child ids for termid %d' % (len(childids), termid))
+        return '', childids
+    except psycopg2.DatabaseError as e:
+        debug(7, "error %s enountered in ontology.GetTreeChildrenById" % e)
+        return "error %s enountered in ontology.GetTreeChildrenById" % e, '', []
+
+
 def GetParents_old(con, cur, term):
     """
     Get all the parents of the term in the ontology tree
@@ -440,6 +470,90 @@ def GetParents(con, cur, term, force_unique=False):
         return err, []
     err, terms, term_ids = get_names_from_ids(con, cur, parents)
     return '', terms
+
+
+def get_family_graph(con, cur, terms, force_unique=False, relation='both'):
+    """
+    get a cytoscape graph json of the parents and/or children of a term
+
+    Parameters
+    ----------
+    con,cur
+    term : list of str
+        The terms ('feces' or 'efo:00001' etc.) for which to look for parents
+    force_unique: bool, optional
+        True to fail if more than one id matches the term
+        False (default) to return parents for all the terms
+    relation: str, optional
+        'child' to get children, 'parent' to get parents, 'both' to get both
+
+    Returns
+    -------
+    err : str
+        Error message or empty string if ok
+    family : list of str
+        json (cytospace graph) of the term parents and/or children
+    """
+    import networkx as nx
+
+    # get the term ontologyids
+    term_ids = []
+    for cterm in terms:
+        err, cterm_ids = get_term_ids(con, cur, cterm, allow_ontology_id=True)
+        if err:
+            msg = 'error getting term_ids for term %s: %s' % (cterm, err)
+            debug(4, msg)
+            return msg, []
+        if len(cterm_ids) > 1:
+            debug(1, '*** more than one id (%d) found for term %s. Please supply ontology id instead (i.e. "envo:00001")' % (len(cterm_ids), cterm))
+            if force_unique:
+                msg = 'more than one id (%d) found for term %s. Please supply ontology id instead (i.e. "envo:00001")' % (len(cterm_ids), cterm)
+                debug(4, msg)
+                return msg, []
+        term_ids.extend(cterm_ids)
+
+    tg = nx.DiGraph()
+    if relation == 'both' or relation == 'parent':
+        debug(3, 'Getting parents')
+        plist = term_ids.copy()
+        parents_ids = set(plist)
+        processed_set = set()
+        while len(plist) > 0:
+            cid = plist.pop(0)
+            if cid in processed_set:
+                continue
+            err, cparentids = GetTreeParentsById(con, cur, cid)
+            if err:
+                continue
+            for ccparentid in cparentids:
+                tg.add_edge(ccparentid, cid)
+            plist.extend(cparentids)
+            processed_set.add(cid)
+
+    if relation == 'both' or relation == 'child':
+        debug(3, 'Getting children')
+        plist = term_ids.copy()
+        parents_ids = set(plist)
+        processed_set = processed_set.difference(term_ids)
+        while len(plist) > 0:
+            cid = plist.pop(0)
+            if cid in processed_set:
+                continue
+            processed_set.add(cid)
+            err, cparentids = GetTreeChildrenById(con, cur, cid)
+            if err:
+                continue
+            for ccparentid in cparentids:
+                tg.add_edge(cid, ccparentid)
+            plist.extend(cparentids)
+
+    # now add node names
+    processed = list(processed_set)
+    err, terms, term_ids = get_names_from_ids(con, cur, processed)
+    for idx, cid in enumerate(processed):
+        tg.nodes[cid]['name'] = terms[idx]
+    debug(2, 'found %d parents' % len(parents_ids))
+    return '', nx.node_link_data(tg)
 
 
 def GetSynonymTermId(con, cur, synonym):
