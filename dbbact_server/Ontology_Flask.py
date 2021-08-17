@@ -160,7 +160,7 @@ def ontology_get_family_graph():
         # # TODO: retrun error
         return('missing argument term', 400)
     relation = request.json.get('relation', 'both')
-    err, res = dbontology.get_family_graph(g.con, g.cur, terms, relation)
+    err, res = dbontology.get_family_graph(g.con, g.cur, terms=terms, relation=relation, force_unique=False)
     if err:
         return(err, 400)
     return(json.dumps({'family': res}))

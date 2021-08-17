@@ -472,7 +472,7 @@ def GetParents(con, cur, term, force_unique=False):
     return '', terms
 
 
-def get_family_graph(con, cur, terms, force_unique=False, relation='both'):
+def get_family_graph(con, cur, terms, relation='both', force_unique=False, ):
     """
     get a cytoscape graph json of the parents and/or children of a term
 
