@@ -288,8 +288,9 @@ def add_parent(ctx, term, parent, add_if_not_exist, old_parent):
 @click.option('--new-term', '-n', required=True, type=str, help='the new term')
 @click.option('--add-if-not-exist', default=False, is_flag=True, help='Add the new term to dbBact ontology if does not exist')
 @click.option('--ignore-no-annotations', default=False, is_flag=True, help='Rename the term even if does not appear in any annotation')
+@click.option('--inplace', default=False, is_flag=True, help='Just change the description of the old term (i.e. change the name for the term instead of creating a new one)')
 @click.pass_context
-def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations):
+def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations, inplace):
 	'''Link a dbBact ontology term to a dbBact parent term.
 	If the parent term does not exist, dbBact creates it
 	'''
@@ -303,6 +304,20 @@ def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations
 	old_term_id = _get_term_id(con, cur, old_term, only_dbbact=False)
 	if old_term_id is None:
 		raise ValueError('Term %s does not exist' % old_term)
+
+	if inplace:
+		cur.execute('SELECT * FROM OntologyTable WHERE description=%s', [new_term])
+		if cur.rowcount > 0:
+			raise ValueError('new term %s already exists as description' % new_term)
+		cur.execute('SELECT * FROM OntologyTable WHERE term_id=%s', [new_term])
+		if cur.rowcount > 0:
+			raise ValueError('new term %s already exists as term_id' % new_term)
+		cur.execute('UPDATE OntologyTable SET description=%s WHERE id=%s', [new_term, old_term_id])
+		_write_log(log_file, 'rename_term for old_term: %s (id: %s) to new_term: %s in place' % (old_term, old_term_id, new_term))
+		con.commit()
+		debug(3, 'done')
+		return
+
 	new_term_id = _add_dbbact_term(con, cur, new_term, create_if_not_exist=add_if_not_exist, only_dbbact=False)
 
 	# get all annotations with the old term
