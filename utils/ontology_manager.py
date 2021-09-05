@@ -285,7 +285,7 @@ def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations
 		debug(3, 'Found %d terms with %s as parent term. Updating' % (cur.rowcount, old_term))
 		res = cur.fetchall()
 		for cres in res:
-			cur.execute('UPDATE OntologyTreeStructureTable SET ontologyid=%s WHERE uniqueid=%s', [new_term_id, cres['uniqueid']])
+			cur.execute('UPDATE OntologyTreeStructureTable SET ontologyparentid=%s WHERE uniqueid=%s', [new_term_id, cres['uniqueid']])
 
 	_write_log(log_file, 'rename_term for old_term: %s (id: %s) to new_term: %s (id: %s)' % (old_term, old_term_id, new_term, new_term_id))
 	con.commit()
