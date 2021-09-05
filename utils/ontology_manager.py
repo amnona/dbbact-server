@@ -251,8 +251,9 @@ def add_parent(ctx, term, parent, add_if_not_exist, old_parent):
 @click.option('--old-term', '-t', required=True, type=str, help='the term to rename')
 @click.option('--new-term', '-n', required=True, type=str, help='the new term')
 @click.option('--add-if-not-exist', default=False, is_flag=True, help='Add the new term to dbBact ontology if does not exist')
+@click.option('--ignore-no-annotations', default=False, is_flag=True, help='Rename the term even if does not appear in any annotation')
 @click.pass_context
-def rename_term(ctx, old_term, new_term, add_if_not_exist):
+def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations):
 	'''Link a dbBact ontology term to a dbBact parent term.
 	If the parent term does not exist, dbBact creates it
 	'''
@@ -271,11 +272,20 @@ def rename_term(ctx, old_term, new_term, add_if_not_exist):
 	# get all annotations with the old term
 	cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology=%s', [old_term_id])
 	if cur.rowcount == 0:
-		raise ValueError('No annotations found containing term %s' % old_term)
+		if not ignore_no_annotations:
+			raise ValueError('No annotations found containing term %s' % old_term)
 	debug(3, 'found %d annotations with the term %s' % (cur.rowcount, old_term))
 
 	# update to the new term
 	cur.execute('UPDATE AnnotationListTable SET idontology=%s WHERE idontology=%s', [new_term_id, old_term_id])
+
+	# update the ontology parents table
+	cur.execute('SELECT * from OntologyTreeStructureTable WHERE onotologyid=%s', [old_term_id])
+	if cur.rowcount > 0:
+		debug(3, 'Found %d terms with %s as parent term. Updating' % (cur.rowcount, old_term))
+		res = cur.fetchall()
+		for cres in res:
+			cur.execute('UPDATE OntologyTreeStructureTable SET ontologyid=%s WHERE uniqueid=%s', [new_term_id, cres['uniqueid']])
 
 	_write_log(log_file, 'rename_term for old_term: %s (id: %s) to new_term: %s (id: %s)' % (old_term, old_term_id, new_term, new_term_id))
 	con.commit()
