@@ -141,6 +141,10 @@ def delete_term(ctx, term):
 	res = input('Delete %s (%s): Are you sure (y/n)?' % (term, term_id))
 	if not res.lower() in ('y', 'yes'):
 		raise ValueError('Delete aborted')
+
+	# delete all the entries where it is a child
+	cur.execute('DELETE FROM ontologytreestructuretable WHERE ontologyid=%s', [term_id])
+	# and delete the term itself
 	cur.execute('DELETE FROM ontologytable WHERE id=%s', [term_id])
 	con.commit()
 	_write_log(log_file, 'delete_term for term: %s (id: %s)' % (term, term_id))
