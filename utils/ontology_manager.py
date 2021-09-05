@@ -280,7 +280,7 @@ def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations
 	cur.execute('UPDATE AnnotationListTable SET idontology=%s WHERE idontology=%s', [new_term_id, old_term_id])
 
 	# update the ontology parents table
-	cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyid=%s', [old_term_id])
+	cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyparentid=%s', [old_term_id])
 	if cur.rowcount > 0:
 		debug(3, 'Found %d terms with %s as parent term. Updating' % (cur.rowcount, old_term))
 		res = cur.fetchall()
