@@ -116,6 +116,37 @@ def add_term(ctx, term):
 
 
 @om_cmd.command()
+@click.option('--term', '-t', required=True, type=str, help='the term to delete')
+@click.pass_context
+def delete_term(ctx, term):
+	'''Add a new term to the dbbact ontology
+	'''
+	con = ctx.obj['con']
+	cur = ctx.obj['cur']
+	log_file = ctx.obj['log_file']
+	term = term.lower()
+	debug(3, 'delete-term for term %s' % term)
+	term_id = _add_dbbact_term(con, cur, term, create_if_not_exist=False, only_dbbact=True)
+
+	# check if it is a parent of someone
+	cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyparentid=%s', [term_id])
+	if cur.rowcount > 0:
+		raise ValueError('The term %s is a parent of %d terms. Cannot delete' % cur.rowcount)
+
+	# check if it appears in annotations
+	cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology = %s', [term_id])
+	if cur.rowcount > 0:
+		raise ValueError('The term %s appears in %d annotations. Cannot delete' % cur.rowcount)
+
+	res = input('Delete %s (%s): Are you sure (y/n)?' % (term, term_id))
+	if not res.lower() in ('y', 'yes'):
+		raise ValueError('Delete aborted')
+	cur.execute('DELETE FROM ontologytable WHERE id=%s', [term_id])
+	con.commit()
+	_write_log(log_file, 'delete_term for term: %s (id: %s)' % (term, term_id))
+
+
+@om_cmd.command()
 @click.option('--term', '-t', required=True, type=str, help='the term to get info about')
 @click.option('--partial', '-p', is_flag=True, default=False, help='search for term as substring')
 @click.option('--no-parent', is_flag=True, default=False, help='only list terms that have no parent')
@@ -161,6 +192,7 @@ def term_info(ctx, term, partial, no_parent):
 			print(cparent)
 		annotation_ids = []
 		exp_names = set()
+		print('ANNOTATIONS:')
 		cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology = %s', [cres['id']])
 		res2 = cur.fetchall()
 		for cres2 in res2:
