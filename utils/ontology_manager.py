@@ -163,7 +163,7 @@ def term_info(ctx, term, partial, no_parent):
 	log_file = ctx.obj['log_file']
 	term = term.lower()
 
-	debug(3, 'get_-term-info for term %s' % term)
+	debug(3, 'term-info for term %s' % term)
 	cur.execute('SELECT * FROM ontologytable WHERE term_id=%s', [term])
 	if cur.rowcount == 0:
 		if partial:
@@ -194,6 +194,13 @@ def term_info(ctx, term, partial, no_parent):
 		print('PARENTS:')
 		for cparent in all_parents:
 			print(cparent)
+		print('CHILDREN:')
+		cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyparentid=%s', [cres['id']])
+		children = cur.fetchall()
+		for cchild in children:
+			cur.execute('SELECT * FROM ontologytable WHERE id=%s LIMIT 1', [cchild['ontologyid']])
+			cchilddet = cur.fetchone()
+			print(cchilddet['description'])
 		annotation_ids = []
 		exp_names = set()
 		print('ANNOTATIONS:')
