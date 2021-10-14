@@ -229,8 +229,9 @@ def term_info(ctx, term, partial, no_parent):
 @click.option('--parent', '-p', required=True, type=str, help='the parent term')
 @click.option('--add-if-not-exist', default=False, is_flag=True, help='Add the parent term to dBact ontology if does not exist')
 @click.option('--old-parent', type=click.Choice(['replace', 'insert', 'ignore', 'fail'], case_sensitive=False), help='if old parent exists, "replace" or "insert" between or "ignore" or "fail"', default='fail', show_default=True)
+@click.option('--only-dbbact', default=True, is_flag=True, help='Add the parent term even if it is not from the dbbact ontology (belongs to a different ontology)')
 @click.pass_context
-def add_parent(ctx, term, parent, add_if_not_exist, old_parent):
+def add_parent(ctx, term, parent, add_if_not_exist, old_parent, only_dbbact):
 	'''Link a dbBact ontology term to a dbBact parent term.
 	If the parent term does not exist, dbBact creates it
 	'''
@@ -243,7 +244,7 @@ def add_parent(ctx, term, parent, add_if_not_exist, old_parent):
 
 	debug(3, 'add parent %s to term %s' % (parent, term))
 	term_id = _get_term_id(con, cur, term)
-	parent_term_id = _add_dbbact_term(con, cur, parent, create_if_not_exist=add_if_not_exist)
+	parent_term_id = _add_dbbact_term(con, cur, parent, create_if_not_exist=add_if_not_exist, only_dbbact=only_dbbact)
 
 	# to be safe, get the dbBact ontology number
 	cur.execute('SELECT id FROM ontologynamestable WHERE description=%s', ['dbbact'])
@@ -298,8 +299,8 @@ def add_parent(ctx, term, parent, add_if_not_exist, old_parent):
 @click.option('--inplace', default=False, is_flag=True, help='Just change the description of the old term (i.e. change the name for the term instead of creating a new one)')
 @click.pass_context
 def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations, inplace):
-	'''Link a dbBact ontology term to a dbBact parent term.
-	If the parent term does not exist, dbBact creates it
+	'''replace a term with another term in all annotations. If inplace=True, just change the description of the term
+	If the new term does not exist, dbBact creates it into the dbbact ontology
 	'''
 	con = ctx.obj['con']
 	cur = ctx.obj['cur']
