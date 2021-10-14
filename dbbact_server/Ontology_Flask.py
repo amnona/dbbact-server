@@ -32,7 +32,7 @@ def ontology_add_term():
             "ontologyname" : str (optional)
                 default = "scdb"
                 name of the ontology to which this term belongs (i.e. "doid")
-                (description from OntologyNamesTable
+                (description from OntologyNamesTable)
             "synonyms" : (optional) list of
             {
                 "term" : str
@@ -71,7 +71,7 @@ def ontology_add_term():
         parent = 'na'
     ontologyname = alldat.get('ontologyname')
     if ontologyname is None:
-        ontologyname = 'scdb'
+        ontologyname = 'dbbact'
     synonyms = alldat.get('synonyms')
     err, termid = dbontology.AddTerm(g.con, g.cur, term, parent, ontologyname, synonyms, term_id=term_id, parent_id=parent_id)
     if err:
