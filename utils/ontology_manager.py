@@ -229,7 +229,7 @@ def term_info(ctx, term, partial, no_parent):
 @click.option('--parent', '-p', required=True, type=str, help='the parent term')
 @click.option('--add-if-not-exist', default=False, is_flag=True, help='Add the parent term to dBact ontology if does not exist')
 @click.option('--old-parent', type=click.Choice(['replace', 'insert', 'ignore', 'fail'], case_sensitive=False), help='if old parent exists, "replace" or "insert" between or "ignore" or "fail"', default='fail', show_default=True)
-@click.option('--only-dbbact', default=True, is_flag=True, help='Add the parent term even if it is not from the dbbact ontology (belongs to a different ontology)')
+@click.option('--only-dbbact/--not-only-dbbact', default=True, is_flag=True, help='Add the parent term even if it is not from the dbbact ontology (belongs to a different ontology)')
 @click.pass_context
 def add_parent(ctx, term, parent, add_if_not_exist, old_parent, only_dbbact):
 	'''Link a dbBact ontology term to a dbBact parent term.
