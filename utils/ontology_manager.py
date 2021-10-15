@@ -353,7 +353,7 @@ def rename_term(ctx, old_term, new_term, experiments, add_if_not_exist, ignore_n
 			cannotation_id = cannotation['idannotation']
 			print(cannotation_id)
 			cur.execute('SELECT idexp FROM AnnotationsTable WHERE id=%s LIMIT 1', [cannotation_id])
-			if len(cur.rowcount) == 0:
+			if cur.rowcount == 0:
 				debug(7, 'experiment ID %s not found! skipping' % cannotation_id)
 				continue
 			res = cur.fetchone()
