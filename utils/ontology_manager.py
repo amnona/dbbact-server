@@ -386,6 +386,64 @@ def rename_term(ctx, old_term, new_term, experiments, add_if_not_exist, ignore_n
 	debug(3, 'done')
 
 
+@om_cmd.command()
+@click.option('--old-term', '-t', required=True, type=str, help='the term to rename')
+@click.option('--new-term', '-n', required=True, type=str, help='the new term')
+@click.option('--experiments', '-e', multiple=True, default=None, type=int, help='replace only in experiments from the list of these experiment IDs')
+@click.option('--add-if-not-exist', default=False, is_flag=True, help='Add the new term to dbBact ontology if does not exist')
+@click.pass_context
+def add_term_to_annotation(ctx, old_term, new_term, experiments, add_if_not_exist):
+	'''Add another term to annotations containing a given term
+	'''
+	con = ctx.obj['con']
+	cur = ctx.obj['cur']
+	log_file = ctx.obj['log_file']
+	old_term = old_term.lower()
+	new_term = new_term.lower()
+
+	debug(3, 'add term %s to annotations with term %s' % (old_term, new_term))
+
+	# not sure if multiple provides None or [], so let's make it None
+	if experiments is not None:
+		if len(experiments) == 0:
+			experiments = None
+		else:
+			experiments = set(experiments)
+	old_term_id = _get_term_id(con, cur, old_term, only_dbbact=False)
+	if old_term_id is None:
+		raise ValueError('Term %s does not exist' % old_term)
+
+	new_term_id = _add_dbbact_term(con, cur, new_term, create_if_not_exist=add_if_not_exist, only_dbbact=False)
+
+	# get all annotations with the old term
+	cur.execute('SELECT idannotation,idannotationdetail FROM AnnotationListTable WHERE idontology=%s', [old_term_id])
+	if cur.rowcount == 0:
+		raise ValueError('No annotations found containing term %s' % old_term)
+	debug(3, 'found %d annotations with the term %s' % (cur.rowcount, old_term))
+
+	annotations = cur.fetchall()
+	num_added = 0
+	num_non_match = 0
+	for cannotation in annotations:
+		cannotation_id = cannotation['idannotation']
+		canntation_detail = cannotation['idannotationdetail']
+		if experiments is not None:
+			cur.execute('SELECT idexp FROM AnnotationsTable WHERE id=%s LIMIT 1', [cannotation_id])
+			if cur.rowcount == 0:
+				debug(7, 'experiment ID %s not found! skipping' % cannotation_id)
+				num_non_match += 1
+				continue
+			res = cur.fetchone()
+			if res['idexp'] not in experiments:
+				continue
+		cur.execute('INSERT INTO AnnotationListTable (idannotation, idannotationdetail, idontology) VALUES (%s, %s, %s)', [cannotation_id, canntation_detail, new_term_id])
+		num_added += 1
+	debug('added new term to %d annotations (%d annotations skipped)' % (num_added, num_non_match))
+	_write_log(log_file, 'add_term_to_annotation for old_term: %s (id: %s) to new_term: %s (id: %s)' % (old_term, old_term_id, new_term, new_term_id))
+	con.commit()
+	debug(3, 'done')
+
+
 if __name__ == "__main__":
 	om_cmd()
 	# main(sys.argv[1:])
