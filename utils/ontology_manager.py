@@ -438,7 +438,7 @@ def add_term_to_annotation(ctx, old_term, new_term, experiments, add_if_not_exis
 				continue
 		cur.execute('INSERT INTO AnnotationListTable (idannotation, idannotationdetail, idontology) VALUES (%s, %s, %s)', [cannotation_id, canntation_detail, new_term_id])
 		num_added += 1
-	debug('added new term to %d annotations (%d annotations skipped)' % (num_added, num_non_match))
+	debug(3, 'added new term to %d annotations (%d annotations skipped)' % (num_added, num_non_match))
 	_write_log(log_file, 'add_term_to_annotation for old_term: %s (id: %s) to new_term: %s (id: %s)' % (old_term, old_term_id, new_term, new_term_id))
 	con.commit()
 	debug(3, 'done')
