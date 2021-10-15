@@ -311,6 +311,11 @@ def rename_term(ctx, old_term, new_term, experiments, add_if_not_exist, ignore_n
 
 	debug(3, 'rename term %s to term %s' % (old_term, new_term))
 
+	# not sure if multiple provides None or [], so let's make it None
+	if experiments is not None:
+		if len(experiments) == 0:
+			experiments = None
+
 	if experiments is not None:
 		if inplace:
 			raise ValueError('Cannot replcae in place in a subset of experiments.')
