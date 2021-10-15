@@ -346,12 +346,13 @@ def rename_term(ctx, old_term, new_term, experiments, add_if_not_exist, ignore_n
 		cur.execute('UPDATE AnnotationListTable SET idontology=%s WHERE idontology=%s', [new_term_id, old_term_id])
 	else:
 		num_match = 0
+		match_exps = set()
+		non_match_exps = set()
 		num_non_match = 0
 		experiments = set(experiments)
 		annotations = cur.fetchall()
 		for cannotation in annotations:
 			cannotation_id = cannotation['idannotation']
-			print(cannotation_id)
 			cur.execute('SELECT idexp FROM AnnotationsTable WHERE id=%s LIMIT 1', [cannotation_id])
 			if cur.rowcount == 0:
 				debug(7, 'experiment ID %s not found! skipping' % cannotation_id)
@@ -359,10 +360,12 @@ def rename_term(ctx, old_term, new_term, experiments, add_if_not_exist, ignore_n
 			res = cur.fetchone()
 			if res['idexp'] in experiments:
 				num_match += 1
+				match_exps.add(res['idexp'])
 				cur.execute('UPDATE AnnotationListTable SET idontology=%s WHERE idontology=%s AND idannotation=%s', [new_term_id, old_term_id, cannotation_id])
 			else:
 				num_non_match += 1
-		debug(3, 'found %d annotations with a matching expid, %d without' % (num_match, num_non_match))
+				non_match_exps.add(res['idexp'])
+		debug(3, 'found %d annotations (%d experiments) with a matching expid, %d (%d) without' % (num_match, len(match_exps), num_non_match, len(non_match_exps)))
 
 	# update the ontology parents table - only if we did not do a partial update
 	if experiments is None:
