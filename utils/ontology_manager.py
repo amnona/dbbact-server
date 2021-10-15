@@ -294,11 +294,12 @@ def add_parent(ctx, term, parent, add_if_not_exist, old_parent, only_dbbact):
 @om_cmd.command()
 @click.option('--old-term', '-t', required=True, type=str, help='the term to rename')
 @click.option('--new-term', '-n', required=True, type=str, help='the new term')
+@click.option('--experiments', '-e', multiple=True, default=None, type=int, help='replace only in experiments from the list of these experiment IDs')
 @click.option('--add-if-not-exist', default=False, is_flag=True, help='Add the new term to dbBact ontology if does not exist')
 @click.option('--ignore-no-annotations', default=False, is_flag=True, help='Rename the term even if does not appear in any annotation')
 @click.option('--inplace', default=False, is_flag=True, help='Just change the description of the old term (i.e. change the name for the term instead of creating a new one)')
 @click.pass_context
-def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations, inplace):
+def rename_term(ctx, old_term, new_term, experiments, add_if_not_exist, ignore_no_annotations, inplace):
 	'''replace a term with another term in all annotations. If inplace=True, just change the description of the term
 	If the new term does not exist, dbBact creates it into the dbbact ontology
 	'''
@@ -309,6 +310,11 @@ def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations
 	new_term = new_term.lower()
 
 	debug(3, 'rename term %s to term %s' % (old_term, new_term))
+
+	if experiments is not None:
+		if inplace:
+			raise ValueError('Cannot replcae in place in a subset of experiments.')
+
 	old_term_id = _get_term_id(con, cur, old_term, only_dbbact=False)
 	if old_term_id is None:
 		raise ValueError('Term %s does not exist' % old_term)
@@ -336,15 +342,36 @@ def rename_term(ctx, old_term, new_term, add_if_not_exist, ignore_no_annotations
 	debug(3, 'found %d annotations with the term %s' % (cur.rowcount, old_term))
 
 	# update to the new term
-	cur.execute('UPDATE AnnotationListTable SET idontology=%s WHERE idontology=%s', [new_term_id, old_term_id])
+	if experiments is None:
+		cur.execute('UPDATE AnnotationListTable SET idontology=%s WHERE idontology=%s', [new_term_id, old_term_id])
+	else:
+		num_match = 0
+		num_non_match = 0
+		experiments = set(experiments)
+		annotations = cur.fetchall()
+		for cannotation in annotations:
+			cannotation_id = cannotation['idannotation']
+			print(cannotation_id)
+			cur.execute('SELECT idexp FROM AnnotationsTable WHERE id=%s LIMIT 1', [cannotation_id])
+			if len(cur.rowcount) == 0:
+				debug(7, 'experiment ID %s not found! skipping' % cannotation_id)
+				continue
+			res = cur.fetchone()
+			if res['idexp'] in experiments:
+				num_match += 1
+				cur.execute('UPDATE AnnotationListTable SET idontology=%s WHERE idontology=%s AND idannotation=%s', [new_term_id, old_term_id, cannotation_id])
+			else:
+				num_non_match += 1
+		debug(3, 'found %d annotations with a matching expid, %d without' % (num_match, num_non_match))
 
-	# update the ontology parents table
-	cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyparentid=%s', [old_term_id])
-	if cur.rowcount > 0:
-		debug(3, 'Found %d terms with %s as parent term. Updating' % (cur.rowcount, old_term))
-		res = cur.fetchall()
-		for cres in res:
-			cur.execute('UPDATE OntologyTreeStructureTable SET ontologyparentid=%s WHERE uniqueid=%s', [new_term_id, cres['uniqueid']])
+	# update the ontology parents table - only if we did not do a partial update
+	if experiments is None:
+		cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyparentid=%s', [old_term_id])
+		if cur.rowcount > 0:
+			debug(3, 'Found %d terms with %s as parent term. Updating' % (cur.rowcount, old_term))
+			res = cur.fetchall()
+			for cres in res:
+				cur.execute('UPDATE OntologyTreeStructureTable SET ontologyparentid=%s WHERE uniqueid=%s', [new_term_id, cres['uniqueid']])
 
 	_write_log(log_file, 'rename_term for old_term: %s (id: %s) to new_term: %s (id: %s)' % (old_term, old_term_id, new_term, new_term_id))
 	con.commit()
