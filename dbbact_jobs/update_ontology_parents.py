@@ -12,7 +12,7 @@ import setproctitle
 from dbbact_server import db_access, dbannotations
 from dbbact_server.utils import debug, SetDebugLevel
 
-__version__ = "0.9"
+__version__ = "1.0"
 
 
 def update_ontology_parents(con, cur, overwrite=True, ontology=None):
@@ -46,6 +46,9 @@ def update_ontology_parents(con, cur, overwrite=True, ontology=None):
 			cur.execute('UPDATE OntologyTable SET seqCount=0, annotationCount=0')
 			debug(4, 'deleting annotationparentstable')
 			cur.execute('DELETE FROM AnnotationParentsTable')
+			debug(4, 'temporarily deleting indices on AnnotationParentsTable')
+			cur.execute('DROP INDEX annotationparentstable_idannotation_idx')
+			cur.execute('DROP INDEX annotationparentstable_ontology_idx')
 
 	# iterate over all annotations
 	cur.execute('SELECT id,seqCount from AnnotationsTable')
@@ -71,8 +74,13 @@ def update_ontology_parents(con, cur, overwrite=True, ontology=None):
 			debug(6, 'error: %s' % err)
 			continue
 		debug(3, 'adding annotation %d (%d)' % (cid, added))
-		dbannotations.AddAnnotationParents(con, cur, cid, annotationdetails, commit=False, numseqs=cseqcount, all_parents_dict=all_parents_dict)
+		dbannotations.AddAnnotationParents(con, cur, cid, annotationdetails, numseqs=cseqcount, all_parents_dict=all_parents_dict, commit=False)
 		added += 1
+
+	if overwrite:
+		debug(4, 'adding indexes')
+		cur.execute('CREATE INDEX annotationparentstable_idannotation_idx ON annotationparentstable(idannotation int4_ops)')
+		cur.execute('CREATE INDEX annotationparentstable_ontology_idx ON annotationparentstable(ontology text_ops)')
 	debug(4, 'committing')
 	con.commit()
 	debug(4, 'added %d, skipped %d' % (added, skipped))
