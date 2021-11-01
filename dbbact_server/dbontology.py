@@ -118,7 +118,7 @@ def get_names_from_ids(con, cur, term_ids):
     err: str.
         Empty ('') if ok otherwise the error encountered
     terms: list of str.
-        The matching terms (i.e. 'feces' etc)
+        The matching term descriptions (i.e. 'feces' etc.)
     ontology_ids: list of str
         the matching ontology ids (i.e. 'envo:00001' etc.)
     '''
@@ -439,7 +439,7 @@ def get_parents_ids(con, cur, term_ids):
     return '', parents_ids
 
 
-def GetParents(con, cur, term, force_unique=False):
+def GetParents(con, cur, term, force_unique=False, get_ids=False):
     """
     Get all the parents of the term in the ontology tree
 
@@ -450,12 +450,14 @@ def GetParents(con, cur, term, force_unique=False):
     force_unique: bool, optional
         True to fail if more than one id matches the term
         False (default) to return parents for all the terms
+    get_ids: bool, optional
+        If True, get term_ids (i.e. 'gaz:00001'). If False, get term descriptions (i.e. 'feces')
 
     output:
     err : str
         Error message or empty string if ok
     parents : list of str
-        the parents of term
+        the parents of term. if get_ids is false, returns term descriptions (i.e. 'feces'). If get_ids is true, returns term_ids (i.e. 'gaz:000001')
     """
     err, term_ids = get_term_ids(con, cur, term, allow_ontology_id=True)
     if err:
@@ -469,7 +471,10 @@ def GetParents(con, cur, term, force_unique=False):
     if err:
         return err, []
     err, terms, term_ids = get_names_from_ids(con, cur, parents)
-    return '', terms
+    if get_ids:
+        return '', term_ids
+    else:
+        return '', terms
 
 
 def get_family_graph(con, cur, terms, relation='both', force_unique=False, ):
