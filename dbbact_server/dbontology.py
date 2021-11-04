@@ -104,6 +104,38 @@ def get_term_ids(con, cur, term, allow_ontology_id=True):
     return '', ids
 
 
+def get_name_from_id(con, cur, term_dbbact_id):
+    '''Get term name and term_id from the term dbbact id (OntologyTable)
+
+    Parameters
+    ----------
+    con, cur
+    term_dbbact_id: int
+        the dbbact id of the term to get the name and term_id for
+
+    Returns
+    -------
+    err: str.
+        Empty ('') if ok otherwise the error encountered
+    term: str
+        The matching term description (i.e. 'feces' etc.)
+    term_id: str
+        the matching term_id (i.e. 'envo:00001' etc.)
+    '''
+    try:
+        cur.execute('SELECT description, term_id FROM OntologyTable WHERE id=%s LIMIT 1', [term_dbbact_id])
+        if cur.rowcount == 0:
+            msg = 'termid %d not in OntologyTable' % term_dbbact_id
+            debug(5, msg)
+            return msg, None, None
+        res = cur.fetchone()
+        return '', res['description'], res['term_id']
+    except psycopg2.DatabaseError as e:
+        msg = "error %s enountered in ontology.get_name_from_id" % e
+        debug(7, msg)
+        return msg, None, None
+
+
 def get_names_from_ids(con, cur, term_ids):
     '''Get term names from the dbbact ids (OntologyTable)
 
@@ -126,17 +158,15 @@ def get_names_from_ids(con, cur, term_ids):
     ontology_ids = []
     try:
         for cid in term_ids:
-            cur.execute('SELECT description, term_id FROM OntologyTable WHERE id=%s LIMIT 1', [cid])
-            if cur.rowcount == 0:
-                msg = 'termid %d not in OntologyTable' % cid
-                debug(5, msg)
-                return msg, [], []
-            res = cur.fetchone()
-            terms.append(res['description'])
-            ontology_ids.append(res['term_id'])
+            err, cterm, cterm_id = get_name_from_id(con, cur, cid)
+            if err:
+                debug(5, err)
+                return err, [], []
+            terms.append(cterm)
+            ontology_ids.append(cterm_id)
         return '', terms, ontology_ids
     except psycopg2.DatabaseError as e:
-        msg = "error %s enountered in ontology.AddTerm" % e
+        msg = "error %s enountered in ontology.get_names_from_ids" % e
         debug(7, msg)
         return msg, [], []
 
@@ -439,7 +469,7 @@ def get_parents_ids(con, cur, term_ids):
     return '', parents_ids
 
 
-def GetParents(con, cur, term, force_unique=False, get_ids=False):
+def get_parents(con, cur, term, force_unique=False):
     """
     Get all the parents of the term in the ontology tree
 
@@ -450,31 +480,54 @@ def GetParents(con, cur, term, force_unique=False, get_ids=False):
     force_unique: bool, optional
         True to fail if more than one id matches the term
         False (default) to return parents for all the terms
-    get_ids: bool, optional
-        If True, get term_ids (i.e. 'gaz:00001'). If False, get term descriptions (i.e. 'feces')
 
     output:
     err : str
         Error message or empty string if ok
-    parents : list of str
-        the parents of term. if get_ids is false, returns term descriptions (i.e. 'feces'). If get_ids is true, returns term_ids (i.e. 'gaz:000001')
+    parent_dbbact_ids : list of int
+        the dbbact term ids of the given term
     """
-    err, term_ids = get_term_ids(con, cur, term, allow_ontology_id=True)
+    err, term_dbbact_ids = get_term_ids(con, cur, term, allow_ontology_id=True)
     if err:
         return err, []
-    if len(term_ids) > 1:
+    if len(term_dbbact_ids) > 1:
         if force_unique:
-            msg = 'more than one id (%d) found for term %s. Please supply ontology id instead (i.e. "envo:00001")' % (len(term_ids), term)
+            msg = 'more than one id (%d) found for term %s. Please supply ontology id instead (i.e. "envo:00001")' % (len(term_dbbact_ids), term)
             debug(4, msg)
             return msg, []
-    err, parents = get_parents_ids(con, cur, term_ids)
+    err, parent_dbbact_ids = get_parents_ids(con, cur, term_dbbact_ids)
     if err:
         return err, []
-    err, terms, term_ids = get_names_from_ids(con, cur, parents)
-    if get_ids:
-        return '', term_ids
-    else:
-        return '', terms
+    return '', list(parent_dbbact_ids)
+
+
+def get_parents_terms_and_term_ids(con, cur, term, force_unique=False):
+    """
+    Get all the parents of the term in the ontology tree. Similar to get_parents but returns term names and term_ids instead of the term dbbact ids
+
+    input:
+    con,cur
+    term : str
+        The term ('feces' or 'efo:00001' etc.) for which to look for parents
+    force_unique: bool, optional
+        True to fail if more than one id matches the term
+        False (default) to return parents for all the terms
+
+    output:
+    err : str
+        Error message or empty string if ok
+    terms : list of str
+        the parent terms of the term (i.e. 'feces').
+    term_ids: list of str
+        the parent term_ids (i.e. 'gaz:000001'). same order as parents
+    """
+    err, parent_dbbact_ids = get_parents(con, cur, term, force_unique=force_unique)
+    if err:
+        return err, [], []
+    err, terms, term_ids = get_names_from_ids(con, cur, parent_dbbact_ids)
+    if err:
+        return err, [], []
+    return '', terms, term_ids
 
 
 def get_family_graph(con, cur, terms, relation='both', force_unique=False, ):

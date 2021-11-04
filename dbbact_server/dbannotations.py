@@ -7,7 +7,7 @@ from . import dbexperiments
 from . import dbidval
 from . import dbontology
 from . import dbprimers
-from .dbontology import GetParents
+from .dbontology import get_parents, get_name_from_id
 from .utils import debug
 
 
@@ -375,7 +375,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
     numseqs: int, optional
         number of sequences in the annotation (to add to the sequences count for the term)
     all_parents_dict: None or dict, optional
-        {term(str): parents(list)}. If not None - the parents for each term (to save multiple calls to GetParents()). NOTE: the dict is extended with annotation results
+        {term(str): parents(list)}. If not None - the parents for each term (to save multiple calls to get_parents()). NOTE: the dict is extended with annotation results
 
     Returns
     -------
@@ -396,7 +396,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
 
             # if we don't yet have the parents, get from table
             if parents is None:
-                err, parents = GetParents(con, cur, contologyterm)
+                err, parents = get_parents(con, cur, contologyterm)
                 if err:
                     debug(6, 'error getting parents for term %s: %s' % (contologyterm, err))
                     continue
@@ -412,13 +412,16 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
         for cdetailtype, parents in parentsdict.items():
             parents = list(set(parents))
             for cpar in parents:
-                cpar = cpar.lower()
+                err, cpar_description, cpar_term_id = get_name_from_id(con, cur, cpar)
+                if err:
+                    debug(7, err)
+                    return err, -2
                 cdetailtype = cdetailtype.lower()
-                debug(1, 'adding parent %s' % cpar)
-                cur.execute('INSERT INTO AnnotationParentsTable (idAnnotation,annotationDetail,ontology) VALUES (%s,%s,%s)', [annotationid, cdetailtype, cpar])
+                debug(1, 'adding parent %s (%s, %s)' % (cpar, cpar_description, cpar_term_id))
+                cur.execute('INSERT INTO AnnotationParentsTable (idAnnotation,annotationDetail,ontology,term_id) VALUES (%s,%s,%s,%s)', [annotationid, cdetailtype, cpar_description, cpar_term_id])
                 numadded += 1
                 # add the number of sequences and one more annotation to all the terms in this annotation
-                cur.execute('UPDATE OntologyTable SET seqCount = seqCount+%s, annotationCount=annotationCount+1 WHERE description = %s', [numseqs, cpar])
+                cur.execute('UPDATE OntologyTable SET seqCount = seqCount+%s, annotationCount=annotationCount+1 WHERE id = %s', [numseqs, cpar])
         debug(1, "Added %d annotationparents items" % numadded)
         if commit:
             con.commit()
@@ -516,17 +519,17 @@ def get_annotation_details_termids(con, cur, annotationid):
     allres = cur.fetchall()
     for res in allres:
         iddetailtype = res['idannotationdetail']
-        idontology = res['idontology']
+        term_dbbact_id = res['idontology']
         err, detailtype = dbidval.GetDescriptionFromId(con, cur, 'AnnotationDetailsTypesTable', iddetailtype)
         if err:
             return err, []
-        err, term, ontology_id = dbontology.get_names_from_ids(con, cur, [idontology])
-        debug(1, 'ontologyid %d term %s ontologyid %s' % (idontology, term, ontology_id))
+        err, term, ontology_id = dbontology.get_name_from_id(con, cur, term_dbbact_id)
+        debug(1, 'ontologyid %d term %s ontologyid %s' % (term_dbbact_id, term, ontology_id))
         if err:
             return err, []
         if ontology_id[0] == '':
             ontology_id[0] = term[0]
-        details.append([detailtype, ontology_id[0]])
+        details.append([detailtype, ontology_id])
     debug(1, 'found %d annotation details' % len(details))
     return '', details
 

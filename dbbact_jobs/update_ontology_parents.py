@@ -23,6 +23,7 @@ def update_ontology_parents_overwrite(con, cur):
     all_parents_dict = {}
     seq_counts = defaultdict(int)
     annotation_counts = defaultdict(int)
+    exp_set = defaultdict(set)
 
     debug(4, 'updating parents for all terms/ontologies')
     debug(4, 'deleting all from annotationparentstable')
@@ -36,12 +37,13 @@ def update_ontology_parents_overwrite(con, cur):
         debug(7, 'failed to delete indices from AnnotationParentsTable')
 
     # iterate over all annotations
-    cur.execute('SELECT id,seqCount from AnnotationsTable')
+    cur.execute('SELECT id,seqCount,idexp from AnnotationsTable')
     annotations = cur.fetchall()
     debug(4, 'updating AnnotationParentsTable for %d annotations' % len(annotations))
     for cres in annotations:
-        cid = cres[0]
-        cseqcount = cres[1]
+        cid = cres['id']
+        cseqcount = cres['seqcount']
+        cexp = cres['idexp']
         if cseqcount == 0:
             debug(5, 'WARNING: annotation %d has no sequences in AnnotationsTable' % cid)
 
@@ -62,7 +64,7 @@ def update_ontology_parents_overwrite(con, cur):
 
             # if we don't yet have the parents, get from table
             if parents is None:
-                err, parents = dbontology.GetParents(con, cur, contologyterm, get_ids=True)
+                err, parents = dbontology.get_parents(con, cur, contologyterm)
                 if err:
                     debug(6, 'error getting parents for term %s: %s' % (contologyterm, err))
                     continue
@@ -77,14 +79,18 @@ def update_ontology_parents_overwrite(con, cur):
         for cdetailtype, parents in parentsdict.items():
             parents = list(set(parents))
             for cpar in parents:
-                cpar = cpar.lower()
+                err, cparent_description, cparent_term_id = dbontology.get_name_from_id(con, cur, cpar)
+                if err:
+                    debug(7, err)
+                    continue
                 cdetailtype = cdetailtype.lower()
                 debug(1, 'adding parent %s' % cpar)
-                cur.execute('INSERT INTO AnnotationParentsTable (idAnnotation,annotationDetail,ontology) VALUES (%s,%s,%s)', [cid, cdetailtype, cpar])
+                cur.execute('INSERT INTO AnnotationParentsTable (idAnnotation,annotationDetail,ontology, term_id) VALUES (%s,%s,%s,%s)', [cid, cdetailtype, cparent_description, cparent_term_id])
                 numadded += 1
                 # add the number of sequences and one more annotation to all the terms in this annotation (we need to update the ontology table later)
-                annotation_counts[cpar] += 1
-                seq_counts[cpar] += cseqcount
+                annotation_counts[cparent_term_id] += 1
+                exp_set[cparent_term_id].add(cexp)
+                seq_counts[cparent_term_id] += cseqcount
 
         debug(1, "Added %d annotationparents items" % numadded)
         added += 1
@@ -104,6 +110,7 @@ def update_ontology_parents_overwrite(con, cur):
         cterm = row['term_id']
         row['seqcount'] = seq_counts[cterm]
         row['annotationcount'] = annotation_counts[cterm]
+        row['exp_count'] = len(exp_set[cterm])
 
         cols = list(row.keys())
         vals = [row[x] for x in cols]
@@ -120,7 +127,6 @@ def update_ontology_parents_overwrite(con, cur):
     cur.execute('ALTER TABLE ontologysynonymtable DROP CONSTRAINT ontologysynonymtable_idontology_fkey')
     cur.execute('ALTER TABLE ontologytreestructuretable DROP CONSTRAINT ontologytreestructuretable_ontologyid_fkey')
     cur.execute('ALTER TABLE ontologytreestructuretable DROP CONSTRAINT ontologytreestructuretable_ontologyparentid_fkey')
-    cur.execute('ontologytable_id_seq')
 
     debug(4, 'deleting old ontologytable')
     cur.execute('DROP TABLE ontologytable CASCADE')
@@ -128,16 +134,16 @@ def update_ontology_parents_overwrite(con, cur):
     debug(4, 'renaming new tmp_ontologytable to ontologytable')
     cur.execute('ALTER TABLE tmp_ontologytable RENAME TO ontologytable')
 
+    debug(4, 'creating indices for ontologytable')
+    cur.execute('CREATE UNIQUE INDEX ontologytable_pkey ON ontologytable(id int4_ops)')
+    cur.execute('CREATE INDEX ontologytable_description_index ON ontologytable(description text_ops)')
+    cur.execute('CREATE INDEX term_id_index ON ontologytable(term_id text_ops)')
+
     debug(4, 're-linking foreign keys to ontologytable')
     cur.execute('ALTER TABLE annotationlisttable ADD CONSTRAINT annotationlisttable_idontology_fkey FOREIGN KEY (idontology) REFERENCES ontologytable(id)')
     cur.execute('ALTER TABLE ontologysynonymtable ADD CONSTRAINT ontologysynonymtable_idontology_fkey FOREIGN KEY (idontology) REFERENCES ontologytable(id)')
     cur.execute('ALTER TABLE ontologytreestructuretable ADD CONSTRAINT ontologytreestructuretable_ontologyid_fkey FOREIGN KEY (ontologyid) REFERENCES ontologytable(id)')
     cur.execute('ALTER TABLE ontologytreestructuretable ADD CONSTRAINT ontologytreestructuretable_ontologyparentid_fkey FOREIGN KEY (ontologyparentid) REFERENCES ontologytable(id)')
-
-    debug(4, 'creating indices for ontologytable')
-    cur.execute('CREATE UNIQUE INDEX ontologytable_pkey ON ontologytable(id int4_ops)')
-    cur.execute('CREATE INDEX ontologytable_description_index ON ontologytable(description text_ops)')
-    cur.execute('CREATE INDEX term_id_index ON ontologytable(term_id text_ops)')
 
     debug(4, 'committing')
     con.commit()

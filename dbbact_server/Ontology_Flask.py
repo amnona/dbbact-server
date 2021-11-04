@@ -99,7 +99,9 @@ def ontology_get_parents():
         Content :
         {
             "parents" : list of str
-                list of the parent terms
+                list of the parent terms (i.e. 'saliva')
+            "term_ids": list of str
+                list of the parent term ids (i.e. 'gaz:0000001')
         }
     Details:
         Validation:
@@ -114,10 +116,10 @@ def ontology_get_parents():
     if term is None:
         # # TODO: retrun error
         return('missing argument term', 400)
-    err, parents = dbontology.GetParents(g.con, g.cur, term)
+    err, parents, term_ids = dbontology.get_parents_terms_and_term_ids(g.con, g.cur, term)
     if err:
         return(err, 400)
-    return(json.dumps({'parents': parents}))
+    return(json.dumps({'parents': parents, 'term_ids': term_ids}))
 
 
 @Ontology_Flask_Obj.route('/ontology/get_family_graph', methods=['GET'])
