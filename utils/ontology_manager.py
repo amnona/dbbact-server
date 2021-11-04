@@ -11,7 +11,7 @@ import datetime
 from dbbact_server import db_access
 from dbbact_server.utils import debug, SetDebugLevel
 
-__version__ = "0.1"
+__version__ = "1.0"
 
 
 def _write_log(logfile, msg):
@@ -440,6 +440,59 @@ def add_term_to_annotation(ctx, old_term, new_term, experiments, add_if_not_exis
 		num_added += 1
 	debug(3, 'added new term to %d annotations (%d annotations skipped)' % (num_added, num_non_match))
 	_write_log(log_file, 'add_term_to_annotation for old_term: %s (id: %s) to new_term: %s (id: %s)' % (old_term, old_term_id, new_term, new_term_id))
+	con.commit()
+	debug(3, 'done')
+
+
+@om_cmd.command()
+@click.option('--term1', '-t', required=True, type=str, help='first term combine')
+@click.option('--term2', '-u', required=True, type=str, help='sencond term to combine')
+@click.pass_context
+def combine_terms(ctx, term1, term2):
+	'''Conbine two terms - i.e. add both terms to each annotations containing one of the terms
+	'''
+	con = ctx.obj['con']
+	cur = ctx.obj['cur']
+	log_file = ctx.obj['log_file']
+	term1 = term1.lower()
+	term2 = term2.lower()
+
+	debug(3, 'combine terms %s, %s in all annotations' % (term1, term2))
+
+	term1_id = _get_term_id(con, cur, term1, only_dbbact=False)
+	if term1_id is None:
+		raise ValueError('Term %s does not exist' % term1)
+	term2_id = _get_term_id(con, cur, term2, only_dbbact=False)
+	if term2_id is None:
+		raise ValueError('Term %s does not exist' % term2)
+
+	# get all annotations with the old and new terms
+	cur.execute('SELECT idannotation,idannotationdetail FROM AnnotationListTable WHERE idontology=%s', [term1_id])
+	debug(3, 'found %d annotations with the term %s' % (cur.rowcount, term1))
+	term1_annotations = cur.fetchall()
+	cur.execute('SELECT idannotation,idannotationdetail FROM AnnotationListTable WHERE idontology=%s', [term2_id])
+	debug(3, 'found %d annotations with the term %s' % (cur.rowcount, term2))
+	term2_annotations = cur.fetchall()
+	annotations = term1_annotations.copy()
+	annotations.extend(term2_annotations)
+
+	term1_annotation_ids = set([x['idannotation'] for x in term1_annotations])
+	term2_annotation_ids = set([x['idannotation'] for x in term2_annotations])
+
+	num_added = 0
+	num_non_match = 0
+	for cannotation in annotations:
+		cannotation_id = cannotation['idannotation']
+		canntation_detail = cannotation['idannotationdetail']
+		# test if the annotation already contains either of the terms
+		if cannotation_id not in term1_annotation_ids:
+			cur.execute('INSERT INTO AnnotationListTable (idannotation, idannotationdetail, idontology) VALUES (%s, %s, %s)', [cannotation_id, canntation_detail, term1_id])
+		else:
+			cur.execute('INSERT INTO AnnotationListTable (idannotation, idannotationdetail, idontology) VALUES (%s, %s, %s)', [cannotation_id, canntation_detail, term2_id])
+		num_added += 1
+
+	debug(3, 'added new term to %d annotations (%d annotations skipped)' % (num_added, num_non_match))
+	_write_log(log_file, 'combine_terms for term: %s (id: %s) and term: %s (id: %s)' % (term1, term1_id, term2, term2_id))
 	con.commit()
 	debug(3, 'done')
 
