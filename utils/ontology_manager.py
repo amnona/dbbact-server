@@ -7,6 +7,9 @@ need to run once since we didn't dutomatically set when adding new term
 import click
 
 import datetime
+from collections import defaultdict
+
+import psycopg2
 
 from dbbact_server import db_access
 from dbbact_server.utils import debug, SetDebugLevel
@@ -494,6 +497,57 @@ def combine_terms(ctx, term1, term2):
 	debug(3, 'added new term to %d annotations (%d annotations skipped)' % (num_added, num_non_match))
 	_write_log(log_file, 'combine_terms for term: %s (id: %s) and term: %s (id: %s)' % (term1, term1_id, term2, term2_id))
 	con.commit()
+	debug(3, 'done')
+
+
+@om_cmd.command()
+@click.pass_context
+def find_duplicates(ctx):
+	'''Conbine two terms - i.e. add both terms to each annotations containing one of the terms
+	'''
+	con = ctx.obj['con']
+	cur = ctx.obj['cur']
+	log_file = ctx.obj['log_file']
+
+	cur2 = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+	debug(3, 'find duplicate terms')
+	num_na = 0
+	num_empty = 0
+	cur.execute("SELECT * from ontologytable where term_id NOT LIKE 'gaz:%'")
+	for crow in cur:
+		cterm = crow['description']
+		if cterm == 'na':
+			num_na += 1
+			continue
+		if cterm == '':
+			num_empty += 1
+			continue
+		# check if it is a double
+		cur2.execute('SELECT * from ontologytable where description=%s', [cterm])
+		if cur2.rowcount < 2:
+			continue
+
+		# get the ids of the terms
+		similar_ids = {}
+		similar = set()
+		for crow2 in cur2:
+			if crow2['term_id'].startswith('gaz:'):
+				continue
+			similar_ids[crow2['id']] = crow2['term_id']
+			similar.add(crow2['term_id'])
+
+		# check if it appears in any annotations
+		cur2.execute('SELECT * from AnnotationListTable WHERE idontology IN %s', [tuple(similar_ids)])
+		if cur2.rowcount == 0:
+			continue
+		print('term: %s (%s)' % (cterm, similar))
+		annotation_terms = defaultdict(list)
+		for crow2 in cur2:
+			annotation_terms[crow2['idannotation']].append(similar_ids[crow2['idontology']])
+		for ck, cv in annotation_terms.items():
+			print(' * annotation: %d terms: %s' % (ck, cv))
+
+	print('num na: %d, num_empty: %d' % (num_na, num_empty))
 	debug(3, 'done')
 
 
