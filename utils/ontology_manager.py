@@ -503,7 +503,8 @@ def combine_terms(ctx, term1, term2):
 @om_cmd.command()
 @click.pass_context
 def find_duplicates(ctx):
-	'''Conbine two terms - i.e. add both terms to each annotations containing one of the terms
+	'''Find terms from different ontologies that have the same name (i.e. feces) and list in which annotations they appear
+	Ignores duplicates that are from gaz ontology
 	'''
 	con = ctx.obj['con']
 	cur = ctx.obj['cur']

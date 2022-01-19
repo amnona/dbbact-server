@@ -157,7 +157,6 @@ def ontology_get_family_graph():
     """
     debug(3, 'ontology_get_parents', request)
     terms = request.json.get('terms')
-    print(terms)
     if terms is None:
         # # TODO: retrun error
         return('missing argument term', 400)

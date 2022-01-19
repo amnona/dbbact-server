@@ -530,7 +530,7 @@ def get_parents_terms_and_term_ids(con, cur, term, force_unique=False):
     return '', terms, term_ids
 
 
-def get_family_graph(con, cur, terms, relation='both', force_unique=False, ):
+def get_family_graph(con, cur, terms, relation='both', force_unique=False, max_children_num=50):
     """
     get a cytoscape graph json of the parents and/or children of a term
 
@@ -544,6 +544,9 @@ def get_family_graph(con, cur, terms, relation='both', force_unique=False, ):
         False (default) to return parents for all the terms
     relation: str, optional
         'child' to get children, 'parent' to get parents, 'both' to get both
+    max_children_num: int or None, optional
+        if None, return all children
+        if int, return maximum of max_children_num child results
 
     Returns
     -------
@@ -598,6 +601,10 @@ def get_family_graph(con, cur, terms, relation='both', force_unique=False, ):
             if cid in processed_set:
                 continue
             processed_set.add(cid)
+            if max_children_num is not None:
+                if len(processed_set) > max_children_num:
+                    debug(3, 'max children num (%d) reached for terms: %s' % (max_children_num, terms))
+                    break
             err, cparentids = GetTreeChildrenById(con, cur, cid)
             if err:
                 continue
@@ -777,6 +784,7 @@ def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
     ----------
     terms: list of str
         list of terms to look for. can be term pairs
+    term_type: 
     TODO: ignore_lower: bool, optional. TODO
         True to look for total counts combining "all"/"high" and "lower" counts
 
@@ -788,8 +796,10 @@ def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
     terms = list(set(terms))
     term_info = {}
     for cterm in terms:
-        cur.execute('SELECT TotalExperiments, TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', [cterm])
-        # cur.execute('SELECT seqCount, annotationCount, exp_count from OntologyTable WHERE description=%s LIMIT 1', [cterm])
+        if term_types == ('single'):
+            cur.execute('SELECT exp_count, annotationCount from OntologyTable WHERE description=%s LIMIT 1', [cterm])
+        else:
+            cur.execute('SELECT TotalExperiments, TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', [cterm])
         if cur.rowcount == 0:
             debug(2, 'Term %s not found in ontology table' % cterm)
             continue
