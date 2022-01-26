@@ -784,7 +784,7 @@ def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
     ----------
     terms: list of str
         list of terms to look for. can be term pairs
-    term_type: 
+    term_type:
     TODO: ignore_lower: bool, optional. TODO
         True to look for total counts combining "all"/"high" and "lower" counts
 
@@ -797,7 +797,10 @@ def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
     term_info = {}
     for cterm in terms:
         if term_types == ('single'):
-            cur.execute('SELECT exp_count, annotationCount from OntologyTable WHERE description=%s LIMIT 1', [cterm])
+            if cterm[0] == '-':
+                cur.execute('SELECT exp_count, annotation_neg_count from OntologyTable WHERE description=%s LIMIT 1', [cterm[1:]])
+            else:
+                cur.execute('SELECT exp_count, annotationCount from OntologyTable WHERE description=%s LIMIT 1', [cterm])
         else:
             cur.execute('SELECT TotalExperiments, TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', [cterm])
         if cur.rowcount == 0:

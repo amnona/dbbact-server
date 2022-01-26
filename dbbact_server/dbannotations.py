@@ -421,7 +421,12 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
                 cur.execute('INSERT INTO AnnotationParentsTable (idAnnotation,annotationDetail,ontology,term_id) VALUES (%s,%s,%s,%s)', [annotationid, cdetailtype, cpar_description, cpar_term_id])
                 numadded += 1
                 # add the number of sequences and one more annotation to all the terms in this annotation
-                cur.execute('UPDATE OntologyTable SET seqCount = seqCount+%s, annotationCount=annotationCount+1 WHERE id = %s', [numseqs, cpar])
+                # if the detail is LOW, add 1 to the annotation_neg_count
+                if cdetailtype == 2:
+                    cur.execute('UPDATE OntologyTable SET seqCount = seqCount+%s, annotation_neg_count=annotation_neg_count+1 WHERE id = %s', [numseqs, cpar])
+                # otherwise, add 1 to the annotationCount
+                else:
+                    cur.execute('UPDATE OntologyTable SET seqCount = seqCount+%s, annotationCount=annotationCount+1 WHERE id = %s', [numseqs, cpar])
         debug(1, "Added %d annotationparents items" % numadded)
         if commit:
             con.commit()
@@ -443,7 +448,7 @@ def GetAnnotationParents(con, cur, annotationid):
     output:
     err: str
         error encountered or '' if ok
-    parents : dict of {str:list of str} {detail type (i.e. 'higher in'): list of ontology terms}
+    parents : dict of {str:list of str} {detail type (i.e. 'all'/'low'/'high'): list of ontology terms}
     '''
     debug(1, 'GetAnnotationParents for id %d' % annotationid)
     cur.execute('SELECT annotationdetail,ontology FROM AnnotationParentsTable WHERE idannotation=%s', [annotationid])
@@ -987,8 +992,13 @@ def DeleteAnnotation(con, cur, annotationid, userid=0, commit=True):
         msg = 'Could not find ontology parents. Delete aborted'
         debug(3, msg)
         return msg
-    for cterm in parents:
-        cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s, annotationCount=annotationCount-1 WHERE description = %s', [num_seqs, cterm])
+    for cdetailtype, cterm in parents.items():
+        print(cterm)
+        print(cdetailtype)
+        if cdetailtype == 'low':
+            cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s, annotation_neg_count=annotation_neg_count-1 WHERE description = %s', [num_seqs, cterm])
+        else:
+            cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s, annotationCount=annotationCount-1 WHERE description = %s', [num_seqs, cterm])
     debug(3, 'fixed ontologytable counts')
 
     cur.execute('DELETE FROM AnnotationsTable WHERE id=%s', [annotationid])

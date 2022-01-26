@@ -23,6 +23,7 @@ def update_ontology_parents_overwrite(con, cur):
     all_parents_dict = {}
     seq_counts = defaultdict(int)
     annotation_counts = defaultdict(int)
+    annotation_neg_counts = defaultdict(int)
     exp_set = defaultdict(set)
 
     debug(4, 'updating parents for all terms/ontologies')
@@ -67,6 +68,7 @@ def update_ontology_parents_overwrite(con, cur):
                 err, parents = dbontology.get_parents(con, cur, contologyterm)
                 if err:
                     debug(6, 'error getting parents for term %s: %s' % (contologyterm, err))
+                    all_parents_dict[contologyterm] = []
                     continue
                 all_parents_dict[contologyterm] = parents
 
@@ -88,7 +90,12 @@ def update_ontology_parents_overwrite(con, cur):
                 cur.execute('INSERT INTO AnnotationParentsTable (idAnnotation,annotationDetail,ontology, term_id) VALUES (%s,%s,%s,%s)', [cid, cdetailtype, cparent_description, cparent_term_id])
                 numadded += 1
                 # add the number of sequences and one more annotation to all the terms in this annotation (we need to update the ontology table later)
-                annotation_counts[cparent_term_id] += 1
+                if cdetailtype == 'all' or cdetailtype == 'high':
+                    annotation_counts[cparent_term_id] += 1
+                elif cdetailtype == 'low':
+                    annotation_neg_counts[cparent_term_id] += 1
+                else:
+                    debug(6, 'cdetailtype %s not recognized for annotation %s' % (cdetailtype, cid))
                 exp_set[cparent_term_id].add(cexp)
                 seq_counts[cparent_term_id] += cseqcount
 
@@ -110,6 +117,7 @@ def update_ontology_parents_overwrite(con, cur):
         cterm = row['term_id']
         row['seqcount'] = seq_counts[cterm]
         row['annotationcount'] = annotation_counts[cterm]
+        row['annotation_neg_count'] = annotation_neg_counts[cterm]
         row['exp_count'] = len(exp_set[cterm])
 
         cols = list(row.keys())
@@ -178,9 +186,9 @@ def update_ontology_parents(con, cur, overwrite=True, ontology=None):
             # alter table ontologytable ADD COLUMN seqCount integer DEFAULT 0;
             # alter table ontologytable ADD COLUMN annotationCount integer DEFAULT 0;
 
-            cur.execute('ALTER TABLE OntologyTable DROP COLUMN seqCount, DROP COLUMN annotationCount')
+            cur.execute('ALTER TABLE OntologyTable DROP COLUMN seqCount, DROP COLUMN annotationCount, DROP COLUMN annotation_neg_count')
             debug(4, 'inserting the columns')
-            cur.execute('ALTER TABLE OntologyTable ADD COLUMN seqcount integer DEFAULT 0, ADD COLUMN annotationcount integer DEFAULT 0')
+            cur.execute('ALTER TABLE OntologyTable ADD COLUMN seqcount integer DEFAULT 0, ADD COLUMN annotationcount integer DEFAULT 0, ADD COLUMN annotation_neg_count integer DEFAULT 0')
             # cur.execute('UPDATE OntologyTable SET seqCount=0, annotationCount=0')
             debug(4, 'deleting annotationparentstable')
             cur.execute('DELETE FROM AnnotationParentsTable')

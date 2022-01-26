@@ -483,7 +483,7 @@ def get_annotation_ontology_parents():
         Code : 200
         Content :
         {
-            parents : dict of (str:list of str) (detail type (i.e. 'higher in'), list of ontology terms)
+            parents : dict of (str:list of str) (detail type (i.e. 'low'/'high'/'all'), list of ontology terms)
         }
     Details :
         Validation:
