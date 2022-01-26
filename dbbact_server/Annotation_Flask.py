@@ -478,6 +478,9 @@ def get_annotation_ontology_parents():
         {
             annotationid : int
                 the annotationid to get the ontology parents for
+            get_term_id: bool, optional (default=False)
+                True will get the parent term_ids (i.e. 'gaz:000001')
+                False will get the parent terms (i.e. 'saliva')
         }
     Success Response:
         Code : 200
@@ -496,10 +499,11 @@ def get_annotation_ontology_parents():
     if alldat is None:
         return ('No json parameters supplied', 400)
     annotationid = alldat.get('annotationid')
+    get_term_id = alldat.get('get_term_id', False)
     # annotationid=int(request.args.get('annotationid'))
     if annotationid is None:
         return(getdoc(cfunc))
-    err, parents = dbannotations.GetAnnotationParents(g.con, g.cur, annotationid, get_term_id=False)
+    err, parents = dbannotations.GetAnnotationParents(g.con, g.cur, annotationid, get_term_id=get_term_id)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
