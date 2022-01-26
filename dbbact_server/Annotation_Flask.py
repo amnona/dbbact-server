@@ -499,7 +499,7 @@ def get_annotation_ontology_parents():
     # annotationid=int(request.args.get('annotationid'))
     if annotationid is None:
         return(getdoc(cfunc))
-    err, parents = dbannotations.GetAnnotationParents(g.con, g.cur, annotationid)
+    err, parents = dbannotations.GetAnnotationParents(g.con, g.cur, annotationid, get_term_id=False)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)

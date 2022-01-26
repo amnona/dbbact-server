@@ -176,9 +176,17 @@ def UpdateAnnotation(con, cur, annotationid, annotationtype=None, annotationdeta
     # update the annotation details if needed
     if annotationdetails is not None:
         debug(1, 'Updating %d annotation details' % len(annotationdetails))
+
+        # first update the counts (removing the old annotaiton details)
+        err = update_counts_for_annotation_delete(con, cur, annotationid, commit=False)
+        if err:
+            debug(7, 'failed to update the counts before updating the annotation details')
+            return err, -1
+
         # to update the annotaiton details, we delete and then create the new ones
         cur.execute('DELETE FROM AnnotationListTable WHERE idannotation=%s', [annotationid])
         debug(1, 'deleted from annotationliststable')
+
         # add the annotation details (which ontology term is higer/lower/all etc.)
         err, numadded = AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=False)
         if err:
@@ -436,7 +444,7 @@ def AddAnnotationParents(con, cur, annotationid, annotationdetails, commit=True,
         return e, -2
 
 
-def GetAnnotationParents(con, cur, annotationid):
+def GetAnnotationParents(con, cur, annotationid, get_term_id=True):
     '''
     Get the ontology parents list for the annotation
 
@@ -444,14 +452,21 @@ def GetAnnotationParents(con, cur, annotationid):
     con,cur
     annotationid : int
         the annotationid for which to show the list of ontology terms
+    get_term_id: bool, optional
+        True (default) to get the term_id (i.e. 'gaz:000001')
+        False to get the term name (i.e. 'feces')
 
     output:
     err: str
         error encountered or '' if ok
-    parents : dict of {str:list of str} {detail type (i.e. 'all'/'low'/'high'): list of ontology terms}
+    parents : dict of {str:list of str} {detail type (i.e. 'all'/'low'/'high'): list of ontology terms_ids}
     '''
     debug(1, 'GetAnnotationParents for id %d' % annotationid)
-    cur.execute('SELECT annotationdetail,ontology FROM AnnotationParentsTable WHERE idannotation=%s', [annotationid])
+    # cur.execute('SELECT annotationdetail,ontology FROM AnnotationParentsTable WHERE idannotation=%s', [annotationid])
+    if get_term_id:
+        cur.execute('SELECT annotationdetail,term_id FROM AnnotationParentsTable WHERE idannotation=%s', [annotationid])
+    else:
+        cur.execute('SELECT annotationdetail,ontology FROM AnnotationParentsTable WHERE idannotation=%s', [annotationid])
     if cur.rowcount == 0:
         errmsg = 'No Annotation Parents found for annotationid %d in AnnotationParentsTable' % annotationid
         debug(3, errmsg)
@@ -981,25 +996,9 @@ def DeleteAnnotation(con, cur, annotationid, userid=0, commit=True):
             debug(6, 'cannot delete. annotation %d was created by user %d but delete request was from user %d' % (annotationid, origuser, userid))
             return 'Cannot delete. Annotation was created by a different user'
 
-    # find how many sequences are in the annotations
-    cur.execute('SELECT seqCount FROM AnnotationsTable WHERE id=%s', [annotationid])
-    res = cur.fetchone()
-    num_seqs = res[0]
-
-    # update the ontology term sequence counts
-    err, parents = GetAnnotationParents(con, cur, annotationid)
+    err = update_counts_for_annotation_delete(con, cur, annotationid, commit=False)
     if err:
-        msg = 'Could not find ontology parents. Delete aborted'
-        debug(3, msg)
-        return msg
-    for cdetailtype, cterm in parents.items():
-        print(cterm)
-        print(cdetailtype)
-        if cdetailtype == 'low':
-            cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s, annotation_neg_count=annotation_neg_count-1 WHERE description = %s', [num_seqs, cterm])
-        else:
-            cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s, annotationCount=annotationCount-1 WHERE description = %s', [num_seqs, cterm])
-    debug(3, 'fixed ontologytable counts')
+        return err
 
     cur.execute('DELETE FROM AnnotationsTable WHERE id=%s', [annotationid])
     debug(1, 'deleted from annotationstable')
@@ -1014,6 +1013,49 @@ def DeleteAnnotation(con, cur, annotationid, userid=0, commit=True):
     if commit:
         con.commit()
     return('')
+
+
+def update_counts_for_annotation_delete(con, cur, annotationid, commit=False):
+    '''Update the sequence count, annotationcount, annotation_neg_count for deleting an annotation
+
+    Parameters
+    ----------
+    con, cur:
+    annotationid: the annotationid to update the counts for
+    commit: bool, optional
+        False (default) to not commit the change
+        True to commit the change
+
+    Returns
+    -------
+    err: str
+        '' if ok, otherwise the error encountered
+    '''
+    debug(1, 'update_counts_for_annotation_delete for id %s' % annotationid)
+
+    # find how many sequences are in the annotations
+    cur.execute('SELECT seqCount FROM AnnotationsTable WHERE id=%s', [annotationid])
+    res = cur.fetchone()
+    num_seqs = res[0]
+
+    # update the ontology term sequence counts
+    err, parents = GetAnnotationParents(con, cur, annotationid, get_term_id=True)
+    if err:
+        msg = 'Could not find ontology parents. Delete aborted'
+        debug(3, msg)
+        return msg
+    for cdetailtype, cterms in parents.items():
+        print(cterms)
+        print(cdetailtype)
+        for ccterm in cterms:
+            if cdetailtype == 'low':
+                cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s, annotation_neg_count=annotation_neg_count-1 WHERE term_id = %s', [num_seqs, ccterm])
+            else:
+                cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s, annotationCount=annotationCount-1 WHERE term_id = %s', [num_seqs, ccterm])
+    debug(3, 'fixed ontologytable counts')
+    if commit:
+        con.commit()
+    return ''
 
 
 def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, commit=True):
@@ -1060,13 +1102,14 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
     debug(3, 'removed %d from the annotationstable seq count' % numseqs)
 
     # update the ontology term sequence counts
-    err, parents = GetAnnotationParents(con, cur, annotationid)
+    err, parents = GetAnnotationParents(con, cur, annotationid, get_term_id=True)
     if err:
         msg = 'Could not find ontology parents. Delete aborted'
         debug(3, msg)
         return msg
-    for cterm in parents:
-        cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s WHERE description = %s', [numseqs, cterm])
+    for cdetailtype, cterms in parents.items():
+        for ccterm in cterms:
+            cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s WHERE term_id = %s', [numseqs, ccterm])
     debug(3, 'fixed ontologytable counts')
 
     if commit:
@@ -1182,7 +1225,7 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
                         continue
                     # if we need to get the parents, add all the parent terms
                     if get_parents:
-                        err, parents = GetAnnotationParents(con, cur, cannotationid)
+                        err, parents = GetAnnotationParents(con, cur, cannotationid, get_term_id=False)
                     else:
                         # otherwise, just keep the annotation terms
                         parents = defaultdict(list)
@@ -1193,9 +1236,7 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
                     cdetails['parents'] = parents
                     # add to the set of all terms to get the info for
                     # note we add a "-" for terms that have a "low" annotation type
-                    for cdet in parents.items():
-                        ctype = cdet[0]
-                        cterms = cdet[1]
+                    for ctype, cterms in parents.items():
                         for cterm in cterms:
                             if ctype == 'low':
                                 cterm = '-' + cterm

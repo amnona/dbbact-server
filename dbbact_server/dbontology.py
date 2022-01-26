@@ -797,6 +797,9 @@ def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
     term_info = {}
     for cterm in terms:
         if term_types == ('single'):
+            if cterm == '':
+                debug(4, 'empty term encountered')
+                continue
             if cterm[0] == '-':
                 cur.execute('SELECT exp_count, annotation_neg_count from OntologyTable WHERE description=%s LIMIT 1', [cterm[1:]])
             else:
