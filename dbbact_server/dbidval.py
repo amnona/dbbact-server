@@ -74,8 +74,6 @@ def AddItem(con, cur, table, description, allowreplicate=False, commit=True):
     sid : int
         the id of the added item
     """
-    print('nana')
-    print(table)
     try:
         description = description.lower()
         if not allowreplicate:
@@ -85,8 +83,6 @@ def AddItem(con, cur, table, description, allowreplicate=False, commit=True):
                 debug(2, 'AddItem - item %s already exists. id is %d' % (description, sid))
                 return '', sid
         # should create new item
-        print('pookapooka')
-        print('adding to table %s term %s' % (table, description))
         cur.execute('INSERT INTO %s (description) VALUES (%s) RETURNING id' % (table, '%s'), [description])
         sid = cur.fetchone()[0]
         debug(2, 'AddItem - added new item %s. id is %d' % (description, sid))
