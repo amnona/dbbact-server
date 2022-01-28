@@ -147,7 +147,7 @@ def update_ontology_parents_overwrite(con, cur):
         cur.execute('CREATE SEQUENCE ontologytable_id_seq')
     except:
         debug(2, 'the sequence ontologytable_id_seq already exists')
-    cur.execute('ALTER SEQUENCE ontologytable_id_seq owner to %s', [con.get_dsn_parameters()])
+    cur.execute('ALTER SEQUENCE ontologytable_id_seq owner to %s', [con.get_dsn_parameters()['user']])
     cur.execute("SELECT setval('ontologytable_id_seq', (SELECT max(id)+1 FROM ontologytable), false)")
     cur.execute("ALTER TABLE ontologytable ALTER COLUMN id SET DEFAULT nextval('ontologytable_id_seq')")
     # we need to set the owner of the sequence to the same owner as the database - to enable updating it
