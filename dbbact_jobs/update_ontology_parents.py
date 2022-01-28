@@ -110,7 +110,6 @@ def update_ontology_parents_overwrite(con, cur):
     # we need to copy and insert new values since updating inplace is very very slow
     # create the tmp copy but without indexes
     cur.execute('CREATE TABLE tmp_ontologytable (LIKE ontologytable INCLUDING defaults INCLUDING constraints)')
-
     insert_cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute('SELECT * FROM OntologyTable')
     for row in cur:
@@ -141,6 +140,18 @@ def update_ontology_parents_overwrite(con, cur):
 
     debug(4, 'renaming new tmp_ontologytable to ontologytable')
     cur.execute('ALTER TABLE tmp_ontologytable RENAME TO ontologytable')
+
+    # also create the sequence for automatic id
+    debug(4, 'creating the ontologytable id sequence and linking')
+    try:
+        cur.execute('CREATE SEQUENCE ontologytable_id_seq')
+    except:
+        debug(2, 'the sequence ontologytable_id_seq already exists')
+    cur.execute('ALTER SEQUENCE ontologytable_id_seq owner to %s', [con.get_dsn_parameters()])
+    cur.execute("SELECT setval('ontologytable_id_seq', (SELECT max(id)+1 FROM ontologytable), false)")
+    cur.execute("ALTER TABLE ontologytable ALTER COLUMN id SET DEFAULT nextval('ontologytable_id_seq')")
+    # we need to set the owner of the sequence to the same owner as the database - to enable updating it
+    cur.execute('ALTER SEQUENCE ontologytable_id_seq owned by ontologytable.id')
 
     debug(4, 'creating indices for ontologytable')
     cur.execute('CREATE UNIQUE INDEX ontologytable_pkey ON ontologytable(id int4_ops)')

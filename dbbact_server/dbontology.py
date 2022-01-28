@@ -222,9 +222,11 @@ def AddTerm(con, cur, term, parent='dbbact:1811274', ontologyname='dbbact', syno
         synonyms = [csyn.lower() for csyn in synonyms]
 
         # add/get the ontology term
+        print('bazbooz')
         err, termid = add_ontology_term(con, cur, term, term_id, commit=False)
         if err:
             return err, None
+        print('bazbooz2')
 
         # add/get the ontology parent term
         err, parentid = add_ontology_term(con, cur, parent, parent_id, commit=False)
@@ -232,6 +234,8 @@ def AddTerm(con, cur, term, parent='dbbact:1811274', ontologyname='dbbact', syno
             return err, None
 
         # add/get the ontology name
+        print('pitakara')
+        print('term=%s' % ontologyname)
         err, ontologynameid = dbidval.AddItem(con, cur, table='OntologyNamesTable', description=ontologyname, commit=False)
         if err:
             return err, None
