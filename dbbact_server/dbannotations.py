@@ -1045,8 +1045,6 @@ def update_counts_for_annotation_delete(con, cur, annotationid, commit=False):
         debug(3, msg)
         return msg
     for cdetailtype, cterms in parents.items():
-        print(cterms)
-        print(cdetailtype)
         for ccterm in cterms:
             if cdetailtype == 'low':
                 cur.execute('UPDATE OntologyTable SET seqCount = seqCount-%s, annotation_neg_count=annotation_neg_count-1 WHERE term_id = %s', [num_seqs, ccterm])
