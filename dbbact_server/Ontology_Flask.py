@@ -503,8 +503,8 @@ def get_term_children():
         Code : 200
         Content :
         {
-            term_count : dict of {term, float}
-                The total number of experiments each term pair appears in
+            terms : dict of {termid (int): term(str)}
+                the child terms of the given term (including itself). if only_annotated is not False, only returns child terms that appear in at least 1 annotation
         }
     Details :
         Validation:
@@ -512,9 +512,11 @@ def get_term_children():
     debug(3, 'get_term_children', request)
     cfunc = get_term_children
     alldat = request.get_json()
-    term = alldat.get('term')
-    ontology_name = alldat.get('ontology_name')
-    only_annotated = alldat.get('only_annotated')
+    term = alldat.get('term', None)
+    ontology_name = alldat.get('ontology_name', None)
+    only_annotated = alldat.get('only_annotated', True)
+    if only_annotated.lower() == 'false':
+        only_annotated = False
     if term is None:
         return(getdoc(cfunc))
     err, children = dbontology.get_term_children(g.con, g.cur, term, ontology_name=ontology_name, only_annotated=only_annotated)

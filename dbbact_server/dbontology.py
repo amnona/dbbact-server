@@ -1099,7 +1099,7 @@ def get_term_children(con, cur, term, ontology_name=None, only_annotated=True):
             if cur.rowcount > 0:
                 if cur.fetchone()[0] > 0:
                     ok_terms.add(cterm)
-                break
+                    continue
             # look also for lower in annotations
             cur.execute('SELECT TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', ['-' + cterm])
             if cur.rowcount > 0:

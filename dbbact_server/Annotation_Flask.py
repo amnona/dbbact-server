@@ -3,7 +3,7 @@ import json
 from flask import Blueprint, request, g
 from flask_login import current_user
 from flask_login import login_required
-
+    
 from . import dbannotations
 from .utils import debug, getdoc
 from .autodoc import auto
@@ -232,6 +232,51 @@ def get_annotation_sequences():
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
     return json.dumps({'seqids': seqids})
+
+
+@login_required
+@auto.doc()
+@Annotation_Flask_Obj.route('/annotations/get_list_sequences', methods=['GET'])
+def get_annotation_list_sequences():
+    """
+    Title: get_list_sequences
+    Description : Get all sequences ids associated with a list of annotations
+    URL: annotations/get_list_sequences
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            annotation_ids : list of int
+                list of annotation ids to get the sequences for
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            annotation_seqs : dict of {annotationid (int): list of int (sequence ids)
+                the seqids for all sequences participating in each annotation (key)
+        }
+    Details :
+        Validation:
+            If an annotation is private, return it only if user is authenticated and created the curation. If user not authenticated, do not return it in the list
+            If annotation is not private, return it (no need for authentication)
+    """
+    debug(3, 'get_annotation_list_sequences', request)
+    cfunc = get_annotation_sequences
+    alldat = request.get_json()
+    if alldat is None:
+        return ('No json parameters supplied', 400)
+    annotation_ids = alldat.get('annotation_ids')
+    if annotation_ids is None:
+        return('annotation_ids parameter missing', 400)
+    annotation_seqs = {}
+    for cannotation_id in annotation_ids:
+        err, seqids = dbannotations.GetSequencesFromAnnotationID(g.con, g.cur, cannotation_id, userid=current_user.user_id)
+        if err:
+            debug(6, err)
+            return ('Problem geting details. error=%s' % err, 400)
+        annotation_seqs[cannotation_id] = seqids
+    return json.dumps({'annotation_seqs': annotation_seqs})
 
 
 @login_required
