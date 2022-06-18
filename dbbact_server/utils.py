@@ -90,10 +90,12 @@ def tolist(data):
 
 def send_email(user, pwd, recipient, subject, body):
     import os
+    # we use this to sanitize the string prior to sending the email
+    from shlex import quote
 
     if 'OPENU_FLAG' in os.environ:
         debug(3, 'Sending mail using openu server')
-        openu_str = "echo '%s' | mail -s '%s' -r %s %s" % (body, subject, ' dbbact@dbbact.org', recipient)
+        openu_str = "echo '%s' | mail -s '%s' -r %s %s" % (quote(body), quote(subject), ' dbbact@dbbact.org', quote(recipient))
         os.system(openu_str)
         debug(3, 'Mail sent using openu server')
         return
