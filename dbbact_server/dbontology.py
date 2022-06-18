@@ -945,13 +945,8 @@ def GetIDs(con, cur, ontList):
     """
     ontids = []
     try:
-        sqlStr = "SELECT id from ontologyTable WHERE (description='%s')" % ontList[0]
-        idx = 0
-        while idx < len(ontList):
-            sqlStr += " OR (description='%s')" % ontList[idx]
-            idx = idx + 1
+        cur.execute('SELECT id from OntologyTable WHERE description IN %s', [tuple(ontList)])
 
-        cur.execute(sqlStr)
         if cur.rowcount == 0:
             debug(2, 'Failed to get list of terms')
         else:
