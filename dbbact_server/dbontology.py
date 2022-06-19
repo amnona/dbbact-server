@@ -813,8 +813,8 @@ def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
         total_experiments = 0
         total_annotations = 0
         for cres in res:
-            total_experiments += res[0]
-            total_annotations += res[1]
+            total_experiments += cres[0]
+            total_annotations += cres[1]
         term_info[cterm] = {}
         # term_info[cterm]['total_sequences'] = 0
         term_info[cterm]['total_experiments'] = total_experiments
