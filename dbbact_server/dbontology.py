@@ -801,19 +801,24 @@ def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
                 debug(4, 'empty term encountered')
                 continue
             if cterm[0] == '-':
-                cur.execute('SELECT exp_count, annotation_neg_count from OntologyTable WHERE description=%s LIMIT 1', [cterm[1:]])
+                cur.execute('SELECT exp_count, annotation_neg_count from OntologyTable WHERE description=%s', [cterm[1:]])
             else:
-                cur.execute('SELECT exp_count, annotationCount from OntologyTable WHERE description=%s LIMIT 1', [cterm])
+                cur.execute('SELECT exp_count, annotationCount from OntologyTable WHERE description=%s', [cterm])
         else:
-            cur.execute('SELECT TotalExperiments, TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', [cterm])
+            cur.execute('SELECT TotalExperiments, TotalAnnotations from TermInfoTable WHERE term=%s', [cterm])
         if cur.rowcount == 0:
             debug(2, 'Term %s not found in ontology table' % cterm)
             continue
-        res = cur.fetchone()
+        res = cur.fetchall()
+        total_experiments = 0
+        total_annotations = 0
+        for cres in res:
+            total_experiments += res[0]
+            total_annotations += res[1]
         term_info[cterm] = {}
         # term_info[cterm]['total_sequences'] = 0
-        term_info[cterm]['total_experiments'] = res[0]
-        term_info[cterm]['total_annotations'] = res[1]
+        term_info[cterm]['total_experiments'] = total_experiments
+        term_info[cterm]['total_annotations'] = total_annotations
     debug(1, 'found info for %d terms' % len(term_info))
     return term_info
 
