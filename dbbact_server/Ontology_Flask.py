@@ -557,3 +557,45 @@ def get_term_parent_tree_flask():
         return(getdoc(cfunc))
     err, term_trees = dbontology.get_parents_trees(g.con, g.cur, term)
     return json.dumps({'term_trees': term_trees})
+
+
+@Ontology_Flask_Obj.route('/ontology/get_term_seqs', methods=['GET'])
+@auto.doc()
+def get_term_seqs():
+    """
+    Title: get_term_seqs
+    Description : Get all sequences positively or negatively associated with the ontology term
+    URL: ontology/get_term_seqs
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            term: str
+                the term to get the parents for. can be the term name (i.e. 'feces') or the term id (i.e. 'gaz:0000001')
+            get_children: bool, optional
+                True to get also the sequences for the term children, or False to get only for the term
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            pos_seqs: list of str
+                list of positively associated sequences (i.e. 'common'/'dominant'/'higher in')
+            neg_seqs: list of str
+                list of negatively associated sequences (i.e. 'lower in')
+
+        }
+    Details :
+        Validation:
+    """
+    debug(3, 'get_term_seqs', request)
+    cfunc = get_term_parent_tree_flask
+    alldat = request.get_json()
+    if alldat is None:
+        return(getdoc(cfunc))
+    term = alldat.get('term')
+    if term is None:
+        return(getdoc(cfunc))
+    get_children = alldat.get('get_children', True)
+    err, pos_seqs, neg_seqs = dbontology.get_term_seqs(g.con, g.cur, term, get_children=get_children)
+    return json.dumps({'pos_seqs': pos_seqs, 'neg_seqs': neg_seqs})

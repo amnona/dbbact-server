@@ -1,4 +1,6 @@
 import psycopg2
+from collections import defaultdict
+
 from .utils import debug, tolist
 from . import dbidval
 from . import dbannotations
@@ -1057,8 +1059,9 @@ def get_term_children(con, cur, term, ontology_name=None, only_annotated=True):
 
     Returns
     -------
-    dict of {termid(int): term(str)}
-    All the children of the given term
+    error: empty ('') if ok, otherwise the error string
+    children: dict of {termid(int): term(str)}
+        All the children of the given term
     '''
     err, termid = GetIDs(con, cur, [term])
     if err:
@@ -1196,3 +1199,56 @@ def get_parents_trees(con, cur, term, max_trees=20):
         if err == '':
             all_tree_names.append(tree_names)
     return '', all_tree_names
+
+
+def get_term_sequences(con, cur, term, get_children=True):
+    '''Get all the sequences associated with a term
+
+    Parameters
+    ----------
+    con,cur : database connection and cursor
+    term: str
+        the term name (i.e. 'feces') or id (i.e. 'gaz:0000001') to get the sequences for
+    get_children: bool, optional
+        if true, get sequences also associated with the term children. if not, get only sequences associated with this term
+
+    Returns
+    -------
+    err: empty ('') if ok, otherwise the error enoucntered
+    pos_seqs: list of str
+        the positive associated sequences (i.e. common/dominant/higher in)
+    neg_seqs: list of str
+        the negative associated sequences (i.e. lower in)
+    '''
+    term = term.lower()
+    if get_children:
+        err, ids_dict = get_term_children(con, cur, term)
+        if err:
+            return err, [], []
+        ids = list(ids_dict.keys())
+    else:
+        err, ids = get_term_ids(con, cur, term)
+        if err:
+            return err, [], []
+    if len(ids) == 0:
+        msg = 'term %s not found in OntologyTable'
+        debug(2, msg)
+        return msg, [], []
+    pos_seqs = defaultdict(int)
+    neg_seqs = defaultdict(int)
+    for cid in ids:
+        cur.execute('SELECT (idannotation, idannotationdetail) FROM annotationlisttable WHERE idontology=%s', [cid])
+        res = cur.fetchall()
+        for cres in res:
+            cannotation_id = cres[0]
+            cidannotation_detail = cres[1]
+            cerr, cseqs = dbannotations.GetFullSequencesFromAnnotationID(con, cur, cannotation_id)
+            if cerr != '':
+                debug(3, 'error encountered when getting sequences for annotationid %s: %s' % (cannotation_id, cerr))
+                continue
+            for ccseq in cseqs:
+                if cidannotation_detail == 2:
+                    neg_seqs[ccseq] += 1
+                else:
+                    pos_seqs[ccseq] += 1
+    return '', list(pos_seqs.keys()), list(neg_seqs.keys())
