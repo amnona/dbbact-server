@@ -459,7 +459,7 @@ def GetAnnotationParents(con, cur, annotationid, get_term_id=True):
     output:
     err: str
         error encountered or '' if ok
-    parents : dict of {str:list of str} {detail type (i.e. 'all'/'low'/'high'): list of ontology terms_ids}
+    parents : dict of {str:list of str} {detail type (i.e. 'all'/'low'/'high'): list of ontology terms_ids (if get_term_id is True) or list of ontology terms (if get_term_id is False)}
     '''
     debug(1, 'GetAnnotationParents for id %d' % annotationid)
     # cur.execute('SELECT annotationdetail,ontology FROM AnnotationParentsTable WHERE idannotation=%s', [annotationid])
