@@ -816,6 +816,12 @@ def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
         total_experiments = 0
         total_annotations = 0
         for cres in res:
+            if cres[0] is None:
+                debug(7, 'None value encountered for term %s total experiments' % cterm)
+                continue
+            if cres[0] is None:
+                debug(7, 'None value encountered for term %s total annotations' % cterm)
+                continue
             total_experiments += cres[0]
             total_annotations += cres[1]
         term_info[cterm] = {}
