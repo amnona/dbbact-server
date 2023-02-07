@@ -42,7 +42,7 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
     userid : str or None (optional)
         username of the user creating this annotation or None (default) for anonymous user
     commit : bool (optional)
-        True (default) to commit, False to wait with the commit
+        True (default) to commit, False to wait with the commit 
     seq_translate_api: str or None (optional)
         address of the sequence translator API (to add new sequences to translation waiting queue). If none, don't add to waiting queue
 
@@ -788,7 +788,7 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_transl
     userid : int (optional)
         the id of the user requesting the annotations. Private annotations with non-matching user will not be returned
     seq_translate_api: str or None, optional
-        str: the address of the sequence translator rest-api (default 0.0.0.0:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
+        str: the address of the sequence translator rest-api (default 127.0.0.1:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
         None: get only exact matches
 
     Returns

@@ -238,6 +238,7 @@ def set_env_params():
             if cval is not None:
                 debug(5, 'using value %s for env. parameter %s' % (cval, cparam))
             app.config[cparam] = cval
+    os.environ['NO_PROXY']='127.0.0.1'
 
 
 if __name__ == '__main__':
