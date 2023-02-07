@@ -233,7 +233,7 @@ def GetSequencesIds(con, cur, sequences, idprimer=None, no_shorter=False, no_lon
     no_longer : bool (optional)
         False (default) to enable longer db sequences matching sequence, True to require at least length of database sequence
     seq_translate_api: str or None, optional
-        str: the address of the sequence translator rest-api (default 0.0.0.0:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
+        str: the address of the sequence translator rest-api (default 127.0.0.1:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
         None: get only exact matches
     dbname: str or None, optional
         if None, assume sequences are acgt sequences
@@ -292,7 +292,7 @@ def GetSequenceId(con, cur, sequence, idprimer=None, no_shorter=False, no_longer
     no_longer : bool (optional)
         False (default) to enable longer db sequences matching sequence, True to require at least length of database sequence
     seq_translate_api: str or None, optional
-        str: the address of the sequence translator rest-api (default 0.0.0.0:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
+        str: the address of the sequence translator rest-api (default 127.0.0.1:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
         None: get only exact matches
     dbname: str or None, optional
         if None, assume sequences are acgt sequences
