@@ -171,7 +171,7 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
     '''The entry point for running the api server through gunicorn (http://gunicorn.org/)
     to run dbbact rest server using gunicorn, use:
 
-    gunicorn 'dbbact.Server_Main:gunicorn(server_type='main', debug_level=6)' -b 0.0.0.0:5001 --workers 4 --name=dbbact-rest-api
+    gunicorn 'dbbact.Server_Main:gunicorn(server_type='main', debug_level=6)' -b 127.0.0.1:5001 --workers 4 --name=dbbact-rest-api
 
 
     Parameters
@@ -217,11 +217,11 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
     # try to set the seq translator api address accroding to server type if needed
     if app.config.get('DBBACT_SEQUENCE_TRANSLATOR_ADDR') is True:
         if app.config.get('DBBACT_SERVER_TYPE') == 'main':
-            seq_trans_api = 'http://0.0.0.0:5021'
+            seq_trans_api = 'http://127.0.0.1:5021'
         elif app.config.get('DBBACT_SERVER_TYPE') == 'develop':
-            seq_trans_api = 'http://0.0.0.0:5022'
+            seq_trans_api = 'http://127.0.0.1:5022'
         elif app.config.get('DBBACT_SERVER_TYPE') == 'test':
-            seq_trans_api = 'http://0.0.0.0:5023'
+            seq_trans_api = 'http://127.0.0.1:5023'
         else:
             debug(6, 'unknown server_type %s. Not using sequence translator')
             seq_trans_api = None
@@ -238,6 +238,8 @@ def set_env_params():
             if cval is not None:
                 debug(5, 'using value %s for env. parameter %s' % (cval, cparam))
             app.config[cparam] = cval
+    # Bypass the proxy for local requests (so can talk to sequence_translator_dbbact)
+    os.environ['NO_PROXY']='127.0.0.1'
 
 
 if __name__ == '__main__':

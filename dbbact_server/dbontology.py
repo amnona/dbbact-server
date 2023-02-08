@@ -533,7 +533,34 @@ def get_parents_terms_and_term_ids(con, cur, term, force_unique=False):
     return '', terms, term_ids
 
 
-def get_family_graph(con, cur, terms, relation='both', force_unique=False, max_children_num=50):
+def _has_annotations(con, cur, terms):
+    '''Check if a given term has any annotations associated with it
+
+    Parameters
+    ----------
+    con, cur
+    terms: list of str
+        The terms (names - e.g. 'feces') to test if any annotations are associated with
+
+    Returns
+    -------
+    list of bool: True if any annotations are associated, False if no annotations for this term
+    '''
+    ok_terms = []
+    for cterm in terms:
+        cur.execute('SELECT TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', [cterm])
+        if cur.rowcount > 0:
+            if cur.fetchone()[0] > 0:
+                ok_terms.append(cterm)
+        # look also for lower in annotations
+        cur.execute('SELECT TotalAnnotations from TermInfoTable WHERE term=%s LIMIT 1', ['-' + cterm])
+        if cur.rowcount > 0:
+            if cur.fetchone()[0] > 0:
+                ok_terms.append(cterm)
+    return ok_terms
+
+
+def get_family_graph(con, cur, terms, relation='both', force_unique=False, max_children_num=500000):
     """
     get a cytoscape graph json of the parents and/or children of a term
 
@@ -577,6 +604,7 @@ def get_family_graph(con, cur, terms, relation='both', force_unique=False, max_c
         term_ids.extend(cterm_ids)
 
     tg = nx.DiGraph()
+    processed_set = set()
     if relation == 'both' or relation == 'parent':
         debug(3, 'Getting parents')
         plist = term_ids.copy()
@@ -618,6 +646,9 @@ def get_family_graph(con, cur, terms, relation='both', force_unique=False, max_c
     # now add node names
     processed = list(processed_set)
     err, terms, term_ids = get_names_from_ids(con, cur, processed)
+    # check what terms have annotations
+    # ok_terms = _has_annotations(con, cur, terms)
+    # print('%d have annotations out of %d' % (len(ok_terms), len(terms)))
     for idx, cid in enumerate(processed):
         tg.nodes[cid]['name'] = terms[idx]
     debug(2, 'found %d parents' % len(parents_ids))

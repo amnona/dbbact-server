@@ -1348,6 +1348,7 @@ def get_species_seqs_f():
     err, ids, seqs = dbsequences.get_species_seqs(g.con, g.cur, species, seq_translate_api=g.seq_translate_api)
     debug(1, 'found %d ids for speices %s' % (len(ids), species))
     if err:
+        debug(3,'Error encountered when calling get_species_seqs:\n%s' % err)
         return('problem getting species sequences. error=%s' % err, 400)
 
     return json.dumps({'ids': ids, 'seqs': seqs})
