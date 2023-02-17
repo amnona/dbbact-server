@@ -105,6 +105,7 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 				end_time = time.time()
 				if res != 0:
 					debug(5, 'command %s failed. error code: %s' % (ccommand, res))
+					debug(2, 'failed command: %s' % cbash)
 				else:
 					debug(2, 'command exited ok. running time: %r sec' % (end_time - start_time))
 				# check for sig_term so we will stop running
