@@ -124,7 +124,7 @@ def run_bg_jobs(port, host, database, user, password, single_update=False, comma
 def main(argv):
 	parser = argparse.ArgumentParser(description='run_bg_jobs version %s.' % __version__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('--port', help='postgres port', default=5432, type=int)
-	parser.add_argument('--host', help='postgres host', default=None)
+	parser.add_argument('--host', help='postgres host', default='127.0.0.1')
 	parser.add_argument('--database', help='postgres database (overrides value from server-type)')
 	parser.add_argument('--user', help='postgres user (overrides value from server-type)')
 	parser.add_argument('--password', help='postgres password (overrides value from server-type)')
