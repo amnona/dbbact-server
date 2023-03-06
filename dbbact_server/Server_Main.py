@@ -166,8 +166,8 @@ def load_user(request):
             user = User(dbDefaultUser, dbDefaultPwd, userId, isadmin)
         return user
     # we need this except for flask-autodoc (it does not have flask.g ?!?!)
-    except:
-        debug(3, 'exception occured when logging in user. login failed')
+    except Exception as e:
+        debug(3, 'exception occured when logging in user. login failed. error: %s' % e)
         return None
 
 
