@@ -154,12 +154,16 @@ def load_user(request):
             # recentLoginUsers.append(user)
         else:
             debug(2, 'user login for user %s failed %s' % (userName, errorMes))
+            # make sure we are not admin
+            isadmin = 0
             # login failed, so fallback to default user
             errorMes, userId = dbuser.getUserId(g.con, g.cur, dbDefaultUser, dbDefaultPwd)
-            isadmin = 0
             if userId >= 0:
                 debug(1, 'logged in as default user userid=%d' % userId)
-                user = User(dbDefaultUser, dbDefaultPwd, userId, isadmin)
+            else:
+                debug(3, 'Failed to get userID. using default. error %s' % errorMes)
+                userId = 0
+            user = User(dbDefaultUser, dbDefaultPwd, userId, isadmin)
         return user
     # we need this except for flask-autodoc (it does not have flask.g ?!?!)
     except:
