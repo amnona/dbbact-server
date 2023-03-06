@@ -1,7 +1,7 @@
 import os
 
 from flask import Flask, g, request
-from flask_login import LoginManager, UserMixin
+from flask_login import LoginManager, UserMixin, AnonymousUserMixin
 
 from .autodoc import auto
 from .Seq_Flask import Seq_Flask_Obj
@@ -45,6 +45,11 @@ class User(UserMixin):
         self.password = password
         self.user_id = userId
         self.is_admin = isAdmin
+
+
+class UserAnonymous(AnonymousUserMixin):
+    user_id = None
+    is_admin = 0
 
 
 # whenever a new request arrives, connect to the database and store in g.db
@@ -171,7 +176,7 @@ def load_user(request):
     # we need this except for flask-autodoc (it does not have flask.g ?!?!)
     except Exception as e:
         debug(3, 'exception occured when logging in user. login failed. error: %s' % e)
-        return None
+        return user
 
 
 def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=None, pg_pwd=None, seq_trans_api=True, debug_level=6):
