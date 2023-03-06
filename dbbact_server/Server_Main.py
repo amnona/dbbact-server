@@ -35,7 +35,6 @@ auto.init_app(app)
 
 
 class User(UserMixin):
-
     def __init__(self, username, password, userId, isAdmin):
         self.name = username
         self.password = password
@@ -43,8 +42,9 @@ class User(UserMixin):
         self.is_admin = isAdmin
 
 
+# used in case login fails
 class UserAnonymous(AnonymousUserMixin):
-    user_id = None
+    user_id = 0
     is_admin = 0
 
 
