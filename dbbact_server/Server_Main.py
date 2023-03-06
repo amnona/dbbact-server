@@ -1,7 +1,7 @@
 import os
 
 from flask import Flask, g, request
-from flask_login import LoginManager, UserMixin
+from flask_login import LoginManager, UserMixin, AnonymousUserMixin
 
 from .autodoc import auto
 from .Seq_Flask import Seq_Flask_Obj
@@ -33,10 +33,6 @@ app.register_blueprint(Docs_Flask_Obj)
 
 auto.init_app(app)
 
-# setup the user authentication (using json parameters 'user', 'pwd')
-login_manager = LoginManager()
-login_manager.init_app(app)
-
 
 class User(UserMixin):
 
@@ -45,6 +41,17 @@ class User(UserMixin):
         self.password = password
         self.user_id = userId
         self.is_admin = isAdmin
+
+
+class UserAnonymous(AnonymousUserMixin):
+    user_id = None
+    is_admin = 0
+
+
+# setup the user authentication (using json parameters 'user', 'pwd')
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.anonymous_user = UserAnonymous
 
 
 # whenever a new request arrives, connect to the database and store in g.db
@@ -154,17 +161,21 @@ def load_user(request):
             # recentLoginUsers.append(user)
         else:
             debug(2, 'user login for user %s failed %s' % (userName, errorMes))
+            # make sure we are not admin
+            isadmin = 0
             # login failed, so fallback to default user
             errorMes, userId = dbuser.getUserId(g.con, g.cur, dbDefaultUser, dbDefaultPwd)
-            isadmin = 0
             if userId >= 0:
                 debug(1, 'logged in as default user userid=%d' % userId)
-                user = User(dbDefaultUser, dbDefaultPwd, userId, isadmin)
+            else:
+                debug(3, 'Failed to get userID. using default. error %s' % errorMes)
+                userId = 0
+            user = User(dbDefaultUser, dbDefaultPwd, userId, isadmin)
         return user
     # we need this except for flask-autodoc (it does not have flask.g ?!?!)
-    except:
-        debug(3, 'exception occured when logging in user. login failed')
-        return None
+    except Exception as e:
+        debug(3, 'exception occured when logging in user. login failed. error: %s' % e)
+        return user
 
 
 def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=None, pg_pwd=None, seq_trans_api=True, debug_level=6):
