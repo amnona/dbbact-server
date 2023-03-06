@@ -33,10 +33,6 @@ app.register_blueprint(Docs_Flask_Obj)
 
 auto.init_app(app)
 
-# setup the user authentication (using json parameters 'user', 'pwd')
-login_manager = LoginManager()
-login_manager.init_app(app)
-
 
 class User(UserMixin):
 
@@ -50,6 +46,12 @@ class User(UserMixin):
 class UserAnonymous(AnonymousUserMixin):
     user_id = None
     is_admin = 0
+
+
+# setup the user authentication (using json parameters 'user', 'pwd')
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.anonymous_user = UserAnonymous
 
 
 # whenever a new request arrives, connect to the database and store in g.db
