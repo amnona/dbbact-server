@@ -119,14 +119,11 @@ def load_user(request):
         debug(1, '>>>>>>>>>>>load_user login attempt')
         user = None
         alldat = request.get_json()
-        debug(1, 'got json')
         if (alldat is not None):
-            debug(1, ' not none')
             debug(1, 'login request json: %s' % alldat)
             userName = alldat.get('user')
             password = alldat.get('pwd')
         else:
-            debug(1, 'none')
             userName = None
             password = None
         debug(1, 'username is %s' % userName)
