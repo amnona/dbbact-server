@@ -1165,7 +1165,7 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
             if cseq[i] != sequence[i]:
                 mismatches += 1
         if mismatches > max_mismatches:
-            debug(1, 'sequence %s has %d mismatches, skipping' % (cseq, mismatches)
+            debug(1, 'sequence %s has %d mismatches, skipping' % (cseq, mismatches))
             continue
         sequences.append(cseq)
         seq_ids.append(cres['id'])
