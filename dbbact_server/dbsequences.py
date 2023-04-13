@@ -1119,3 +1119,45 @@ def get_species_seqs(con, cur, species, seq_translate_api):
     ids = res.json()['ids']
     debug(2, 'found %d seqs' % len(ids))
     return '', ids, ids
+
+
+def get_close_sequences(con, cur, sequence, max_mismatches=1):
+    '''Get the sequences in dbbact that are close to the given sequence
+    Search for sequences with up to max_mismatches mismatches to the given sequence
+    
+    Parameters
+    ----------
+    con, cur
+    sequence: str ('ACGT')
+        the sequence to search for close enough matches
+    max_mismatches: int, optional
+        the maximum number of mismatches allowed
+    
+    Returns
+    -------
+    err: str
+        the error encountered or empty string '' if ok
+    sequences: list of str
+        the matching sequences
+    seq_ids: list of int
+        the matching sequences dbbact ids
+    '''
+    debug(1, 'get_close_sequences for sequence %s' % sequence)
+    if max_mismatches > 5:
+        return 'max_mismatches must be <= 5', [], []
+    sequence = sequence.lower()
+    sim_thresh = max_mismatches / len(sequence)
+    cur.execute('SET pg_trgm.similarity_threshold = %s', [sim_thresh])
+    cur.execute('SELECT id, sequence FROM SequencesTable WHERE sequence % %s', [sequence])
+    res = cur.fetchall()
+    if len(res) == 0:
+        debug(1, 'no sequences found')
+        return '', [], []
+    debug(1, 'found %d sequences' % len(res))
+    sequences = []
+    seq_ids = []
+    for cres in res:
+        cseq = cres['sequence']
+        sequences.append(cseq)
+        seq_ids.append(cres['id'])
+    return '', sequences, seq_ids

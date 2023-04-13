@@ -1352,3 +1352,44 @@ def get_species_seqs_f():
         return('problem getting species sequences. error=%s' % err, 400)
 
     return json.dumps({'ids': ids, 'seqs': seqs})
+
+
+@Seq_Flask_Obj.route('/sequences/get_close_sequences', methods=['GET'])
+@auto.doc()
+def get_close_sequences_f():
+    '''
+    Title: get_close_sequences
+    Description: Get a list of dbBact sequences that are close (i.e. <= max_mismatches) to the given sequence
+    URL: /sequences/get_close_sequences
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            "sequence": str
+                the sequence to get close sequences for
+            "max_mismatches": int (optional)
+                the maximum number of mismatches to allow (default=1)
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            "sequences": list of str
+                the sequences that are close to the given sequence
+            "ids": list of int
+                the dbBact sequence ids of the sequences
+        }
+    '''
+    debug(3, 'get close sequences', request)
+    cfunc = get_close_sequences_f
+    alldat = request.get_json()
+    if alldat is None:
+        return(getdoc(cfunc))
+    sequence = alldat.get('sequence')
+    if sequence is None:
+        return('sequence parameter missing', 400)
+    max_mismatches = alldat.get('max_mismatches', 1)
+    err, sequences, ids = dbsequences.get_close_sequences(g.con, g.cur, sequence=sequence, max_mismatches=max_mismatches)
+    if err:
+        return('problem getting close sequences. error=%s' % err, 400)
+    return json.dumps({'sequences': sequences, 'ids': ids})
