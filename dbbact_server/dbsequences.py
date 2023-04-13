@@ -1159,6 +1159,14 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
     seq_ids = []
     for cres in res:
         cseq = cres['sequence']
+        # count the number of mismatches between cseq and sequence
+        mismatches = 0
+        for i in range(len(cseq)):
+            if cseq[i] != sequence[i]:
+                mismatches += 1
+        if mismatches > max_mismatches:
+            debug(1, 'sequence %s has %d mismatches, skipping' % (cseq, mismatches)
+            continue
         sequences.append(cseq)
         seq_ids.append(cres['id'])
     return '', sequences, seq_ids
