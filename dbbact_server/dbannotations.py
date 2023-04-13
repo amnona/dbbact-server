@@ -1136,6 +1136,9 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
         True to get the taxonomy for each sequence (returned in the 'taxonomy' field)
     get_parents: bool, True
         True to get the parent terms for each annotation term, False to just get the annotation terms
+    seq_translate_api: str or None, optional
+        str: the address of the sequence translator rest-api (default 127.0.0.1:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
+        None: get only exact matches
     dbname: str or None, optional
         if None, assume sequences are acgt sequences
         if str, assume sequences are database ids and this is the database name (i.e. 'FJ978486' for 'silva', etc.)

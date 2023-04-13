@@ -259,13 +259,14 @@ def GetSequencesIds(con, cur, sequences, idprimer=None, no_shorter=False, no_lon
     # and now call the sequence translator for all sequences
     if seq_translate_api is not None:
         if dbname is None:
-            debug(2, 'translating sequence to other regions')
+            debug(2, 'translating %d sequences to other regions' % len(sequences))
             res = requests.post(seq_translate_api + '/get_ids_for_seqs', json={'sequences': sequences})
         else:
-            debug(2, 'getting dbids from wholeseq ids')
+            debug(2, 'getting dbids from wholeseq ids for %d sequences' % len(sequences))
             res = requests.post(seq_translate_api + '/get_dbbact_ids_from_wholeseq_ids', json={'whole_seq_ids': sequences, 'dbname': dbname})
         if res.ok:
             trans_ids = res.json()['dbbact_ids']
+            debug(2, 'got %d ids from sequence translator' % len(trans_ids))
         else:
             debug(5, 'got error from sequence translator: %s' % res.content)
             trans_ids = []
@@ -273,7 +274,7 @@ def GetSequencesIds(con, cur, sequences, idprimer=None, no_shorter=False, no_lon
         for cidx in range(len(sequences)):
             sids[cidx].extend(trans_ids[cidx])
     else:
-        debug(2, 'not translating')
+        debug(2, 'not translating %d sequences' % len(sequences))
     return '', sids
 
 
