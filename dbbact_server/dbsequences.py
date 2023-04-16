@@ -1148,6 +1148,7 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
         return 'max_mismatches must be <= 5', [], []
     sequence = sequence.lower()
     sim_thresh = 1 - max_mismatches / len(sequence)
+    sim_thresh = 0.95
     debug(2, 'sim_thresh: %f' % sim_thresh)
     cur.execute('SET pg_trgm.similarity_threshold = %s', [sim_thresh])
     cur.execute('SELECT id, sequence FROM SequencesTable WHERE sequence %% %s', [sequence])
