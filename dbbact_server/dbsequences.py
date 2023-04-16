@@ -1155,7 +1155,7 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
     if len(res) == 0:
         debug(2, 'no sequences found')
         return '', [], []
-    debug(2, 'found %d sequences with similarity < %f' % (len(res), sim_thresh)))
+    debug(2, 'found %d sequences with similarity < %f' % (len(res), sim_thresh))
     similar_seqs = []
     for cres in res:
         cseq = cres['sequence']
