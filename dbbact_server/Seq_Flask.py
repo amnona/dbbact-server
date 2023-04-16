@@ -1383,10 +1383,13 @@ def get_close_sequences_f():
         Code : 200
         Content :
         {
-            "sequences": list of str
-                the sequences that are close to the given sequence
-            "ids": list of int
-                the dbBact sequence ids of the sequences
+            "similar_seqs": list (one entry per close sequence) of dict containing:
+                "sequence": str
+                    the sequence
+                "seq_id": int
+                    the dbBact sequence id
+                "mismatches": int
+                    the number of mismatches
         }
     '''
     debug(3, 'get close sequences', request)
@@ -1398,7 +1401,7 @@ def get_close_sequences_f():
     if sequence is None:
         return('sequence parameter missing', 400)
     max_mismatches = alldat.get('max_mismatches', 1)
-    err, sequences, ids = dbsequences.get_close_sequences(g.con, g.cur, sequence=sequence, max_mismatches=max_mismatches)
+    err, similar_seqs = dbsequences.get_close_sequences(g.con, g.cur, sequence=sequence, max_mismatches=max_mismatches)
     if err:
         return('problem getting close sequences. error=%s' % err, 400)
-    return json.dumps({'sequences': sequences, 'ids': ids})
+    return json.dumps({'similar_seqs': similar_seqs})

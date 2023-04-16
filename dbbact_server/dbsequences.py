@@ -1138,27 +1138,25 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
     -------
     err: str
         the error encountered or empty string '' if ok
-    sequences: list of str
-        the matching sequences
-    seq_ids: list of int
-        the matching sequences dbbact ids
+    similar_seqs: list of dict {'sequence': str, 'seq_id': int, 'mismatches': int}
     '''
     debug(1, 'get_close_sequences for sequence %s' % sequence)
     if max_mismatches > 5:
         return 'max_mismatches must be <= 5', [], []
     sequence = sequence.lower()
+    # set the similarity threshold for the results
     sim_thresh = 1 - max_mismatches / len(sequence)
-    sim_thresh = 0.95
+    sim_thresh = 0.92
     debug(2, 'sim_thresh: %f' % sim_thresh)
+
     cur.execute('SET pg_trgm.similarity_threshold = %s', [sim_thresh])
     cur.execute('SELECT id, sequence FROM SequencesTable WHERE sequence %% %s', [sequence])
     res = cur.fetchall()
     if len(res) == 0:
         debug(2, 'no sequences found')
         return '', [], []
-    debug(2, 'found %d sequences' % len(res))
-    sequences = []
-    seq_ids = []
+    debug(2, 'found %d sequences with similarity < %f' % (len(res), sim_thresh)))
+    similar_seqs = []
     for cres in res:
         cseq = cres['sequence']
         # count the number of mismatches between cseq and sequence
@@ -1169,6 +1167,6 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
         if mismatches > max_mismatches:
             debug(1, 'sequence %s has %d mismatches, skipping' % (cseq, mismatches))
             continue
-        sequences.append(cseq)
-        seq_ids.append(cres['id'])
-    return '', sequences, seq_ids
+        similar_seqs.append({'sequence': cseq, 'seq_id': cres['id'], 'mismatches': mismatches})
+    debug(2, 'out of which %d are close up to %d mismatches' % (len(similar_seqs), max_mismatches))
+    return '', similar_seqs
