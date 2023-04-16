@@ -1138,7 +1138,7 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
     -------
     err: str
         the error encountered or empty string '' if ok
-    similar_seqs: list of dict {'sequence': str, 'seq_id': int, 'mismatches': int}
+    similar_seqs: list of dict {'sequence': str, 'seq_id': int, 'num_mismatches': int}
     '''
     debug(1, 'get_close_sequences for sequence %s' % sequence)
     if max_mismatches > 5:
@@ -1167,6 +1167,6 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
         if mismatches > max_mismatches:
             debug(1, 'sequence %s has %d mismatches, skipping' % (cseq, mismatches))
             continue
-        similar_seqs.append({'sequence': cseq, 'seq_id': cres['id'], 'mismatches': mismatches})
+        similar_seqs.append({'sequence': cseq, 'seq_id': cres['id'], 'num_mismatches': mismatches})
     debug(2, 'out of which %d are close up to %d mismatches' % (len(similar_seqs), max_mismatches))
     return '', similar_seqs

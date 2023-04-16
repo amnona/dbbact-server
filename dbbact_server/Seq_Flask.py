@@ -1388,7 +1388,7 @@ def get_close_sequences_f():
                     the sequence
                 "seq_id": int
                     the dbBact sequence id
-                "mismatches": int
+                "num_mismatches": int
                     the number of mismatches
         }
     '''
