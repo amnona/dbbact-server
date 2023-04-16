@@ -295,6 +295,9 @@ def get_sequence_annotations():
                     "agentType" : str
                         Name of the program which submitted this annotation (i.e. heatsequer)
                         (description from AgentTypesTable)
+                    "review_status" : int
+                            The annotation review status: 0 - not reviewed yet, 1 - reviewed and accepted (by the dbbact team)
+                            NOTE: annotations are returned even if not reviewed yet
                     "description" : str
                         Free text describing this annotation (i.e. "lower in green tomatoes comapred to red ones")
                     "private" : bool
@@ -411,6 +414,9 @@ def get_sequence_list_annotations():
                         "agentType" : str
                             Name of the program which submitted this annotation (i.e. heatsequer)
                             (description from AgentTypesTable)
+                        "review_status" : int
+                            The annotation review status: 0 - not reviewed yet, 1 - reviewed and accepted (by the dbbact team)
+                            NOTE: annotations are returned even if not reviewed yet
                         "description" : str
                             Free text describing this annotation (i.e. "lower in green tomatoes comapred to red ones")
                         "private" : bool
@@ -537,6 +543,9 @@ def get_fast_annotations():
                     "agentType" : str
                         Name of the program which submitted this annotation (i.e. heatsequer)
                         (description from AgentTypesTable)
+                    "review_status" : int
+                            The annotation review status: 0 - not reviewed yet, 1 - reviewed and accepted (by the dbbact team)
+                            NOTE: annotations are returned even if not reviewed yet
                     "description" : str
                         Free text describing this annotation (i.e. "lower in green tomatoes comapred to red ones")
                     "private" : bool
