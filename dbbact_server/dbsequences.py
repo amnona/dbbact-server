@@ -259,13 +259,14 @@ def GetSequencesIds(con, cur, sequences, idprimer=None, no_shorter=False, no_lon
     # and now call the sequence translator for all sequences
     if seq_translate_api is not None:
         if dbname is None:
-            debug(2, 'translating sequence to other regions')
+            debug(2, 'translating %d sequences to other regions' % len(sequences))
             res = requests.post(seq_translate_api + '/get_ids_for_seqs', json={'sequences': sequences})
         else:
-            debug(2, 'getting dbids from wholeseq ids')
+            debug(2, 'getting dbids from wholeseq ids for %d sequences' % len(sequences))
             res = requests.post(seq_translate_api + '/get_dbbact_ids_from_wholeseq_ids', json={'whole_seq_ids': sequences, 'dbname': dbname})
         if res.ok:
             trans_ids = res.json()['dbbact_ids']
+            debug(2, 'got %d ids from sequence translator' % len(trans_ids))
         else:
             debug(5, 'got error from sequence translator: %s' % res.content)
             trans_ids = []
@@ -273,7 +274,7 @@ def GetSequencesIds(con, cur, sequences, idprimer=None, no_shorter=False, no_lon
         for cidx in range(len(sequences)):
             sids[cidx].extend(trans_ids[cidx])
     else:
-        debug(2, 'not translating')
+        debug(2, 'not translating %d sequences' % len(sequences))
     return '', sids
 
 
@@ -1119,3 +1120,53 @@ def get_species_seqs(con, cur, species, seq_translate_api):
     ids = res.json()['ids']
     debug(2, 'found %d seqs' % len(ids))
     return '', ids, ids
+
+
+def get_close_sequences(con, cur, sequence, max_mismatches=1):
+    '''Get the sequences in dbbact that are close to the given sequence
+    Search for sequences with up to max_mismatches mismatches to the given sequence
+    
+    Parameters
+    ----------
+    con, cur
+    sequence: str ('ACGT')
+        the sequence to search for close enough matches
+    max_mismatches: int, optional
+        the maximum number of mismatches allowed
+    
+    Returns
+    -------
+    err: str
+        the error encountered or empty string '' if ok
+    similar_seqs: list of dict {'sequence': str, 'seq_id': int, 'num_mismatches': int}
+    '''
+    debug(1, 'get_close_sequences for sequence %s' % sequence)
+    if max_mismatches > 5:
+        return 'max_mismatches must be <= 5', [], []
+    sequence = sequence.lower()
+    # set the similarity threshold for the results
+    sim_thresh = 1 - max_mismatches / len(sequence)
+    sim_thresh = 0.92
+    debug(2, 'sim_thresh: %f' % sim_thresh)
+
+    cur.execute('SET pg_trgm.similarity_threshold = %s', [sim_thresh])
+    cur.execute('SELECT id, sequence FROM SequencesTable WHERE sequence %% %s', [sequence])
+    res = cur.fetchall()
+    if len(res) == 0:
+        debug(2, 'no sequences found')
+        return '', [], []
+    debug(2, 'found %d sequences with similarity < %f' % (len(res), sim_thresh))
+    similar_seqs = []
+    for cres in res:
+        cseq = cres['sequence']
+        # count the number of mismatches between cseq and sequence
+        mismatches = 0
+        for i in range(len(cseq)):
+            if cseq[i] != sequence[i]:
+                mismatches += 1
+        if mismatches > max_mismatches:
+            debug(1, 'sequence %s has %d mismatches, skipping' % (cseq, mismatches))
+            continue
+        similar_seqs.append({'sequence': cseq, 'seq_id': cres['id'], 'num_mismatches': mismatches})
+    debug(2, 'out of which %d are close up to %d mismatches' % (len(similar_seqs), max_mismatches))
+    return '', similar_seqs

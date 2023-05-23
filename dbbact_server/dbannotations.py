@@ -596,6 +596,8 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
         'details' : list of (str,str) of type (i.e. 'higher in') and value (i.e. 'homo sapiens')
         "flags": list of dict {'flagid': int, status:str, userid: int}
             the flags raised for this annotation by other users (if not empty, maybe should suspect this annotation)
+        "review_status" : int
+                The annotation review status: 0 - not reviewed yet, 1 - reviewed and accepted (by the dbbact team)
     """
     debug(1, 'get annotation from id %d' % annotationid)
     # cur.execute('SELECT AnnotationsTable.*,userstable.username FROM AnnotationsTable,userstable WHERE AnnotationsTable.iduser = userstable.id and AnnotationsTable.id=%s', [annotationid])
@@ -651,6 +653,7 @@ def GetAnnotationsFromID(con, cur, annotationid, userid=0):
     data['details'] = details
     err, flags = get_annotation_flags(con, cur, annotationid)
     data['flags'] = flags
+    data['review_status'] = res['review_status']
 
     return '', data
 
@@ -1136,6 +1139,9 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
         True to get the taxonomy for each sequence (returned in the 'taxonomy' field)
     get_parents: bool, True
         True to get the parent terms for each annotation term, False to just get the annotation terms
+    seq_translate_api: str or None, optional
+        str: the address of the sequence translator rest-api (default 127.0.0.1:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
+        None: get only exact matches
     dbname: str or None, optional
         if None, assume sequences are acgt sequences
         if str, assume sequences are database ids and this is the database name (i.e. 'FJ978486' for 'silva', etc.)

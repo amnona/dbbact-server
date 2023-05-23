@@ -295,6 +295,9 @@ def get_sequence_annotations():
                     "agentType" : str
                         Name of the program which submitted this annotation (i.e. heatsequer)
                         (description from AgentTypesTable)
+                    "review_status" : int
+                            The annotation review status: 0 - not reviewed yet, 1 - reviewed and accepted (by the dbbact team)
+                            NOTE: annotations are returned even if not reviewed yet
                     "description" : str
                         Free text describing this annotation (i.e. "lower in green tomatoes comapred to red ones")
                     "private" : bool
@@ -411,6 +414,9 @@ def get_sequence_list_annotations():
                         "agentType" : str
                             Name of the program which submitted this annotation (i.e. heatsequer)
                             (description from AgentTypesTable)
+                        "review_status" : int
+                            The annotation review status: 0 - not reviewed yet, 1 - reviewed and accepted (by the dbbact team)
+                            NOTE: annotations are returned even if not reviewed yet
                         "description" : str
                             Free text describing this annotation (i.e. "lower in green tomatoes comapred to red ones")
                         "private" : bool
@@ -537,6 +543,9 @@ def get_fast_annotations():
                     "agentType" : str
                         Name of the program which submitted this annotation (i.e. heatsequer)
                         (description from AgentTypesTable)
+                    "review_status" : int
+                            The annotation review status: 0 - not reviewed yet, 1 - reviewed and accepted (by the dbbact team)
+                            NOTE: annotations are returned even if not reviewed yet
                     "description" : str
                         Free text describing this annotation (i.e. "lower in green tomatoes comapred to red ones")
                     "private" : bool
@@ -1352,3 +1361,47 @@ def get_species_seqs_f():
         return('problem getting species sequences. error=%s' % err, 400)
 
     return json.dumps({'ids': ids, 'seqs': seqs})
+
+
+@Seq_Flask_Obj.route('/sequences/get_close_sequences', methods=['GET'])
+@auto.doc()
+def get_close_sequences_f():
+    '''
+    Title: get_close_sequences
+    Description: Get a list of dbBact sequences that are close (i.e. <= max_mismatches) to the given sequence
+    URL: /sequences/get_close_sequences
+    Method: GET
+    URL Params:
+    Data Params: JSON
+        {
+            "sequence": str
+                the sequence to get close sequences for
+            "max_mismatches": int (optional)
+                the maximum number of mismatches to allow (default=1)
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {
+            "similar_seqs": list (one entry per close sequence) of dict containing:
+                "sequence": str
+                    the sequence
+                "seq_id": int
+                    the dbBact sequence id
+                "num_mismatches": int
+                    the number of mismatches
+        }
+    '''
+    debug(3, 'get close sequences', request)
+    cfunc = get_close_sequences_f
+    alldat = request.get_json()
+    if alldat is None:
+        return(getdoc(cfunc))
+    sequence = alldat.get('sequence')
+    if sequence is None:
+        return('sequence parameter missing', 400)
+    max_mismatches = alldat.get('max_mismatches', 1)
+    err, similar_seqs = dbsequences.get_close_sequences(g.con, g.cur, sequence=sequence, max_mismatches=max_mismatches)
+    if err:
+        return('problem getting close sequences. error=%s' % err, 400)
+    return json.dumps({'similar_seqs': similar_seqs})
