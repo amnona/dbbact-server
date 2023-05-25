@@ -317,7 +317,7 @@ def get_sequence_annotations():
                 key: term (str)
                 value: dict of pairs:
                     'total_annotations' : number of annotations having this term in the database (int)
-                    'total_sequences' : number of sequences in annotations having this term in the database (int)
+                    'total_experiments' : number of unique experiments having at least one annotation with this term in the database (int)
         }
     Details :
         Validation:
