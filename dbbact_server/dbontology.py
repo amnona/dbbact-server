@@ -835,9 +835,11 @@ def get_term_counts(con, cur, terms, term_types=('single'), ignore_lower=False):
                 debug(4, 'empty term encountered')
                 continue
             if cterm[0] == '-':
-                cur.execute('SELECT exp_count, annotation_neg_count from OntologyTable WHERE description=%s', [cterm[1:]])
+                # cur.execute('SELECT exp_count, annotation_neg_count from OntologyTable WHERE description=%s', [cterm[1:]])
+                cur.execute('SELECT TotalExperiments, TotalAnnotations from TermInfoTable WHERE term=%s', [cterm])
             else:
-                cur.execute('SELECT exp_count, annotationCount from OntologyTable WHERE description=%s', [cterm])
+                # cur.execute('SELECT exp_count, annotationCount from OntologyTable WHERE description=%s', [cterm])
+                cur.execute('SELECT TotalExperiments, TotalAnnotations from TermInfoTable WHERE term=%s', [cterm])
         else:
             cur.execute('SELECT TotalExperiments, TotalAnnotations from TermInfoTable WHERE term=%s', [cterm])
         if cur.rowcount == 0:
