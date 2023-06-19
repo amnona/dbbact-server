@@ -1,8 +1,8 @@
+For details about dbBact, see [Nucleic Acids Research 2023](https://doi.org/10.1093/nar/gkad527) paper.
+
 # dbbact-server
 
 This is the REST-API server for the dbBact open microbiome knowledge-base.
-
-For more details about dbBact, see [Nucleic Acids Research 2023](https://doi.org/10.1093/nar/gkad527) paper.
 
 The main dbBact server is running at: [dbbact.org](http://dbbact.org).
 
