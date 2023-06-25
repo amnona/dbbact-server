@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, g, request
+from flask import Flask, g, request, Response
 from flask_login import LoginManager, UserMixin, AnonymousUserMixin
 
 from .autodoc import auto
@@ -73,6 +73,13 @@ def before_request():
     g.cur = cur
     # address of the sequence translator rest api
     g.seq_translate_api = app.config.get('DBBACT_SEQUENCE_TRANSLATOR_ADDR')
+
+    # to handle preflight requests from the browser (for cross-site scripting)
+    if request.method == 'OPTIONS':
+        debug(6, 'got options request for page %s' % request.url, request=request)
+        res = Response()
+        res.headers['X-Content-Type-Options'] = '*'
+        return res
 
 
 # and when the request is over, disconnect

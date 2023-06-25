@@ -983,7 +983,6 @@ def get_sequence_string_annotations():
     sequence = alldat.get('sequence')
     if sequence is None:
         return('sequence parameter missing', 400)
-
     err, details = dbannotations.GetSequenceStringAnnotations(g.con, g.cur, sequence, userid=current_user.user_id)
     if err:
         debug(6, err)
