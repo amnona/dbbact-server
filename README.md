@@ -1,4 +1,4 @@
-For details about dbBact, see [Nucleic Acids Research 2023](https://doi.org/10.1093/nar/gkad527) paper.
+<b>The dbBact paper has been published: [Nucleic Acids Research 2023](https://doi.org/10.1093/nar/gkad527) paper.</b>
 
 # dbbact-server
 
@@ -13,6 +13,8 @@ API documentation is available at: [api.dbbact.org/docs](http://api.dbbact.org/d
 Example notebooks for using the dbBact REST-API are available at: [github.com/amnona/dbbact-examples](https://github.com/amnona/dbbact-examples)
 
 dbBact is used by the [Calour microbiome analysis tool](https://github.com/biocore/calour)
+
+The dbBact message forum is now live at: [dbbact.boards.net](https://dbbact.boards.net)
 
 ## Installation:
 <test class="warning">
