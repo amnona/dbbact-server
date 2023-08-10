@@ -1,8 +1,10 @@
-<b>The dbBact paper has been published: [Nucleic Acids Research 2023](https://doi.org/10.1093/nar/gkad527) paper.</b>
+![image](https://github.com/amnona/dbbact-server/assets/5832946/f7f670cd-f9d9-4762-9471-b305fc52b081)
 
-# dbbact-server
+<b>The dbBact paper has been published: [Nucleic Acids Research 2023](https://doi.org/10.1093/nar/gkad527)</b>
 
-This is the REST-API server for the dbBact open microbiome knowledge-base.
+# dbBact-server
+
+This is the REST-API server code for the [dbBact](http://dbbact.org) open microbiome knowledge-base.
 
 The main dbBact server is running at: [dbbact.org](http://dbbact.org).
 
@@ -76,6 +78,8 @@ Also prepare the users private data table (which is not exported in the database
 ```
 psql -U dbbact -d dbbact < database/data_users_private.txt
 ```
+
+dbBact database snapshots are available [here](https://dbbact.org/download)
 
 8. Set the dbbact server environment flag to specify running environment (production/develop/local)
 production:
