@@ -93,8 +93,6 @@ def _add_dbbact_term(con, cur, term, create_if_not_exist=True, only_dbbact=True)
 @click.pass_context
 def om_cmd(ctx, database, port, host, user, password, debug_level, log_file, dry_run):
 	SetDebugLevel(debug_level)
-	print('pita')
-	debug(2,'dbbact ontology manager')
 	con, cur = db_access.connect_db(database=database, user=user, password=password, port=port, host=host)
 	ctx.obj = {}
 	ctx.obj['con'] = con
