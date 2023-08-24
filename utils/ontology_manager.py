@@ -92,6 +92,8 @@ def _add_dbbact_term(con, cur, term, create_if_not_exist=True, only_dbbact=True)
 @click.option('--dry-run', type=bool, default=False, show_default=True, help='If set, do not commit to database')
 @click.pass_context
 def om_cmd(ctx, database, port, host, user, password, debug_level, log_file, dry_run):
+	SetDebugLevel(debug_level)
+	debug(1,'dbbact ontology manager')
 	con, cur = db_access.connect_db(database=database, user=user, password=password, port=port, host=host)
 	ctx.obj = {}
 	ctx.obj['con'] = con
@@ -99,7 +101,6 @@ def om_cmd(ctx, database, port, host, user, password, debug_level, log_file, dry
 	ctx.obj['debug_level'] = debug_level
 	ctx.obj['log_file'] = log_file
 	ctx.obj['commit'] = not dry_run
-	SetDebugLevel(debug_level)
 
 
 @om_cmd.command()
