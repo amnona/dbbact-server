@@ -120,7 +120,7 @@ def add_term(ctx, term):
 
 @om_cmd.command()
 @click.option('--term', '-t', required=True, type=str, help='the term to delete')
-@click.option('--delete-from-annotations', type=bool, default=False, show_default=True, help='If set, enable deletion even if term appears in annotations (and delete the term from the annotations)'))
+@click.option('--delete-from-annotations', type=bool, default=False, show_default=True, help='If set, enable deletion even if term appears in annotations (and delete the term from the annotations)')
 @click.pass_context
 def delete_term(ctx, term, delete_from_annotations):
 	'''Delete a term from the ontology table. Cannot delete if it is a parent of another term or if it appears in annotations unless delete-from-annotations is set
