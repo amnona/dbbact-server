@@ -92,6 +92,7 @@ def _add_dbbact_term(con, cur, term, create_if_not_exist=True, only_dbbact=True)
 @click.option('--dry-run', type=bool, default=False, show_default=True, help='If set, do not commit to database')
 @click.pass_context
 def om_cmd(ctx, database, port, host, user, password, debug_level, log_file, dry_run):
+	SetDebugLevel(debug_level)
 	con, cur = db_access.connect_db(database=database, user=user, password=password, port=port, host=host)
 	ctx.obj = {}
 	ctx.obj['con'] = con
@@ -99,7 +100,6 @@ def om_cmd(ctx, database, port, host, user, password, debug_level, log_file, dry
 	ctx.obj['debug_level'] = debug_level
 	ctx.obj['log_file'] = log_file
 	ctx.obj['commit'] = not dry_run
-	SetDebugLevel(debug_level)
 
 
 @om_cmd.command()
@@ -120,9 +120,10 @@ def add_term(ctx, term):
 
 @om_cmd.command()
 @click.option('--term', '-t', required=True, type=str, help='the term to delete')
+@click.option('--delete-from-annotations', type=bool, default=False, show_default=True, help='If set, enable deletion even if term appears in annotations (and delete the term from the annotations)'))
 @click.pass_context
-def delete_term(ctx, term):
-	'''Add a new term to the dbbact ontology
+def delete_term(ctx, term, delete_from_annotations):
+	'''Delete a term from the ontology table. Cannot delete if it is a parent of another term or if it appears in annotations unless delete-from-annotations is set
 	'''
 	con = ctx.obj['con']
 	cur = ctx.obj['cur']
@@ -134,16 +135,23 @@ def delete_term(ctx, term):
 	# check if it is a parent of someone
 	cur.execute('SELECT * FROM OntologyTreeStructureTable WHERE ontologyparentid=%s', [term_id])
 	if cur.rowcount > 0:
-		raise ValueError('The term %s is a parent of %d terms. Cannot delete' % cur.rowcount)
+		raise ValueError('The term %s is a parent of %d terms. Cannot delete' % (term, cur.rowcount))
 
 	# check if it appears in annotations
 	cur.execute('SELECT idannotation FROM AnnotationListTable WHERE idontology = %s', [term_id])
 	if cur.rowcount > 0:
-		raise ValueError('The term %s appears in %d annotations. Cannot delete' % cur.rowcount)
+		if not delete_from_annotations:
+			raise ValueError('The term %s appears in %d annotations. Cannot delete' % (term, cur.rowcount))
+		else:
+			res = input('Term appears in %d annotations. Delete %s (%s): Are you sure (y/n)?' % (cur.rowcount, term, term_id))
+	else:
+		res = input('Delete %s (%s): Are you sure (y/n)?' % (term, term_id))
 
-	res = input('Delete %s (%s): Are you sure (y/n)?' % (term, term_id))
 	if not res.lower() in ('y', 'yes'):
 		raise ValueError('Delete aborted')
+
+	# delete the term from the annotations
+	cur.execute('DELETE FROM AnnotationListTable WHERE idontology=%s', [term_id])
 
 	# delete all the entries where it is a child
 	cur.execute('DELETE FROM ontologytreestructuretable WHERE ontologyid=%s', [term_id])
