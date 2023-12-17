@@ -1180,6 +1180,8 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1, test_left_trim=Tru
                     continue
                 else:
                     debug(1, 'found subsequence %s is substring of %s' % (sequence, cseq))
+                    # set mismatches to the position where sequence appears in cseq
+                    mismatches = cseq.index(sequence)
             else:
                 debug(1, 'sequence %s has %d mismatches. skipping' % (cseq, mismatches))
                 continue
