@@ -1122,9 +1122,11 @@ def get_species_seqs(con, cur, species, seq_translate_api):
     return '', ids, ids
 
 
-def get_close_sequences(con, cur, sequence, max_mismatches=1):
+def get_close_sequences(con, cur, sequence, max_mismatches=1, test_left_trim=True):
     '''Get the sequences in dbbact that are close to the given sequence
-    Search for sequences with up to max_mismatches mismatches to the given sequence
+    Looks for 2 types of matches:
+    1. Sequences in dbBact with up to max_mismatches mismatches to the given sequence.
+    2. Sequences in dbBact for which the search sequence is a left-trimmed versions (i.e. the given sequence is a substring of the dbBact sequence)
     
     Parameters
     ----------
@@ -1133,6 +1135,9 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
         the sequence to search for close enough matches
     max_mismatches: int, optional
         the maximum number of mismatches allowed
+    test_left_trim: bool, optional
+        if True, also return results of dbBact sequences for which the query sequence is a left trimmed version.
+        This is relevant for sequences that were left trimmed prior to query (i.e. like what people do in dada2)
     
     Returns
     -------
@@ -1140,10 +1145,12 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
         the error encountered or empty string '' if ok
     similar_seqs: list of dict {'sequence': str, 'seq_id': int, 'num_mismatches': int}
     '''
-    debug(1, 'get_close_sequences for sequence %s' % sequence)
+    debug(2, 'get_close_sequences for sequence %s' % sequence)
     if max_mismatches > 5:
-        return 'max_mismatches must be <= 5', [], []
+        return 'max_mismatches must be <= 5', []
+
     sequence = sequence.lower()
+
     # set the similarity threshold for the results
     sim_thresh = 1 - max_mismatches / len(sequence)
     sim_thresh = 0.92
@@ -1154,19 +1161,28 @@ def get_close_sequences(con, cur, sequence, max_mismatches=1):
     res = cur.fetchall()
     if len(res) == 0:
         debug(2, 'no sequences found')
-        return '', [], []
+        return '', []
     debug(2, 'found %d sequences with similarity < %f' % (len(res), sim_thresh))
     similar_seqs = []
     for cres in res:
         cseq = cres['sequence']
         # count the number of mismatches between cseq and sequence
         mismatches = 0
-        for i in range(len(cseq)):
+        for i in range(min(len(cseq),len(sequence))):
             if cseq[i] != sequence[i]:
                 mismatches += 1
         if mismatches > max_mismatches:
-            debug(1, 'sequence %s has %d mismatches, skipping' % (cseq, mismatches))
-            continue
+            # test also if it is a substring of the sequence (i.e. left trimmed)
+            if test_left_trim:
+                debug(1, 'sequence %s has %d mismatches. testing for left trim subsequence')
+                if sequence not in cseq:
+                    debug(1, 'sequence %s is not substring of %s' % (sequence, cseq))
+                    continue
+                else:
+                    debug(1, 'found subsequence %s is substring of %s' % (sequence, cseq))
+            else:
+                debug(1, 'sequence %s has %d mismatches. skipping' % (cseq, mismatches))
+                continue
         similar_seqs.append({'sequence': cseq, 'seq_id': cres['id'], 'num_mismatches': mismatches})
     debug(2, 'out of which %d are close up to %d mismatches' % (len(similar_seqs), max_mismatches))
     return '', similar_seqs
