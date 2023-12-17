@@ -1378,6 +1378,9 @@ def get_close_sequences_f():
                 the sequence to get close sequences for
             "max_mismatches": int (optional)
                 the maximum number of mismatches to allow (default=1)
+            "test_left_trim": bool (optional)
+                True (default) to test if the sequence can be left trimmed to get a match (such as sometimes in the result of DADA2)
+                False to not test left trimming
         }
     Success Response:
         Code : 200
@@ -1400,8 +1403,9 @@ def get_close_sequences_f():
     sequence = alldat.get('sequence')
     if sequence is None:
         return('sequence parameter missing', 400)
+    test_left_trim = alldat.get('test_left_trim', True)
     max_mismatches = alldat.get('max_mismatches', 1)
-    err, similar_seqs = dbsequences.get_close_sequences(g.con, g.cur, sequence=sequence, max_mismatches=max_mismatches)
+    err, similar_seqs = dbsequences.get_close_sequences(g.con, g.cur, sequence=sequence, max_mismatches=max_mismatches, test_left_trim=test_left_trim)
     if err:
         return('problem getting close sequences. error=%s' % err, 400)
     return json.dumps({'similar_seqs': similar_seqs})
