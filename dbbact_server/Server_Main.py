@@ -195,7 +195,7 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
     Parameters
     ----------
     server_type: str or None, optional
-        the server instance running. used for db_access(). can be: 'main','develop','test','local'
+        the server instance running. used for db_access(). can be: 'main','develop','test','local', 'its-main', 'its-develop'
         None to use the DBBACT_SERVER_TYPE environment variable instead
     pg_host, pg_port, pg_db, pg_user, pg_pwd: str or None, optional
         str to override the env. variable and server_type selected postgres connection parameters
@@ -232,6 +232,8 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
     if seq_trans_api is not None:
         app.config['DBBACT_SEQUENCE_TRANSLATOR_ADDR'] = seq_trans_api
 
+    debug(6, 'the final server_type is %s' % app.config.get('DBBACT_SERVER_TYPE'))
+
     # try to set the seq translator api address accroding to server type if needed
     if app.config.get('DBBACT_SEQUENCE_TRANSLATOR_ADDR') is True:
         if app.config.get('DBBACT_SERVER_TYPE') == 'main':
@@ -240,6 +242,10 @@ def gunicorn(server_type=None, pg_host=None, pg_port=None, pg_db=None, pg_user=N
             seq_trans_api = 'http://127.0.0.1:5022'
         elif app.config.get('DBBACT_SERVER_TYPE') == 'test':
             seq_trans_api = 'http://127.0.0.1:5023'
+        elif app.config.get('DBBACT_SERVER_TYPE') == 'its-main':
+            seq_trans_api = 'http://127.0.0.1:5021'
+        elif app.config.get('DBBACT_SERVER_TYPE') == 'its-develop':
+            seq_trans_api = 'http://127.0.0.1:5021'
         else:
             debug(6, 'unknown server_type %s. Not using sequence translator')
             seq_trans_api = None
