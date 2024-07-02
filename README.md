@@ -38,7 +38,7 @@ However, you may want to locally install dbBact in order to test new functions, 
 
 3. install additional needed packages:
 ```
-pip install git+git://github.com/amnona/flask-autodoc
+pip install git+https://github.com/amnona/flask-autodoc
 
 pip install flask-login
 ```
