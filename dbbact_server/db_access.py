@@ -43,10 +43,18 @@ def connect_db(server_type=None, database=None, user=None, password=None, port=N
             cuser = 'dbbact_test'
             cdatabase = 'dbbact_test'
             cpassword = 'dbbact_test'
+        elif server_type == 'its-main':
+            cuser = 'dbbact_its'
+            cdatabase = 'dbbact_its'
+            cpassword = 'dbbact_its'
+        elif server_type == 'its-develop':
+            cuser = 'dbbact_its_develop'
+            cdatabase = 'dbbact_its_develop'
+            cpassword = 'dbbact_its_develop'
         elif server_type == 'main':
             pass
         else:
-            debug(6, 'DBBACT_SERVER_TYPE env. variable has unrecognized value %s. please use one of ["main", "develop", "test"]. using "main" as default' % server_type)
+            debug(6, 'DBBACT_SERVER_TYPE env. variable has unrecognized value %s. please use one of ["main", "develop", "test", "its-main", "its-develop"]. using "main" as default' % server_type)
     # override by function parameters
     if database is not None:
         cdatabase = database
