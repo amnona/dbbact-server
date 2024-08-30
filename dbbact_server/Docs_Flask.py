@@ -34,3 +34,9 @@ def docs():
         output += '</details>\n'
     output += '</body>'
     return output
+
+@Docs_Flask_Obj.route('/', methods=['POST', 'GET'])
+def welcome():
+    # get the version from the __init__.py file
+    from . import __version__
+    return 'dbBact REST-API server version %s\nSee /docs for API documentation.\nFor more details, see the dbBact website (https://dbbact.org) or read the paper:\nAmir, A., Ozel, E., Haberman, Y., & Shental, N. (2023). Achieving pan-microbiome biological insights via the dbBact knowledge base. Nucleic Acids Research, 51(13), 6593-6608.' % __version__
