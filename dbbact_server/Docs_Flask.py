@@ -39,4 +39,4 @@ def docs():
 def welcome():
     # get the version from the __init__.py file
     from . import __version__
-    return 'dbBact REST-API server version %s\nSee /docs for API documentation.\nFor more details, see the dbBact website (https://dbbact.org) or read the paper:\nAmir, A., Ozel, E., Haberman, Y., & Shental, N. (2023). Achieving pan-microbiome biological insights via the dbBact knowledge base. Nucleic Acids Research, 51(13), 6593-6608.' % __version__
+    return '<h1>dbBact REST-API server</h1><h2>version %s</h2>\nSee <a href=https://api.dbbact.org/docs>/docs</a> for API documentation.<br>For more details, see the dbBact website (<a href=https://dbbact.org>dbbact.org)</a> or read the <a href=https://doi.org/10.1093/nar/gkad527>paper</a>:<br>Amir, A., Ozel, E., Haberman, Y., & Shental, N. (2023). Achieving pan-microbiome biological insights via the dbBact knowledge base. Nucleic Acids Research, 51(13), 6593-6608.' % __version__
