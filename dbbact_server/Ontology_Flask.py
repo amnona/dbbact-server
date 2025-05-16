@@ -603,6 +603,7 @@ def get_term_sequences():
 
 
 @Ontology_Flask_Obj.route('/ontology/get_used_terms', methods=['GET'])
+@auto.doc()
 def get_used_terms():
     """Get the list of used ontologies from dbBact
     Returns
@@ -623,7 +624,7 @@ def get_used_terms():
     """
     debug(3, 'get_used_terms', request)
     cfunc = get_used_terms
-    if request.method == 'GET':
+    if request.method != 'GET':
         return(getdoc(cfunc))
     err, terms = dbontology.get_used_terms(g.con, g.cur)
     if err:
