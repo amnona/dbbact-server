@@ -1356,6 +1356,7 @@ def get_used_terms(con, cur):
         num_used: int
             the number of times this term is used in the database
     '''
+    debug(3, 'get_used_terms')
     cur.execute('SELECT * from ontologytable where seqcount>0;')
     if cur.rowcount == 0:
         debug(2, 'no terms with any annotation found in ontology table')
