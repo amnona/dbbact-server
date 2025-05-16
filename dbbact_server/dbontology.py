@@ -1309,3 +1309,68 @@ def get_term_sequences(con, cur, term, get_children=True):
             seq = ck
         neg_sequences[seq] = cv
     return '', pos_sequences, neg_sequences
+
+
+def get_term_synonyms(con, cur, term_id):
+    '''Get all the synonyms for a given term id
+
+    Parameters
+    ----------
+    con,cur : database connection and cursor
+    term_id: int
+        the dbbact term id to get the synonyms for
+
+    Returns
+    -------
+    err: empty ('') if ok, otherwise the error encountered
+    synonyms: list of str
+        the synonyms for the term (i.e. 'feces')
+    '''
+    cur.execute('SELECT synonym FROM ontologysynonymtable WHERE idontology=%s', [term_id])
+    debug(2,'found %d synonyms for term id %d' % (cur.rowcount, term_id))
+    res = cur.fetchall()
+    synonyms = []
+    for cres in res:
+        synonyms.append(cres[0])
+    return '', synonyms
+
+def get_used_terms(con, cur):
+    '''Get all the terms that are used in the database (i.e. have annotations)
+
+    Parameters
+    ----------
+    con,cur : database connection and cursor
+
+    Returns
+    -------
+    err: empty ('') if ok, otherwise the error encountered
+    used_terms: list of dict:
+        'term' : str
+            the ontology term (i.e. 'feces')
+        'term_id' : str
+            the ontology term id (i.e. 'ENVO:00004')
+        synonyms : list of str
+            the synonyms for the term (i.e. 'feces')
+        'id' : int
+            the internal unique dbbact id for the term
+        num_used: int
+            the number of times this term is used in the database
+    '''
+    cur.execute('SELECT * from ontologytable where seqcount>0;')
+    if cur.rowcount == 0:
+        debug(2, 'no terms with any annotation found in ontology table')
+        return 'no terms with any annotation found in ontology table', []
+    debug(3, 'found %d terms with annotations' % cur.rowcount)
+    res = cur.fetchall()
+    used_terms = []
+    for cres in res:
+        term = cres['description']
+        term_id = cres['term_id']
+        id = cres['id']
+        num_used = cres['annotationcount']
+        # get synonyms
+        err, synonyms = get_term_synonyms(con, cur, id)
+        if err:
+            debug(2, 'error getting synonyms for term %s: %s' % (term, err))
+            continue
+        used_terms.append({'term': term, 'term_id': term_id, 'synonyms': synonyms, 'id': id, 'num_used': num_used})
