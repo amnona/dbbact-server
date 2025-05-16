@@ -1375,3 +1375,4 @@ def get_used_terms(con, cur):
             debug(2, 'error getting synonyms for term %s: %s' % (term, err))
             continue
         used_terms.append({'term': term, 'term_id': term_id, 'synonyms': synonyms, 'id': id, 'num_used': num_used})
+    return '', used_terms
