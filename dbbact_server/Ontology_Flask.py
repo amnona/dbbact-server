@@ -600,3 +600,34 @@ def get_term_sequences():
     get_children = (alldat.get('get_children', 'true').lower() == 'true')
     err, pos_seqs, neg_seqs = dbontology.get_term_sequences(g.con, g.cur, term, get_children=get_children)
     return json.dumps({'pos_seqs': pos_seqs, 'neg_seqs': neg_seqs})
+
+
+@Ontology_Flask_Obj.route('/ontology/get_used_terms', methods=['GET'])
+@auto.doc()
+def get_used_terms():
+    """Get the list of used ontologies from dbBact
+    Returns
+    -------
+    'terms' : list of dict:
+        {
+            'term' : str
+                the ontology term (i.e. 'feces')
+            'term_id' : str
+                the ontology term id (i.e. 'ENVO:00004')
+            synonyms : list of str
+                the synonyms for the term (i.e. 'feces')
+            'id' : int
+                the internal unique dbbact id for the term
+            num_used: int
+                the number of times this term is used in the database
+        }
+    """
+    debug(3, 'get_used_terms', request)
+    cfunc = get_used_terms
+    if request.method != 'GET':
+        return(getdoc(cfunc))
+    err, terms = dbontology.get_used_terms(g.con, g.cur)
+    if err:
+        return(err, 400)
+    return json.dumps({'terms': terms})
+    
