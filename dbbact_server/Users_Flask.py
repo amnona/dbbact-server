@@ -145,8 +145,12 @@ def register_user():
     if alldat is None:
         return(getdoc(cfunc))
 
-    user = alldat.get('user')
-    pwd = alldat.get('pwd')
+    user = alldat.get('user','')
+    if user == '':
+        return('user parameter missing', 400)
+    pwd = alldat.get('pwd','')
+    if pwd == '':
+        return('pwd parameter missing', 400)
     name = alldat.get('name')
     description = alldat.get('description')
     mail = alldat.get('email')

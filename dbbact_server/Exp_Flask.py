@@ -297,3 +297,38 @@ def get_experiments_list():
         return(err, 400)
     debug(1, 'found %d experiments for get_experiments_list' % len(expdat))
     return json.dumps({'explist': expdat})
+
+
+@Exp_Flask_Obj.route('/experiments/delete_experiment', methods=['GET'])
+@auto.doc()
+def delete_experiment():
+    """
+    Title: delete_experiment
+    Description: Delete an experiment and all its annotations from the database. Can delete only experiments where all annotations were created by the user.
+    URL: /experiments/delete_experiment
+    Method: GET
+    URL Params: JSON
+        {
+            "expId" : int
+                the experiment id
+        }
+    Success Response:
+        Code : 200
+        Content :
+        {        
+        }
+    Details :
+        Validation:
+            Can only delete experiments where all annotations were created by the user.
+    """
+    debug(3, 'experiments/delete_experiment', request)
+    alldat = request.get_json()
+    if alldat is None:
+        return('no expId supplied', 400)
+    expid = alldat.get('expId')
+    if expid is None:
+        return('no expId supplied', 400)
+    err = dbexperiments.DeleteExperiment(g.con, g.cur, expid, userid=current_user.user_id)
+    if err:
+        return(err, 400)
+    return json.dumps({})
