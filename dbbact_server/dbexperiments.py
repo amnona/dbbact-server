@@ -2,7 +2,6 @@ from collections import defaultdict
 import datetime
 import psycopg2
 
-from .dbannotations import DeleteAnnotation
 from .utils import debug
 
 
@@ -181,6 +180,8 @@ def DeleteExperiment(con, cur, expid, userid=None):
     err : str
         '' if ok, error msg if error encountered
     '''
+    from .dbannotations import DeleteAnnotation
+    
     if userid is None:
         debug(7, "DeleteExperiment failed - no userid provided")
         return "Must provide userid to delete experiment"
