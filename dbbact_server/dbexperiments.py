@@ -192,7 +192,7 @@ def DeleteExperiment(con, cur, expid, userid=None):
         return "Cannot delete experiment - does not exist or private and different user"
     try:
         # check that all annotations were created by this user
-        cur.execute('SELECT COUNT(*) FROM AnnotationsTable WHERE idExp=%s AND idUuser<>%s', [expid, userid])
+        cur.execute('SELECT COUNT(*) FROM AnnotationsTable WHERE idExp=%s AND idUser<>%s', [expid, userid])
         res = cur.fetchone()
         if res[0] > 0:
             debug(5, "Cannot delete experiment %d - it has annotations created by other users" % expid)
