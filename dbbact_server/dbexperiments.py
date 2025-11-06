@@ -201,7 +201,8 @@ def DeleteExperiment(con, cur, expid, userid=None):
         # iterate over all annotations in this experiment and delete them
         cur.execute('SELECT id from AnnotationsTable WHERE idExp=%s', [expid])
         debug(2, 'Found %d annotations to delete for experiment %d' % (cur.rowcount, expid))
-        for cres in cur:
+        res = cur.fetchall()
+        for cres in res:
             cannoid = cres[0]
             debug(2, "Deleting annotation %d of experiment %d" % (cannoid, expid))
             # delete annotation sequences
