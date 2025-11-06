@@ -203,8 +203,10 @@ def DeleteExperiment(con, cur, expid, userid=None):
         debug(2, 'Found %d annotations to delete for experiment %d' % (cur.rowcount, expid))
         for cres in cur:
             cannoid = cres[0]
+            debug(2, "Deleting annotation %d of experiment %d" % (cannoid, expid))
             # delete annotation sequences
             DeleteAnnotation(con, cur, cannoid, userid=userid, commit=False)
+            debug(2, "Annotation %d deleted successfully" % cannoid)
 
         # delete experiment details
         debug(2, "Deleting experiment %d details" % expid)
