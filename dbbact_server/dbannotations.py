@@ -52,6 +52,16 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
     res : int
         annotationid if ok, -1 if error encouneted
     """
+    # validate each term appears only once in the annotation details
+    seen_terms = set()
+    for cdetail in annotationdetails:
+        cdetailtype = cdetail[0]
+        contologyterm = cdetail[1]
+        if contologyterm in seen_terms:
+            debug(3, "ontology term %s appears more than once in the annotation details" % contologyterm)
+            return "ontology term %s appears more than once in the annotation details" % contologyterm, -1
+        seen_terms.add(contologyterm)
+
     # add the sequences after removing duplicates
     sequences = [x.lower() for x in sequences]
     sequences = list(set(sequences))
