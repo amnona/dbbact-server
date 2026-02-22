@@ -163,6 +163,64 @@ def AddExperimentDetails(con, cur, expid, details, user_id, private='n', commit=
         debug(7, "AddExperimentDetails failed")
         return -2
 
+def DeleteExperiment(con, cur, expid, userid=None):
+    '''Delete an experiment and all its annotations from the database
+    The experiment can be deleted only if all its annotations were created by the user requesting the deletion.
+
+    Parameters
+    ----------
+    con, cur
+    expid : int
+        the experiment id to delete
+    userid : int (optional)
+        the userid requesting the deletion
+
+    Returns
+    -------
+    err : str
+        '' if ok, error msg if error encountered
+    '''
+    from .dbannotations import DeleteAnnotation
+    
+    if userid is None:
+        debug(7, "DeleteExperiment failed - no userid provided")
+        return "Must provide userid to delete experiment"
+    debug(1, "DeleteExperiment %d by user %d" % (expid, userid))
+    # check that expid exists
+    if not TestExpIdExists(con, cur, expid=expid, userid=userid):
+        debug(5, "Cannot delete experiment %d - does not exist or private and different user" % expid)
+        return "Cannot delete experiment - does not exist or private and different user"
+    try:
+        # check that all annotations were created by this user
+        cur.execute('SELECT COUNT(*) FROM AnnotationsTable WHERE idExp=%s AND idUser<>%s', [expid, userid])
+        res = cur.fetchone()
+        if res[0] > 0:
+            debug(5, "Cannot delete experiment %d - it has annotations created by other users" % expid)
+            return "Cannot delete experiment - it has annotations created by other users"
+        
+        # iterate over all annotations in this experiment and delete them
+        cur.execute('SELECT id from AnnotationsTable WHERE idExp=%s', [expid])
+        debug(2, 'Found %d annotations to delete for experiment %d' % (cur.rowcount, expid))
+        res = cur.fetchall()
+        for cres in res:
+            cannoid = cres[0]
+            debug(2, "Deleting annotation %d of experiment %d" % (cannoid, expid))
+            # delete annotation sequences
+            DeleteAnnotation(con, cur, cannoid, userid=userid, commit=False)
+            debug(2, "Annotation %d deleted successfully" % cannoid)
+
+        # delete experiment details
+        debug(2, "Deleting experiment %d details" % expid)
+        cur.execute('DELETE FROM ExperimentsTable WHERE expId=%s', [expid])
+        con.commit()
+
+        debug(2, "Experiment %d deleted successfully" % expid)
+        return ''
+
+    except Exception as e:
+        debug(7, "DeleteExperiment failed: %s" % str(e))
+        return "Error deleting experiment: %s" % str(e)
+
 
 def TestExpIdExists(con, cur, expid, userid=None):
     """

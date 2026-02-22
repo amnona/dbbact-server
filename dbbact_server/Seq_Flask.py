@@ -260,6 +260,12 @@ def get_sequence_annotations():
             "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
+            no_longer : bool (optional)
+                False (default) to get annotations also for sequences that are longer than the query sequence (with exact match on overlap)
+                True to get annotations only for sequences that are not longer than the query sequence
+            no_shorter: bool (optional)
+                False (default) to get annotations also for sequences that are shorter than the query sequence (with exact match on overlap)
+                True to get annotations only for sequences that are not shorter than the query sequence
             "dbname": str, optional
                 If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
     Success Response:
@@ -334,6 +340,8 @@ def get_sequence_annotations():
         return('sequence parameter missing', 400)
     get_term_info = alldat.get('get_term_info', True)
     get_tax_info = alldat.get('get_tax_info', True)
+    no_shorter = alldat.get('no_shorter', False)
+    no_longer = alldat.get('no_longer', False)
     region = alldat.get('region')
     use_sequence_translator = alldat.get('use_sequence_translator', True)
     dbname = alldat.get('dbname', None)
@@ -350,7 +358,7 @@ def get_sequence_annotations():
     else:
         seq_translate_api = None
 
-    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region, seq_translate_api=seq_translate_api, dbname=dbname)
+    err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, sequence, userid=current_user.user_id, region=region, seq_translate_api=seq_translate_api, dbname=dbname, no_shorter=no_shorter, no_longer=no_longer)
     if err:
         debug(6, err)
         return ('Problem geting details. error=%s' % err, 400)
@@ -368,7 +376,7 @@ def get_sequence_list_annotations():
     """
     Title: Query sequence:
     Description : Get all the annotations about a list of sequences
-    URL: /sequences/get_annotations
+    URL: /sequences/get_list_annotations
     Method: GET
     URL Params:
     Data Params: JSON
@@ -382,6 +390,12 @@ def get_sequence_list_annotations():
                 False to get just annotations for dbbact sequences that match exactly the queryy sequences
             "dbname": str, optional
                 If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
+            "no_shorter": bool (optional)
+                True to exclude annotations for sequences that are shorter than the query sequence (with exact match on overlap)
+                False (default) to include annotations for sequences that are shorter than the query sequence
+            "no_longer": bool (optional)
+                True to exclude annotations for sequences that are longer than the query sequence (with exact match on overlap)
+                False (default) to include annotations for sequences that are longer than the query sequence)
     Success Response:
         Code : 200
         Content :
@@ -448,6 +462,8 @@ def get_sequence_list_annotations():
         return('sequences parameter missing', 400)
     use_sequence_translator = alldat.get('use_sequence_translator', True)
     dbname = alldat.get('dbname', None)
+    no_shorter = alldat.get('no_shorter', False)
+    no_longer = alldat.get('no_longer', False)
     if dbname is not None:
         use_sequence_translator = True
     if use_sequence_translator:
@@ -457,7 +473,7 @@ def get_sequence_list_annotations():
 
     seqannotations = []
     for cseq in sequences:
-        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id, seq_translate_api=seq_translate_api, dbname=dbname)
+        err, details = dbannotations.GetSequenceAnnotations(g.con, g.cur, cseq, userid=current_user.user_id, seq_translate_api=seq_translate_api, dbname=dbname, no_shorter=no_shorter, no_longer=no_longer)
         # if err:
         #   debug(6,err)
         #   return ('Problem geting details. error=%s' % err,400)
@@ -511,7 +527,13 @@ def get_fast_annotations():
                 True (default) to get all the annotations from each experiment containing one annotation with the sequence, False to just get the annotations with the sequence
             "use_sequence_translator": bool (optional)
                 True (default) to get also annotations for dbbact sequences from other regions linked to the query sequences using the wholeseqdb (i,e, SILVA)
-                False to get just annotations for dbbact sequences that match exactly the queryy sequences
+                False to get just annotations for dbbact sequences that match exactly the query sequences
+            "no_longer" : bool (optional)
+                False (default) to get annotations also for sequences that are longer than the query sequence (with exact match on overlap)
+                True to get annotations only for sequences that are not longer than the query sequence
+            "no_shorter" : bool (optional)
+                False (default) to get annotations also for sequences that are shorter than the query sequence (with exact match on overlap)
+                True to get annotations only for sequences that are not shorter than the query sequence
             "dbname": str, optional
                 If supplied (i.e. 'silva'), assume sequence is the identifier in dbname (i.e.  'FJ978486' for 'silva' instead of acgt sequence)
     Success Response:
@@ -602,6 +624,8 @@ def get_fast_annotations():
     get_taxonomy = alldat.get('get_taxonomy', True)
     get_parents = alldat.get('get_parents', True)
     use_sequence_translator = alldat.get('use_sequence_translator', True)
+    no_shorter = alldat.get('no_shorter', False)
+    no_longer = alldat.get('no_longer', False)
     dbname = alldat.get('dbname', None)
     if dbname is not None:
         use_sequence_translator = True
@@ -610,7 +634,7 @@ def get_fast_annotations():
         seq_translate_api = g.seq_translate_api
     else:
         seq_translate_api = None
-    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations, seq_translate_api=seq_translate_api, dbname=dbname)
+    err, annotations, seqannotations, term_info, taxonomy = dbannotations.GetFastAnnotations(g.con, g.cur, sequences, region=region, userid=current_user.user_id, get_term_info=get_term_info, get_taxonomy=get_taxonomy, get_parents=get_parents, get_all_exp_annotations=get_all_exp_annotations, seq_translate_api=seq_translate_api, dbname=dbname, no_shorter=no_shorter, no_longer=no_longer)
     if err:
         errmsg = 'error encountered while getting the fast annotations: %s' % err
         debug(6, errmsg)

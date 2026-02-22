@@ -52,6 +52,16 @@ def AddSequenceAnnotations(con, cur, sequences, primer, expid, annotationtype, a
     res : int
         annotationid if ok, -1 if error encouneted
     """
+    # validate each term appears only once in the annotation details
+    seen_terms = set()
+    for cdetail in annotationdetails:
+        cdetailtype = cdetail[0]
+        contologyterm = cdetail[1]
+        if contologyterm in seen_terms:
+            debug(3, "ontology term %s appears more than once in the annotation details" % contologyterm)
+            return "ontology term %s appears more than once in the annotation details" % contologyterm, -1
+        seen_terms.add(contologyterm)
+
     # add the sequences after removing duplicates
     sequences = [x.lower() for x in sequences]
     sequences = list(set(sequences))
@@ -777,7 +787,7 @@ def _prepare_queries(con, cur):
         return e
 
 
-def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_translate_api=None, dbname=None):
+def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_translate_api=None, dbname=None, no_shorter=False, no_longer=False):
     """
     Get all annotations for a sequence. Returns a list of annotations (empty list if sequence is not found)
 
@@ -793,6 +803,13 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_transl
     seq_translate_api: str or None, optional
         str: the address of the sequence translator rest-api (default 127.0.0.1:5021). If supplied, will also return matching sequences on other regions based on SILVA/GG
         None: get only exact matches
+    dbname: str or None, optional
+        if None, assume sequences are acgt sequences
+        if str, assume sequences are database ids and this is the database name (i.e. 'FJ978486' for 'silva', etc.)
+    no_shorter: bool, optional
+        False (default) to get annotations also for sequences that are shorter than the query sequence (with exact match on overlap)
+    no_longer: bool, optional
+        False (default) to get annotations also for sequences that are longer than the query sequence (with exact match on overlap)
 
     Returns
     -------
@@ -806,7 +823,7 @@ def GetSequenceAnnotations(con, cur, sequence, region=None, userid=0, seq_transl
     # prepare the queries that run multiple times (to speed up)
     err = _prepare_queries(con, cur)
 
-    err, sid = dbsequences.GetSequenceId(con, cur, sequence, region, seq_translate_api=seq_translate_api, dbname=dbname)
+    err, sid = dbsequences.GetSequenceId(con, cur, sequence, region, seq_translate_api=seq_translate_api, dbname=dbname, no_shorter=no_shorter, no_longer=no_longer)
     if len(sid) == 0:
         debug(2, 'Sequence %s not found for GetSequenceAnnotations.' % sequence)
         return '', []
@@ -1118,7 +1135,7 @@ def DeleteSequenceFromAnnotation(con, cur, sequences, annotationid, userid=0, co
     return('')
 
 
-def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info=True, get_all_exp_annotations=True, get_taxonomy=True, get_parents=True, seq_translate_api=None, dbname=None):
+def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info=True, get_all_exp_annotations=True, get_taxonomy=True, get_parents=True, seq_translate_api=None, dbname=None, no_shorter=False, no_longer=False):
     """
     Get annotations for a list of sequences in a compact form
 
@@ -1145,6 +1162,10 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
     dbname: str or None, optional
         if None, assume sequences are acgt sequences
         if str, assume sequences are database ids and this is the database name (i.e. 'FJ978486' for 'silva', etc.)
+    no_shorter: bool, optional
+        False (default) to get annotations also for sequences that are shorter than the query sequence (with exact match on overlap)
+    no_longer: bool, optional
+        False (default) to get annotations also for sequences that are longer than the query sequence (with exact match on overlap)
 
     output:
     err : str
@@ -1180,7 +1201,7 @@ def GetFastAnnotations(con, cur, sequences, region=None, userid=0, get_term_info
     # in case get_all_exp_annotations=True)
     experiments_added = set()
 
-    err, seqids = dbsequences.GetSequencesIds(con, cur, sequences, region, seq_translate_api=seq_translate_api, dbname=dbname)
+    err, seqids = dbsequences.GetSequencesIds(con, cur, sequences, region, seq_translate_api=seq_translate_api, dbname=dbname, no_shorter=no_shorter, no_longer=no_longer)
     if err:
         return err, []
     for cseqpos, cseq in enumerate(sequences):
