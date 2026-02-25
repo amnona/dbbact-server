@@ -362,8 +362,8 @@ def AddAnnotationDetails(con, cur, annotationid, annotationdetails, commit=True)
                 debug(3, "ontology term %s not found" % contologyterm)
                 err, contologytermid = dbontology.AddTerm(con, cur, contologyterm, commit=False)
                 if err:
-                    debug(7, 'error enountered when adding ontology term %s' % contologyterm)
-                    return 'ontology term %s not found or added' % contologyterm, -1
+                    debug(7, 'error enountered when adding ontology term %s. error %s' % (contologyterm, err))
+                    return 'ontology term %s not found or added. error %s' % (contologyterm, err), -1
                 debug(3, 'ontology term %s added' % contologyterm)
             cur.execute('INSERT INTO AnnotationListTable (idAnnotation,idAnnotationDetail,idOntology) VALUES (%s,%s,%s)', [annotationid, cdetailtypeid, contologytermid])
             numadded += 1
