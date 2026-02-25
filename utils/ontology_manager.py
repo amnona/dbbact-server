@@ -560,6 +560,57 @@ def find_duplicates(ctx):
 	debug(3, 'done')
 
 
+@om_cmd.command()
+@click.pass_context
+def find_empty(ctx):
+	'''Find terms that have empty string in the description, and list annotations in which they appear and the similar terms with same ontology ids
+	'''
+	con = ctx.obj['con']
+	cur = ctx.obj['cur']
+	log_file = ctx.obj['log_file']
+
+	cur2 = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+	debug(3, 'find empty terms')
+	num_na = 0
+	num_empty = 0
+	num_found = 0
+	cur.execute("SELECT * from ontologytable where description==''")
+	for crow in cur:
+		cterm_id = crow['term_id']
+		if cterm_id == 'na':
+			num_na += 1
+			continue
+		if cterm_id == '':
+			num_empty += 1
+			continue
+		# find similar term_ids
+		cur2.execute('SELECT * from ontologytable WHERE term_id=%s', [cterm_id])
+		if cur2.rowcount < 2:
+			continue
+		num_found += 1
+
+		# get the ids of the terms
+		similar_ids = {}
+		similar = set()
+		for crow2 in cur2:
+			similar_ids[crow2['id']] = crow2['term_id']
+			similar.add(crow2['term_id'])
+
+		# check if it appears in any annotations
+		cur2.execute('SELECT * from AnnotationListTable WHERE idontology IN %s', [tuple(similar_ids)])
+		if cur2.rowcount == 0:
+			continue
+		print('term: %s (%s)' % (cterm, similar))
+		annotation_terms = defaultdict(list)
+		for crow2 in cur2:
+			annotation_terms[crow2['idannotation']].append(similar_ids[crow2['idontology']])
+		for ck, cv in annotation_terms.items():
+			print(' * annotation: %d terms: %s' % (ck, cv))
+
+	print('num found: %d, num na: %d, num_empty: %d' % (num_found, num_na, num_empty))
+	debug(3, 'done')
+
+
 if __name__ == "__main__":
 	om_cmd()
 	# main(sys.argv[1:])
