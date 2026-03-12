@@ -20,9 +20,9 @@ def ontology_add_term():
     Data Params: JSON
         {
             "term" : str
-                the new term to add (description from OntologyTable)
+                the new term to add (description from OntologyTable - for example "feces"). NOTE: this should not be the term_id (i.e. "ENVO:00004") but the term description (i.e. "feces")
             'term_id': str
-                the ontology id for the term (i.e. CHEBI:16189)
+                the ontology id for the term (i.e. "CHEBI:16189"). If empty string, the term_id will be automatically generated to "dbbact:XXXX" where XXXX is a unique number. If supplied, it will be used as the term_id for this term (description from OntologyTable)
             "parent" : str (optional)
                 default="na"
                 if supplied, the id of the parent of this term (description from OntologyTable)
@@ -30,9 +30,9 @@ def ontology_add_term():
                 if supplied, the term_id of the parent of this term (i.e. CHEBI:16189).
                 it will be used in addition to the 'parent' field (AND)
             "ontologyname" : str (optional)
-                default = "scdb"
+                default = "dbbact"
                 name of the ontology to which this term belongs (i.e. "doid")
-                (description from OntologyNamesTable)
+                (description from OntologyNamesTable). Note that it can differ from the ontology name in the term_id (i.e. term_id can be "CHEBI:16189" but the ontology name can be "dbbact" if CHEBI is not in the OntologyNamesTable)
             "synonyms" : (optional) list of
             {
                 "term" : str
