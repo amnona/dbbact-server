@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 import argparse
+import csv
+import io
 import sys
+import tempfile
 from collections import defaultdict
 
 import setproctitle
-import psycopg2
 
 from dbbact_sequence_translator.utils import debug, SetDebugLevel
 from dbbact_sequence_translator import db_access
@@ -15,7 +17,7 @@ from dbbact_sequence_translator import db_translate
 '''Process all sequences in the NewSequencesTable queue, so we will have fast wholeseq<->dbBact sequence lookup
 
 Performed by scanning once the whole_seq fasta file (i.e. silva_one_line.fa) and matching each queued dbbact sequence to it.
-If a natch is found, updates the SequenceIDsTable and SequenceToSequenceTable.
+The matches are collected in a temp file during the scan, and then bulk loaded to update the WholeSeqIDsTable and SequenceToSequenceTable.
 '''
 
 __version__ = 0.9
@@ -58,34 +60,45 @@ def iter_fasta_seqs(filename, replace_u_t=True):
 	fl.close()
 
 
-def iter_new_seqs(con):
+def iter_new_seqs(con, dbidVal, check_exists=True):
 	"""
 	iterate all new sequences in NewSequencesTable
 	input:
 	con: the database connection
+	dbidVal: int
+		the whole seq database id (from WholeSeqDatabaseTable)
+	check_exists: bool, optional
+		True to skip sequences already in the WholeSeqIDsTable for this whole seq database
 
 	output:
 	seq - the sequence
-	header - the header
+	dbbactid - the dbbact sequence id
 	"""
-	cur2 = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-	cur2.execute('SELECT * FROM NewSequencesTable')
-	for cres in cur2:
-		cid = cres['dbbactid']
-		cseq = cres['sequence']
+	# a named cursor is server-side, so the rows are streamed instead of all loaded into memory
+	cur2 = con.cursor(name='new_seqs')
+	cur2.itersize = 50000
+	if check_exists:
+		cur2.execute('SELECT n.sequence, n.dbbactid FROM NewSequencesTable n WHERE NOT EXISTS '
+					'(SELECT 1 FROM WholeSeqIDsTable w WHERE w.dbid=%s AND w.dbbactid=n.dbbactid::integer)', [dbidVal])
+	else:
+		cur2.execute('SELECT sequence, dbbactid FROM NewSequencesTable')
+	for cseq, cid in cur2:
 		yield(cseq, cid)
+	cur2.close()
 
 
-def hash_sequences(con, cur, dbidVal, whole_seq_db_version=None, short_len=100, check_exists=True):
-	'''hash all the sequences in a fasta file
+def hash_sequences(con, dbidVal, short_len=100, check_exists=True):
+	'''hash all the sequences in the NewSequencesTable
 
 	Parameters
 	----------
-	con, cur: database connection
+	con: database connection
+	dbidVal: int
+		the whole seq database id (from WholeSeqDatabaseTable)
 	short_len: int, optional
 		the minimal sequence length in the database
 	check_exists: bool, optional
-		True to test and skip sequences already in the WholeSeqIDsTable (assuming SILVA and dbBact sequences have not been updated)
+		True to skip sequences already in the WholeSeqIDsTable (assuming SILVA and dbBact sequences have not been updated)
 
 	Returns
 	-------
@@ -101,19 +114,14 @@ def hash_sequences(con, cur, dbidVal, whole_seq_db_version=None, short_len=100, 
 	all_ids = set()
 	short_hash = defaultdict(dict)
 
-	# get the sequence database index from name
 	debug(2, 'Scanning dbbact sequences')
-	for cseq, cid in iter_new_seqs(con):
+	# if check_exists=True, sequences already in WholeSeqIDsTable are skipped by the query
+	for cseq, cid in iter_new_seqs(con, dbidVal=dbidVal, check_exists=check_exists):
 		total_seqs += 1
 		clen = len(cseq)
 		if clen < short_len:
 			num_too_short += 1
 			continue
-		# if the dbbact sequence is already in WholeSeqIDsTable, skip it (if check_exists=True)
-		if check_exists:
-			err, existsFlag = db_translate.test_whole_seq_id_exists(con, cur, dbidVal=dbidVal, dbbactidVal=cid)
-			if existsFlag:
-				continue
 		all_ids.add(cid)
 		short_seq = cseq[:short_len]
 		short_hash[short_seq][cseq] = cid
@@ -121,52 +129,77 @@ def hash_sequences(con, cur, dbidVal, whole_seq_db_version=None, short_len=100, 
 			seq_lens.add(clen)
 		seq_hash[cseq] = cid
 
-	debug(2, 'processed %d dbbact sequences. found %d new sequences' % (total_seqs, len(seq_hash)))
+	debug(2, 'processed %d dbbact sequences not in WholeSeqIDsTable. found %d new sequences' % (total_seqs, len(seq_hash)))
 	debug(2, 'lens: %s' % seq_lens)
 	debug(2, 'num too short: %d' % num_too_short)
 	return all_ids, seq_hash, seq_lens, short_hash
 
 
-def update_sequencestosequences_table(con, cur, whole_seq_id, whole_seq_db_id, dbbact_id):
+def load_matches(cur, matches_file, all_ids):
+	'''Bulk load the scan results into the temp tables tmp_matches and tmp_ids (dropped on commit)
+
+	Parameters
+	----------
+	cur
+	matches_file: file
+		csv file with one line per match: dbbact_id,whole_seq_id
+	all_ids: set of str
+		all the dbBact sequence ids that were processed
+	'''
+	cur.execute('CREATE TEMP TABLE tmp_matches (dbbactid integer, wholeseqid text) ON COMMIT DROP')
+	matches_file.seek(0)
+	cur.copy_expert('COPY tmp_matches FROM STDIN WITH (FORMAT csv)', matches_file)
+	cur.execute('CREATE TEMP TABLE tmp_ids (dbbactid integer) ON COMMIT DROP')
+	cur.copy_expert('COPY tmp_ids FROM STDIN', io.StringIO(''.join('%s\n' % cid for cid in all_ids)))
+	# temp tables are not auto-analyzed, and we need the statistics for good query plans
+	cur.execute('ANALYZE tmp_matches')
+	cur.execute('ANALYZE tmp_ids')
+
+
+def update_whole_seq_ids_table(cur, whole_seq_db_id):
+	'''Add the matches in tmp_matches to the WholeSeqIDsTable, and a 'na' entry for each dbBact id in tmp_ids without a match
+
+	Parameters
+	----------
+	cur
+	whole_seq_db_id: int
+		the whole seq database id (from WhoeSeqDatabaseTable) - i.e. 1 for silva 13.2
+	'''
+	cur.execute('INSERT INTO WholeSeqIDsTable (dbid, dbbactid, wholeseqid) '
+				'SELECT %s, dbbactid, wholeseqid FROM (SELECT DISTINCT dbbactid, wholeseqid FROM tmp_matches) m', [whole_seq_db_id])
+	debug(2, 'added %d whole seq ids' % cur.rowcount)
+	# add an entry with wholeseqid = 'na' for all dbbact sequences not matching any WholeSeqID, so we won't scan them next time
+	cur.execute("INSERT INTO WholeSeqIDsTable (dbid, dbbactid, wholeseqid) "
+				"SELECT %s, i.dbbactid, 'na' FROM tmp_ids i WHERE NOT EXISTS (SELECT 1 FROM tmp_matches m WHERE m.dbbactid=i.dbbactid)", [whole_seq_db_id])
+	debug(2, 'added "na" for %d non-matched dbbact sequences' % cur.rowcount)
+
+
+def update_sequencestosequences_table(cur):
 	'''Update the SequenceToSequences table, that contains for each whole_seq region sequence the list of matching dbBact ids
 	The table is used for fast sequence lookup when searching for matching dbBact sequences from other regions
 
 	Parameters
 	----------
-	con, cur
-	whole_seq_id: str
-		the whole_sequences database id (i.e gy194060 for SILVA - the WholeSeqID field from SequenceIDsTable)
-	whole_seq_db_id: int
-		the whole seq database id (from WhoeSeqDatabaseTable) - i.e. 1 for silva 13.2
-	dbbact_id: int
-		the dbBact sequence ID
-
-	Returns
-	-------
+	cur
+		the tmp_matches temp table (dbbactid, wholeseqid) should already be loaded (using load_matches())
 	'''
-	# debug(2, 'update_sequencestosequences_table')
-	cur.execute('SELECT sequence FROM SequenceIDsTable WHERE WholeSeqID=%s', [whole_seq_id])
-	# debug(2, 'found %d matches for wholeseqid %s' % (cur.rowcount, whole_seq_id))
-	res = cur.fetchall()
-	for sequence_id_res in res:
-		cseq = sequence_id_res['sequence']
-		cur.execute('SELECT dbbactIDs FROM SequenceToSequenceTable WHERE sequence=%s', [cseq])
-		# if doesn't exist - create
-		if cur.rowcount == 0:
-			# debug(2, 'sequence %s not found in sequencetosequencetable - creating' % cseq)
-			cur.execute('INSERT INTO SequenceToSequenceTable (sequence, dbbactIDs) VALUES (%s, %s)', [cseq, str(dbbact_id)])
-		else:
-			res2 = cur.fetchall()
-			# debug(2, 'found %d ids for sequence %s' % (cur.rowcount, cseq))
-			for cseq_to_seq_res in res2:
-				cdbbact_ids = cseq_to_seq_res['dbbactids']
-				cdbbact_ids = set(cdbbact_ids.split(','))
-				if str(dbbact_id) in cdbbact_ids:
-					continue
-				cdbbact_ids.add(str(dbbact_id))
-				cur.execute('UPDATE SequenceToSequenceTable SET dbbactIDs=%s WHERE sequence=%s', [','.join(cdbbact_ids), cseq])
-				# debug(2, 'updated')
-	# debug(2, 'finished')
+	# for each region sequence (from SequenceIDsTable) of the matched whole seq ids, get the list of new matching dbBact ids
+	cur.execute('CREATE TEMP TABLE tmp_s2s ON COMMIT DROP AS '
+				'SELECT s.sequence, array_agg(DISTINCT m.dbbactid::text) AS ids '
+				'FROM (SELECT DISTINCT dbbactid, wholeseqid FROM tmp_matches) m JOIN SequenceIDsTable s ON s.wholeseqid=m.wholeseqid '
+				'GROUP BY s.sequence')
+	debug(2, 'found %d region sequences matching the new dbbact sequences' % cur.rowcount)
+	cur.execute('ANALYZE tmp_s2s')
+	# add the new ids to sequences already in the table (only rows which have at least one new id)
+	cur.execute("UPDATE SequenceToSequenceTable t "
+				"SET dbbactIDs=(SELECT string_agg(DISTINCT x, ',') FROM unnest(string_to_array(t.dbbactIDs, ',') || n.ids) AS x) "
+				"FROM tmp_s2s n WHERE t.sequence=n.sequence AND NOT (n.ids <@ string_to_array(t.dbbactIDs, ','))")
+	debug(2, 'updated %d existing SequenceToSequenceTable rows' % cur.rowcount)
+	# and create the sequences not in the table
+	cur.execute("INSERT INTO SequenceToSequenceTable (sequence, dbbactIDs) "
+				"SELECT n.sequence, array_to_string(n.ids, ',') FROM tmp_s2s n "
+				"WHERE NOT EXISTS (SELECT 1 FROM SequenceToSequenceTable t WHERE t.sequence=n.sequence)")
+	debug(2, 'added %d new SequenceToSequenceTable rows' % cur.rowcount)
 
 
 def update_whole_seq_db(con, cur, whole_seq_fasta_name, seqdbname, check_exists=True, short_len=150, no_delete=False):
@@ -189,12 +222,7 @@ def update_whole_seq_db(con, cur, whole_seq_fasta_name, seqdbname, check_exists=
 	debug(3, 'update_whole_seq_db started for database %s' % seqdbname)
 
 	count_success = 0
-	count_failure = 0
-	count_seq_success = 0
-	count_seq_failure = 0
-	# set of sequences for which we found at least one match.
-	# for all sequences without a match, we add an entry into WholeSeqIDTable with an index 'na' in wholeseqid so we won't scan them next time
-	found_seqs = set()
+	count_matches = 0
 
 	# silvaFileName = 'SILVA_132_SSURef_tax_silva.fasta'
 
@@ -210,12 +238,15 @@ def update_whole_seq_db(con, cur, whole_seq_fasta_name, seqdbname, check_exists=
 		cur.execute('DELETE FROM WholeSeqIDsTable WHERE dbid=%s', [whole_seq_dbid])
 
 	# prepare the dbbact sequences to get ids for
-	all_ids, seq_hash, seq_lens, short_hash = hash_sequences(con, cur, dbidVal=whole_seq_dbid, short_len=150, check_exists=check_exists)
+	all_ids, seq_hash, seq_lens, short_hash = hash_sequences(con, dbidVal=whole_seq_dbid, short_len=150, check_exists=check_exists)
 	if len(all_ids) == 0:
 		debug(2, "no sequences to process.")
 		return
 
 	debug(2, 'Getting whole seq db IDs for %d dbbact sequences' % len(all_ids))
+	# the matches are written to a temp file and bulk loaded after the scan (much faster than updating the database for each match)
+	matches_file = tempfile.TemporaryFile(mode='w+', newline='')
+	matches_writer = csv.writer(matches_file)
 	# iterate over the silva database file and look for matches to any dbbact sequence
 	idx = 0
 	for cseq, chead in iter_fasta_seqs(whole_seq_fasta_name):
@@ -224,11 +255,12 @@ def update_whole_seq_db(con, cur, whole_seq_fasta_name, seqdbname, check_exists=
 		if idx % 1000 == 1:
 			debug(2, "count: %d" % idx)
 
-		for cpos in range(len(cseq) - short_len):
+		for cpos in range(len(cseq) - short_len + 1):
 			ccseq = cseq[cpos:cpos + short_len]
 			if ccseq in short_hash:
+				# check all dbbact sequences starting with this prefix (i.e. 150bp and 200bp versions of the same sequence)
 				for k, v in short_hash[ccseq].items():
-					if k in cseq:
+					if cseq.startswith(k, cpos):
 						# we have an exact match!
 						# lets prepare the id string (sometimes has format 'ID.START.END TAXONOMY' we need to remove)
 						cid = chead.split(' ')[0]
@@ -238,28 +270,20 @@ def update_whole_seq_db(con, cur, whole_seq_fasta_name, seqdbname, check_exists=
 						else:
 							cid = ".".join(split_cid)
 						cid = cid.lower()
-						found_seqs.add(v)
-
-						# update the SequenceToSequenceTable
-						update_sequencestosequences_table(con, cur, whole_seq_id=cid, whole_seq_db_id=whole_seq_dbid, dbbact_id=v)
-						# add to WholeSeqIDsTable if not already there
-						err = db_translate.add_whole_seq_id(con, cur, dbidVal=whole_seq_dbid, dbbactidVal=v, wholeseqidVal=cid, commit=False, test_exists=check_exists)
-						if err:
-							count_seq_failure += 1
-							break
-						else:
-							count_seq_success += 1
-							isFound = True
-							break
+						matches_writer.writerow([v, cid])
+						count_matches += 1
+						isFound = True
 		if isFound:
 			count_success += 1
 
-	# now add an entry with wholeseqid = 'na' for all dbbact sequences not matching any WholeSeqID entries
-	debug(2, 'found silvaIDs for %d sequences. encountered %d errors.' % (count_success, count_failure))
-	debug(2, 'found matches for %s dbbact sequences. adding "na" to all non-matched sequences' % len(found_seqs))
-	for cseqid in all_ids:
-		if cseqid not in found_seqs:
-			err = db_translate.add_whole_seq_id(con, cur, dbidVal=whole_seq_dbid, dbbactidVal=cseqid, wholeseqidVal='na', commit=False, test_exists=check_exists)
+	debug(2, 'found %d matches in %d whole seq sequences' % (count_matches, count_success))
+	debug(2, 'loading matches into database')
+	load_matches(cur, matches_file, all_ids)
+	matches_file.close()
+	debug(2, 'updating WholeSeqIDsTable')
+	update_whole_seq_ids_table(cur, whole_seq_db_id=whole_seq_dbid)
+	debug(2, 'updating SequenceToSequenceTable')
+	update_sequencestosequences_table(cur)
 	if no_delete:
 		debug(3, 'skipping delete step')
 	else:
